@@ -828,10 +828,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final isMobile = screenWidth < 768.0;
 
     final specs = [
-      (
-        'Primary Facility Branch',
-        'Harborridge Central Plant • Industrial Area HQ',
-      ),
+      ('Store Business Name', 'Harborridge Laundry Services'),
+      ('Primary Facility Branch', 'Harborridge Main Facility'),
+      ('Contact & Dispatch Email', 'codzuresolutions@gmail.com'),
       (
         'Store Currency & Symbol',
         'KES (Kenyan Shilling • Official Central Bank Standard)',
@@ -840,10 +839,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         'Taxation Compliance',
         '16.0% Value Added Tax (KRA ETR Automated Invoicing)',
       ),
-      (
-        'Default Payment Gateways',
-        'M-Pesa Express STK Push, KCB B2B, Stanbic EFT, Cash',
-      ),
+      ('Default Payment Gateways', 'M-Pesa Express, Cash, Card, Bank EFT'),
       (
         'Operational SLA Tiers',
         'Standard: 48 Hours • Express Iron: 12 Hours • Same-Day: 6 Hours',

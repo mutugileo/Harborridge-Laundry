@@ -38,14 +38,6 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
     'LaundryGo Kilimani',
   ];
 
-  double get _periodMultiplier => switch (_selectedPeriod) {
-    'Nov 2026' => 1.0,
-    'Oct 2026' => 0.92,
-    'Q4 2026' => 2.85,
-    'Full Year 2026' => 11.4,
-    _ => 1.0,
-  };
-
   @override
   Widget build(BuildContext context) {
     final ordersState = ref.watch(orderDetailsNotifierProvider);
@@ -54,40 +46,40 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
     final textTheme = Theme.of(context).textTheme;
 
     final liveOrderCount = ordersState.orders.length;
-    final totalOrders = (2146 * _periodMultiplier).round() + liveOrderCount;
-    final grossRevenueKes = (485740 * _periodMultiplier).round();
+    final totalOrders = liveOrderCount;
+    final grossRevenueKes = ordersState.orders.fold<int>(0, (sum, o) {
+      final amt =
+          int.tryParse(o.displayAmount.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      return sum + amt;
+    });
     final netMarginKes = (grossRevenueKes * 0.78).round();
 
+    final serviceCounts = <String, int>{};
+    final serviceRevenues = <String, int>{};
+    for (final order in ordersState.orders) {
+      final svc = order.primaryService;
+      serviceCounts[svc] = (serviceCounts[svc] ?? 0) + 1;
+      final amt =
+          int.tryParse(order.displayAmount.replaceAll(RegExp(r'[^0-9]'), '')) ??
+          0;
+      serviceRevenues[svc] = (serviceRevenues[svc] ?? 0) + amt;
+    }
+
     final serviceBreakdown = [
-      (
-        service: 'Wash & Iron (Hanger & Crisp Press)',
-        revenue: 'KES ${(194200 * _periodMultiplier).round()}',
-        ordersCount: '${(912 * _periodMultiplier).round()} Orders',
-        share: 0.42,
-        color: colors.freshSkyBlue,
-      ),
-      (
-        service: 'Wash & Fold (By Weight / Bulk)',
-        revenue: 'KES ${(148500 * _periodMultiplier).round()}',
-        ordersCount: '${(684 * _periodMultiplier).round()} Orders',
-        share: 0.31,
-        color: colors.harborGold,
-      ),
-      (
-        service: 'Dry Cleaning (Suits, Gowns & Silk)',
-        revenue: 'KES ${(98400 * _periodMultiplier).round()}',
-        ordersCount: '${(318 * _periodMultiplier).round()} Orders',
-        share: 0.19,
-        color: colors.accentGreen,
-      ),
-      (
-        service: 'Wet Wash & Stain Care Addons',
-        revenue: 'KES ${(44640 * _periodMultiplier).round()}',
-        ordersCount: '${(238 * _periodMultiplier).round()} Orders',
-        share: 0.08,
-        color: colors.harborNavy,
-      ),
+      for (final entry in serviceCounts.entries)
+        (
+          service: entry.key,
+          revenue: 'KES ${serviceRevenues[entry.key] ?? 0}',
+          ordersCount: '${entry.value} Orders',
+          share: totalOrders > 0 ? entry.value / totalOrders : 0.0,
+          color: colors.freshSkyBlue,
+        ),
     ];
+
+    final branchMap = <String, List<dynamic>>{};
+    for (final order in ordersState.orders) {
+      branchMap.putIfAbsent(order.vendorBranch, () => []).add(order);
+    }
 
     final branchPerformance =
         <
@@ -101,42 +93,18 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
             String margin,
           })
         >[
-          (
-            branch: 'Harborridge Main',
-            orders: (740 * _periodMultiplier).round(),
-            revenue: 'KES ${(182400 * _periodMultiplier).round()}',
-            consumables: 'KES ${(19400 * _periodMultiplier).round()}',
-            sla: '98.2%',
-            topRider: 'Peter Mwangi',
-            margin: '+82.4%',
-          ),
-          (
-            branch: 'LaundryGo Nairobi',
-            orders: (620 * _periodMultiplier).round() + liveOrderCount,
-            revenue: 'KES ${(141200 * _periodMultiplier).round()}',
-            consumables: 'KES ${(15800 * _periodMultiplier).round()}',
-            sla: '96.8%',
-            topRider: 'David Ochieng',
-            margin: '+79.1%',
-          ),
-          (
-            branch: 'LaundryGo Westlands',
-            orders: (465 * _periodMultiplier).round(),
-            revenue: 'KES ${(96800 * _periodMultiplier).round()}',
-            consumables: 'KES ${(11200 * _periodMultiplier).round()}',
-            sla: '95.4%',
-            topRider: 'Samuel Kariuki',
-            margin: '+76.5%',
-          ),
-          (
-            branch: 'LaundryGo Kilimani',
-            orders: (321 * _periodMultiplier).round(),
-            revenue: 'KES ${(65340 * _periodMultiplier).round()}',
-            consumables: 'KES ${(7900 * _periodMultiplier).round()}',
-            sla: '94.9%',
-            topRider: 'Kelvin Mutua',
-            margin: '+74.8%',
-          ),
+          for (final entry in branchMap.entries)
+            (
+              branch: entry.key,
+              orders: entry.value.length,
+              revenue:
+                  'KES ${entry.value.fold<int>(0, (s, o) => s + (int.tryParse(o.displayAmount.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0))}',
+              consumables:
+                  'KES ${(entry.value.fold<int>(0, (s, o) => s + (int.tryParse(o.displayAmount.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0)) * 0.1).round()}',
+              sla: '98.0%',
+              topRider: entry.value.first.assignedRider.toString(),
+              margin: '+78.0%',
+            ),
         ];
 
     final filteredBranches = _selectedBranchFilter == 'All Branches'
@@ -742,120 +710,130 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
             ],
           ),
           const SizedBox(height: 14.0),
-          Container(
-            decoration: BoxDecoration(
-              color: colors.cardBackground,
-              borderRadius: BorderRadius.circular(14.0),
-              border: Border.all(color: colors.borderSubtle),
-            ),
-            child: Column(
-              children: [
-                for (var i = 0; i < branches.length; i++) ...[
-                  if (i > 0) Divider(height: 1.0, color: colors.borderSubtle),
-                  InteractivePressScale(
-                    onTap: () =>
-                        widget.onFilterOrdersByBranch?.call(branches[i].branch),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18.0,
-                        vertical: 14.0,
+          if (branches.isEmpty)
+            const AppEmptyState(
+              icon: Icons.store_mall_directory_outlined,
+              title: 'No Branch Data Recorded',
+              description: 'Branch volume and margin metrics will populate here automatically as orders are assigned to branch facilities.',
+            )
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: colors.cardBackground,
+                borderRadius: BorderRadius.circular(14.0),
+                border: Border.all(color: colors.borderSubtle),
+              ),
+              child: Column(
+                children: [
+                  for (var i = 0; i < branches.length; i++) ...[
+                    if (i > 0) Divider(height: 1.0, color: colors.borderSubtle),
+                    InteractivePressScale(
+                      onTap: () => widget.onFilterOrdersByBranch?.call(
+                        branches[i].branch,
                       ),
-                      color: Colors.transparent,
-                      child: Wrap(
-                        spacing: 18.0,
-                        runSpacing: 8.0,
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 190.0,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 32.0,
-                                  height: 32.0,
-                                  decoration: BoxDecoration(
-                                    color: colors.freshSkyBlue.withValues(
-                                      alpha: 0.12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18.0,
+                          vertical: 14.0,
+                        ),
+                        color: Colors.transparent,
+                        child: Wrap(
+                          spacing: 18.0,
+                          runSpacing: 8.0,
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 190.0,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 32.0,
+                                    height: 32.0,
+                                    decoration: BoxDecoration(
+                                      color: colors.freshSkyBlue.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8.0),
                                     ),
-                                    borderRadius: BorderRadius.circular(8.0),
+                                    child: Icon(
+                                      Icons.storefront_outlined,
+                                      size: 16.0,
+                                      color: colors.freshSkyBlue,
+                                    ),
                                   ),
-                                  child: Icon(
-                                    Icons.storefront_outlined,
-                                    size: 16.0,
-                                    color: colors.freshSkyBlue,
-                                  ),
-                                ),
-                                const SizedBox(width: 10.0),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${branches[i].branch} →',
-                                        style: textTheme.labelMedium?.copyWith(
-                                          fontSize: 13.0,
-                                          fontWeight: FontWeight.w700,
-                                          color: colors.freshSkyBlue,
-                                          decoration: TextDecoration.underline,
+                                  const SizedBox(width: 10.0),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${branches[i].branch} →',
+                                          style: textTheme.labelMedium
+                                              ?.copyWith(
+                                                fontSize: 13.0,
+                                                fontWeight: FontWeight.w700,
+                                                color: colors.freshSkyBlue,
+                                                decoration:
+                                                    TextDecoration.underline,
+                                              ),
                                         ),
-                                      ),
-                                      Text(
-                                        'Lead: ${branches[i].topRider}',
-                                        style: textTheme.bodySmall?.copyWith(
-                                          fontSize: 11.0,
-                                          color: colors.textSecondary,
+                                        Text(
+                                          'Lead: ${branches[i].topRider}',
+                                          style: textTheme.bodySmall?.copyWith(
+                                            fontSize: 11.0,
+                                            color: colors.textSecondary,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          _BranchMetricColumn(
-                            label: 'Orders',
-                            value: '${branches[i].orders}',
-                          ),
-                          _BranchMetricColumn(
-                            label: 'Gross Revenue',
-                            value: branches[i].revenue,
-                          ),
-                          _BranchMetricColumn(
-                            label: 'Chemical Cost',
-                            value: branches[i].consumables,
-                          ),
-                          _BranchMetricColumn(
-                            label: '24h SLA',
-                            value: branches[i].sla,
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10.0,
-                              vertical: 5.0,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE6F8EF),
-                              borderRadius: BorderRadius.circular(99.0),
-                            ),
-                            child: Text(
-                              '${branches[i].margin} Net Margin',
-                              style: textTheme.labelSmall?.copyWith(
-                                fontSize: 11.0,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF15803D),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
+                            _BranchMetricColumn(
+                              label: 'Orders',
+                              value: '${branches[i].orders}',
+                            ),
+                            _BranchMetricColumn(
+                              label: 'Gross Revenue',
+                              value: branches[i].revenue,
+                            ),
+                            _BranchMetricColumn(
+                              label: 'Chemical Cost',
+                              value: branches[i].consumables,
+                            ),
+                            _BranchMetricColumn(
+                              label: '24h SLA',
+                              value: branches[i].sla,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10.0,
+                                vertical: 5.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE6F8EF),
+                                borderRadius: BorderRadius.circular(99.0),
+                              ),
+                              child: Text(
+                                '${branches[i].margin} Net Margin',
+                                style: textTheme.labelSmall?.copyWith(
+                                  fontSize: 11.0,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF15803D),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );

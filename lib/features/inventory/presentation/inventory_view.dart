@@ -106,12 +106,10 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
     super.initState();
     _searchController = TextEditingController();
     _newSkuNameController = TextEditingController();
-    _newSkuSupplierController = TextEditingController(
-      text: 'Diversey East Africa',
-    );
-    _newSkuUnitController = TextEditingController(text: 'Drums');
-    _newSkuCostController = TextEditingController(text: '4500');
-    _newSkuQtyController = TextEditingController(text: '12');
+    _newSkuSupplierController = TextEditingController();
+    _newSkuUnitController = TextEditingController();
+    _newSkuCostController = TextEditingController();
+    _newSkuQtyController = TextEditingController();
     _loadSupabaseInventory();
   }
 

@@ -84,7 +84,7 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
   String _searchQuery = '';
   String? _feedbackBanner;
   bool _showSchedulePanel = false;
-  String _newRunRider = 'Peter Mwangi';
+  String _newRunRider = 'Unassigned';
   String _newRunBranch = 'LaundryGo Nairobi';
 
   late final TextEditingController _orderIdController;
@@ -97,11 +97,9 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
   @override
   void initState() {
     super.initState();
-    _orderIdController = TextEditingController(text: 'LG-2026-00129');
-    _customerController = TextEditingController(text: 'Liam O\'Connor');
-    _zoneController = TextEditingController(
-      text: 'Upper Hill • Hospital Rd Tower',
-    );
+    _orderIdController = TextEditingController();
+    _customerController = TextEditingController();
+    _zoneController = TextEditingController();
     _searchController = TextEditingController();
     _loadSupabaseDispatch();
   }
@@ -707,9 +705,9 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
                 ),
               ),
               for (final rider in [
-                'Peter Mwangi',
-                'David Otieno',
-                'Samuel Karanja',
+                'Unassigned',
+                'Express Courier',
+                'Field Dispatch',
               ])
                 InteractivePressScale(
                   onTap: () => setState(() => _newRunRider = rider),
@@ -1435,9 +1433,9 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
                     ),
                   ),
                   for (final r in [
-                    'Peter Mwangi',
-                    'David Otieno',
-                    'Samuel Karanja',
+                    'Unassigned',
+                    'Express Courier',
+                    'Field Dispatch',
                   ])
                     PopupMenuItem(
                       value: 'rider:$r',

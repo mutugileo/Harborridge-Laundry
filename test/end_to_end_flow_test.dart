@@ -45,7 +45,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('LG-2026-00131'), findsWidgets);
-      expect(find.text('John Kamau'), findsWidgets);
+      expect(find.text('Walk-in Customer'), findsWidgets);
       expect(find.text('ADD PAYMENT'), findsOneWidget);
       expect(find.text('Print Invoice'), findsOneWidget);
 

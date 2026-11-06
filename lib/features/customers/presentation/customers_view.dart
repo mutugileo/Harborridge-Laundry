@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
-import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
+import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 
 class _CustomerProfileRecord {
   const _CustomerProfileRecord({
@@ -53,53 +53,13 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
   late final TextEditingController _newNameController;
   late final TextEditingController _newPhoneController;
 
-  late List<_CustomerProfileRecord> _customers = const [];
+  final List<_CustomerProfileRecord> _manualCustomers = [];
 
   @override
   void initState() {
     super.initState();
     _newNameController = TextEditingController();
     _newPhoneController = TextEditingController();
-    _loadSupabaseCustomers();
-  }
-
-  Future<void> _loadSupabaseCustomers() async {
-    final client = ref.read(supabaseClientProvider);
-    if (client == null) return;
-    try {
-      final response = await client
-          .from('orders')
-          .select(
-            'customer_name, customer_phone, vendor_branch, order_id, display_amount',
-          )
-          .order('created_at', ascending: false);
-      if (!mounted) return;
-      final seen = <String>{};
-      final loaded = <_CustomerProfileRecord>[];
-      for (final raw in (response as List)) {
-        final map = raw as Map<String, dynamic>;
-        final name = map['customer_name'] as String? ?? 'Customer';
-        if (seen.contains(name)) continue;
-        seen.add(name);
-        loaded.add(
-          _CustomerProfileRecord(
-            id: 'CUS-00${loaded.length + 1}',
-            name: name,
-            phone: map['customer_phone'] as String? ?? '',
-            email: '${name.toLowerCase().replaceAll(' ', '.')}@client.com',
-            branch: map['vendor_branch'] as String? ?? 'Harborridge Main',
-            tier: 'Regular',
-            totalSpend: map['display_amount'] as String? ?? 'KES 0',
-            ordersCount: 1,
-            recentOrderIds: [map['order_id'] as String? ?? ''],
-            preferredService: 'Wash & Fold',
-          ),
-        );
-      }
-      setState(() {
-        _customers = loaded;
-      });
-    } catch (_) {}
   }
 
   @override
@@ -112,23 +72,21 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
   void _addNewCustomer() {
     final name = _newNameController.text.trim();
     if (name.isEmpty) return;
-    final phone = _newPhoneController.text.trim().isEmpty
-        ? '+254 719 800 321'
-        : _newPhoneController.text.trim();
+    final phone = _newPhoneController.text.trim();
     final newRecord = _CustomerProfileRecord(
-      id: 'CUS-00${_customers.length + 1}',
+      id: 'CUS-00${_manualCustomers.length + 1}',
       name: name,
       phone: phone,
-      email: '${name.toLowerCase().replaceAll(' ', '.')}@client.com',
+      email: phone.isNotEmpty ? phone : 'Walk-in Profile',
       branch: 'Harborridge Main',
       tier: 'Regular',
       totalSpend: 'KES 0',
-      ordersCount: 1,
-      recentOrderIds: const ['LG-2026-00125'],
-      preferredService: 'Wash & Iron',
+      ordersCount: 0,
+      recentOrderIds: const [],
+      preferredService: 'Wash & Fold',
     );
     setState(() {
-      _customers = [newRecord, ..._customers];
+      _manualCustomers.insert(0, newRecord);
       _selectedIndex = 0;
       _newNameController.clear();
       _newPhoneController.clear();
@@ -140,13 +98,65 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
     final colors = context.colors;
     final motion = context.motion;
     final textTheme = Theme.of(context).textTheme;
+    final ordersState = ref.watch(orderDetailsNotifierProvider);
 
+    // Group live orders dynamically by customer name
+    final orderCustomerMap = <String, List<dynamic>>{};
+    for (final order in ordersState.orders) {
+      final key = order.customerName.trim().toLowerCase();
+      if (key.isEmpty) continue;
+      orderCustomerMap.putIfAbsent(key, () => []).add(order);
+    }
+
+    final derivedCustomers = <_CustomerProfileRecord>[];
+    var customerIndex = 1;
+    for (final entry in orderCustomerMap.entries) {
+      final list = entry.value;
+      final first = list.first;
+      var totalSpendSum = 0;
+      final orderIds = <String>[];
+      for (final o in list) {
+        orderIds.add(o.orderId as String);
+        final amt =
+            int.tryParse(
+              (o.displayAmount as String).replaceAll(RegExp(r'[^0-9]'), ''),
+            ) ??
+            0;
+        totalSpendSum += amt;
+      }
+
+      final tier = totalSpendSum >= 5000
+          ? 'VIP Gold'
+          : totalSpendSum >= 2500
+          ? 'Corporate'
+          : 'Regular';
+
+      derivedCustomers.add(
+        _CustomerProfileRecord(
+          id: 'CUS-00$customerIndex',
+          name: first.customerName as String,
+          phone: first.customerPhone as String,
+          email: (first.customerPhone as String).isNotEmpty
+              ? first.customerPhone as String
+              : 'Registered Client',
+          branch: first.vendorBranch as String,
+          tier: tier,
+          totalSpend: 'KES $totalSpendSum',
+          ordersCount: list.length,
+          recentOrderIds: orderIds,
+          preferredService: first.primaryService as String,
+        ),
+      );
+      customerIndex++;
+    }
+
+    final allCustomers = [..._manualCustomers, ...derivedCustomers];
     const tiers = ['All', 'VIP Gold', 'Corporate', 'Regular'];
     final filtered = _selectedTier == 'All'
-        ? _customers
-        : _customers.where((c) => c.tier == _selectedTier).toList();
+        ? allCustomers
+        : allCustomers.where((c) => c.tier == _selectedTier).toList();
     final activeCustomer = filtered.isEmpty
-        ? (_customers.isNotEmpty ? _customers.first : null)
+        ? (allCustomers.isNotEmpty ? allCustomers.first : null)
         : filtered[_selectedIndex.clamp(0, filtered.length - 1)];
 
     return SingleChildScrollView(
@@ -436,37 +446,53 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                         ),
                       ),
                       const SizedBox(height: 8.0),
-                      Wrap(
-                        spacing: 8.0,
-                        runSpacing: 8.0,
-                        children: activeCustomer.recentOrderIds.map((orderId) {
-                          return InteractivePressScale(
-                            onTap: () =>
-                                widget.onOpenOrderDetails?.call(orderId),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                                vertical: 7.0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.freshSkyBlue.withValues(
-                                  alpha: 0.12,
-                                ),
-                                borderRadius: BorderRadius.circular(8.0),
-                                border: Border.all(color: colors.freshSkyBlue),
-                              ),
-                              child: Text(
-                                'View $orderId →',
-                                style: textTheme.labelSmall?.copyWith(
-                                  color: colors.harborNavy,
-                                  fontSize: 11.0,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                      if (activeCustomer.recentOrderIds.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Text(
+                            'No order history yet. Intake a new ticket to link transactions.',
+                            style: textTheme.bodySmall?.copyWith(
+                              fontSize: 11.0,
+                              color: colors.textSecondary,
                             ),
-                          );
-                        }).toList(),
-                      ),
+                          ),
+                        )
+                      else
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 8.0,
+                          children: activeCustomer.recentOrderIds.map((
+                            orderId,
+                          ) {
+                            return InteractivePressScale(
+                              onTap: () =>
+                                  widget.onOpenOrderDetails?.call(orderId),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                  vertical: 7.0,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.freshSkyBlue.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  border: Border.all(
+                                    color: colors.freshSkyBlue,
+                                  ),
+                                ),
+                                child: Text(
+                                  'View $orderId →',
+                                  style: textTheme.labelSmall?.copyWith(
+                                    color: colors.harborNavy,
+                                    fontSize: 11.0,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       const SizedBox(height: 14.0),
                       if (widget.onStartPosOrder != null)
                         SizedBox(

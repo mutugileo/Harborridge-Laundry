@@ -135,11 +135,9 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _grossKesController = TextEditingController(text: '92000');
-    _ordersCoveredController = TextEditingController(
-      text: '84 Completed Orders • 760 lbs',
-    );
-    _accountNumberController = TextEditingController(text: 'Till 994820');
+    _grossKesController = TextEditingController();
+    _ordersCoveredController = TextEditingController();
+    _accountNumberController = TextEditingController();
     _loadSupabaseSettlements();
   }
 

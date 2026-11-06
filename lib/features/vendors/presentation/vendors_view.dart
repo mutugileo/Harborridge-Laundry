@@ -76,7 +76,7 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
     _branchNameController = TextEditingController();
     _managerController = TextEditingController();
     _locationController = TextEditingController();
-    _commissionController = TextEditingController(text: '15% Partner Split');
+    _commissionController = TextEditingController();
     _searchController = TextEditingController();
     _loadSupabaseVendors();
   }

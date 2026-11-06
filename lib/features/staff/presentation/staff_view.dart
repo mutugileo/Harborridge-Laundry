@@ -5,6 +5,7 @@ import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/auth/change_pin_dialog.dart';
 import 'package:laundry_ridge/core/permissions/role_permission.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 class StaffView extends ConsumerStatefulWidget {
@@ -52,7 +53,7 @@ class _StaffViewState extends ConsumerState<StaffView> {
     super.initState();
     _nameController = TextEditingController();
     _emailController = TextEditingController();
-    _pinController = TextEditingController(text: '2026');
+    _pinController = TextEditingController();
     _phoneController = TextEditingController();
   }
 
@@ -388,17 +389,27 @@ class _StaffViewState extends ConsumerState<StaffView> {
             ),
           ),
           const SizedBox(height: 16.0),
-          for (var i = 0; i < workers.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12.0),
-            _WorkerPermissionsCard(
-              worker: workers[i],
-              isCurrentSession: workers[i].id == authState.currentWorker.id,
-              onToggleModule: (module) => authNotifier
-                  .toggleWorkerModuleException(workers[i].id, module),
-              onSwitchSession: () =>
-                  authNotifier.switchActiveWorker(workers[i]),
-            ),
-          ],
+          if (workers.isEmpty)
+            AppEmptyState(
+              icon: Icons.badge_outlined,
+              title: 'No Workers Found',
+              description: 'No staff members match the selected role filter. Reset filters or enroll a new worker using the form.',
+              actionLabel: 'Reset Role Filter',
+              actionIcon: Icons.refresh_rounded,
+              onAction: () => setState(() => _roleFilter = 'All'),
+            )
+          else
+            for (var i = 0; i < workers.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12.0),
+              _WorkerPermissionsCard(
+                worker: workers[i],
+                isCurrentSession: workers[i].id == authState.currentWorker.id,
+                onToggleModule: (module) => authNotifier
+                    .toggleWorkerModuleException(workers[i].id, module),
+                onSwitchSession: () =>
+                    authNotifier.switchActiveWorker(workers[i]),
+              ),
+            ],
         ],
       ),
     );

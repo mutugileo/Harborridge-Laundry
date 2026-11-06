@@ -57,28 +57,7 @@ class AdminServicesCatalogView extends StatefulWidget {
 
 class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
   static const List<({String name, String phone, String branch})>
-  _customerPresets = [
-    (
-      name: 'John Kamau',
-      phone: '+254 712 345 678',
-      branch: 'LaundryGo Nairobi',
-    ),
-    (
-      name: 'Moncy James',
-      phone: '+254 720 234 891',
-      branch: 'Harborridge Main',
-    ),
-    (
-      name: 'Anastasia Yesenenko',
-      phone: '+254 722 901 442',
-      branch: 'LaundryGo Westlands',
-    ),
-    (
-      name: 'Grace Wanjiku',
-      phone: '+254 733 118 290',
-      branch: 'LaundryGo Kilimani',
-    ),
-  ];
+  _customerPresets = [];
 
   static const List<String> _serviceTypes = [
     'Wash & Iron',
@@ -103,10 +82,10 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
   ];
 
   static const List<String> _riders = [
-    'Peter Mwangi',
-    'David Otieno',
-    'Samuel Karanja',
-    'Counter Desk',
+    'Unassigned',
+    'Express Courier',
+    'Counter Pickup',
+    'Field Dispatch',
   ];
 
   late final TextEditingController _customerNameController;
@@ -115,7 +94,7 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
   String _selectedServiceType = 'Wash & Iron';
   String _selectedBranch = 'LaundryGo Nairobi';
   String _selectedDeliveryMethod = 'Pickup assigned';
-  String _selectedRider = 'Peter Mwangi';
+  String _selectedRider = 'Unassigned';
   String _selectedPaymentStatus = 'Paid';
   final String _selectedPaymentMethod = 'M-Pesa';
   bool _includeStainRemoval = true;
@@ -125,8 +104,8 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
   @override
   void initState() {
     super.initState();
-    _customerNameController = TextEditingController(text: 'John Kamau');
-    _customerPhoneController = TextEditingController(text: '+254 712 345 678');
+    _customerNameController = TextEditingController();
+    _customerPhoneController = TextEditingController();
   }
 
   @override
@@ -470,53 +449,55 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: 10.0),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final preset in _customerPresets) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: InkWell(
-                      onTap: () => _applyCustomerPreset(preset),
-                      borderRadius: BorderRadius.circular(99.0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10.0,
-                          vertical: 5.0,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.background,
-                          borderRadius: BorderRadius.circular(99.0),
-                          border: Border.all(color: colors.borderSubtle),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.person_outline_rounded,
-                              size: 13.0,
-                              color: colors.freshSkyBlue,
-                            ),
-                            const SizedBox(width: 4.0),
-                            Text(
-                              preset.name,
-                              style: textTheme.labelSmall?.copyWith(
-                                fontSize: 11.0,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textPrimary,
+          if (_customerPresets.isNotEmpty) ...[
+            const SizedBox(height: 10.0),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final preset in _customerPresets) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: InkWell(
+                        onTap: () => _applyCustomerPreset(preset),
+                        borderRadius: BorderRadius.circular(99.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10.0,
+                            vertical: 5.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.background,
+                            borderRadius: BorderRadius.circular(99.0),
+                            border: Border.all(color: colors.borderSubtle),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.person_outline_rounded,
+                                size: 13.0,
+                                color: colors.freshSkyBlue,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4.0),
+                              Text(
+                                preset.name,
+                                style: textTheme.labelSmall?.copyWith(
+                                  fontSize: 11.0,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 14.0),
           _IntakeLabeledTextField(
             label: 'Customer Full Name',

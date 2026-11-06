@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/features/orders/data/orders_repository.dart';
 import 'package:laundry_ridge/features/orders/domain/order_addon.dart';
@@ -502,23 +503,29 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
         ),
     ];
 
+    final operator = ref.read(authSessionNotifierProvider).currentWorker;
+    final now = DateTime.now();
+    final formattedDate =
+        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+    final due = now.add(const Duration(days: 2));
+    final formattedDue =
+        '${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}/${due.year}';
+
     final newOrder = OrderDetail(
       orderId: newOrderId,
       storeName: 'HARBORRIDGE LAUNDRY',
       storeCode: 'HR-2026',
-      storeEmail: 'orders@harborridgelaundry.com',
+      storeEmail: operator.email,
       storeAddress: vendorBranch,
-      taxIdentifier: 'TAX: KRA-PIN-P051',
-      orderDate: '05/11/2026',
-      deliveryDate: '07/11/2026',
+      taxIdentifier: 'TAX: KRA-PIN-P05123984A',
+      orderDate: formattedDate,
+      deliveryDate: formattedDue,
       status: OrderProcessStatus.processing,
       customerName: customerName.trim().isEmpty
           ? 'Walk-in Customer'
           : customerName.trim(),
-      customerPhone: customerPhone.trim().isEmpty
-          ? '+254 700 000 000'
-          : customerPhone.trim(),
-      assignedStaff: 'Elena Rostova',
+      customerPhone: customerPhone.trim().isEmpty ? '' : customerPhone.trim(),
+      assignedStaff: operator.fullName,
       primaryService: primaryService,
       vendorBranch: vendorBranch,
       displayAmount: 'KES ${grandTotal.toStringAsFixed(0)}',
@@ -527,7 +534,7 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       deliveryStatusLabel: deliveryMethod,
       deliveryMethod: deliveryMethod,
       assignedRider: assignedRider,
-      createdDateLabel: '05 Nov 2026',
+      createdDateLabel: formattedDate,
       items: items,
       addons: addons,
       payments: payments,

@@ -132,10 +132,10 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _orderIdController = TextEditingController(text: 'LG-2026-00132');
-    _customerController = TextEditingController(text: 'Liam O\'Connor');
-    _amountKesController = TextEditingController(text: '2200');
-    _referenceController = TextEditingController(text: 'MP-LR99120');
+    _orderIdController = TextEditingController();
+    _customerController = TextEditingController();
+    _amountKesController = TextEditingController();
+    _referenceController = TextEditingController();
     _loadSupabasePayments();
   }
 

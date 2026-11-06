@@ -371,32 +371,16 @@ class OrdersPageView extends StatelessWidget {
             _FilterDropdownPill<String?>(
               label: 'Customer',
               value: state.customerFilter,
-              items: const [
-                DropdownMenuItem(value: null, child: Text('Customer: All')),
-                DropdownMenuItem(
-                  value: 'John Kamau',
-                  child: Text('Customer: John Kamau'),
+              items: [
+                const DropdownMenuItem(
+                  value: null,
+                  child: Text('Customer: All'),
                 ),
-                DropdownMenuItem(
-                  value: 'Moncy James',
-                  child: Text('Customer: Moncy James'),
-                ),
-                DropdownMenuItem(
-                  value: 'Grace Wanjiku',
-                  child: Text('Customer: Grace Wanjiku'),
-                ),
-                DropdownMenuItem(
-                  value: 'Polly Matthews',
-                  child: Text('Customer: Polly Matthews'),
-                ),
-                DropdownMenuItem(
-                  value: 'David Ochieng',
-                  child: Text('Customer: David Ochieng'),
-                ),
-                DropdownMenuItem(
-                  value: 'Emma Davis',
-                  child: Text('Customer: Emma Davis'),
-                ),
+                for (final c in {
+                  for (final o in state.orders) o.customerName,
+                  if (state.customerFilter != null) state.customerFilter!,
+                })
+                  DropdownMenuItem(value: c, child: Text('Customer: $c')),
               ],
               onChanged: notifier.updateCustomerFilter,
             ),

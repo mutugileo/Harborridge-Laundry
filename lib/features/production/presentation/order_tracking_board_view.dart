@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
+import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/app_skeleton.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
@@ -345,6 +346,12 @@ class _OrderTrackingBoardViewState
     required TextTheme textTheme,
     required int totalOrders,
   }) {
+    final staffRoster = ref.watch(authSessionNotifierProvider).workers;
+    final staffNames = staffRoster
+        .map((w) => w.fullName.split(' ').first)
+        .take(3)
+        .join(', ');
+
     final metrics = [
       (
         icon: Icons.local_laundry_service_outlined,
@@ -374,8 +381,8 @@ class _OrderTrackingBoardViewState
         icon: Icons.badge_outlined,
         iconBg: colors.harborGold,
         title: 'STATION CREW',
-        value: '4 Specialists',
-        meta: 'Elena, Sarah, Marcus, David',
+        value: '${staffRoster.length} Active Staff',
+        meta: staffNames.isEmpty ? 'Ready for assignment' : staffNames,
         metaColor: colors.textSecondary,
       ),
     ];
