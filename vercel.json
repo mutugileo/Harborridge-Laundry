@@ -1,0 +1,10 @@
+{
+  "outputDirectory": "build/web",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/((?!.*\\.[\\w]+$|_next|assets|canvaskit|icons).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
