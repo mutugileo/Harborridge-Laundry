@@ -115,21 +115,20 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
           .select('*')
           .order('created_at', ascending: false);
       if (!mounted) return;
-      final loaded =
-          (response as List).map((row) {
-            final map = row as Map<String, dynamic>;
-            return _DispatchRunItem(
-              runId: map['run_id'] as String? ?? 'DSP-00',
-              orderId: map['order_id'] as String? ?? '',
-              customerName: map['customer_name'] as String? ?? 'Customer',
-              zone: map['zone'] as String? ?? '',
-              branch: map['branch'] as String? ?? 'Harborridge Main',
-              riderName: map['rider_name'] as String? ?? 'Rider',
-              etaWindow: map['eta_window'] as String? ?? '',
-              stage: map['stage'] as String? ?? 'Pickup assigned',
-              bagCount: map['bag_count'] as String? ?? '1 Bag',
-            );
-          }).toList();
+      final loaded = (response as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        return _DispatchRunItem(
+          runId: map['run_id'] as String? ?? 'DSP-00',
+          orderId: map['order_id'] as String? ?? '',
+          customerName: map['customer_name'] as String? ?? 'Customer',
+          zone: map['zone'] as String? ?? '',
+          branch: map['branch'] as String? ?? 'Harborridge Main',
+          riderName: map['rider_name'] as String? ?? 'Rider',
+          etaWindow: map['eta_window'] as String? ?? '',
+          stage: map['stage'] as String? ?? 'Pickup assigned',
+          bagCount: map['bag_count'] as String? ?? '1 Bag',
+        );
+      }).toList();
       setState(() {
         _runs = loaded;
       });
@@ -398,8 +397,7 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
                   AppEmptyState(
                     icon: Icons.near_me_outlined,
                     title: 'Dispatch Manifest Empty',
-                    description:
-                        'No active courier runs or pickup tickets found matching filters. Schedule a dispatch route.',
+                    description: 'No active courier runs or pickup tickets found matching filters. Schedule a dispatch route.',
                     actionLabel: '+ Schedule Dispatch Run',
                     actionIcon: Icons.add_road_rounded,
                     onAction: () => setState(() => _showSchedulePanel = true),

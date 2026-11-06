@@ -2,158 +2,131 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/features/dashboard/domain/dashboard_models.dart';
 import 'package:laundry_ridge/features/dashboard/presentation/dashboard_state.dart';
+import 'package:laundry_ridge/features/orders/domain/order_detail.dart';
+import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 
 class DashboardNotifier extends Notifier<DashboardUiState> {
   @override
   DashboardUiState build() {
-    return const DashboardUiState(
+    final ordersState = ref.watch(orderDetailsNotifierProvider);
+    final orders = ordersState.orders;
+
+    final activeOrders = orders
+        .where((o) => o.status != OrderProcessStatus.delivered)
+        .length;
+    final totalOrders = orders.length;
+    final totalRevenue = orders
+        .fold<double>(0.0, (sum, o) => sum + o.paidAmount)
+        .round();
+
+    final customerSpending = <String, double>{};
+    final customerOrderCounts = <String, int>{};
+    for (final order in orders) {
+      customerSpending[order.customerName] =
+          (customerSpending[order.customerName] ?? 0.0) + order.paidAmount;
+      customerOrderCounts[order.customerName] =
+          (customerOrderCounts[order.customerName] ?? 0) + 1;
+    }
+
+    final sortedCustomers = customerSpending.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final topCustomers = sortedCustomers.take(5).map((entry) {
+      final name = entry.key;
+      final spent = entry.value.round();
+      final count = customerOrderCounts[name] ?? 1;
+      final initials = name
+          .split(' ')
+          .map((p) => p.isNotEmpty ? p[0] : '')
+          .take(2)
+          .join();
+      return DashboardTopCustomer(
+        name: name,
+        totalSpent: 'KES $spent',
+        ordersCountLabel: '$count Orders',
+        growthBadge: '100%',
+        initials: initials.isEmpty ? 'C' : initials,
+        avatarBackground: const Color(0xFF1E3A8A),
+        avatarAccent: const Color(0xFF93C5FD),
+      );
+    }).toList();
+
+    return DashboardUiState(
       selectedDateFilter: 'Last 30 days',
       selectedStatsFilter: 'Weekly',
       selectedRevenueFilter: 'Today',
-      selectedCustomerIndex: 2,
-      activeOrdersCount: 15,
-      totalOrdersCount: 4145,
+      selectedCustomerIndex: 0,
+      activeOrdersCount: activeOrders,
+      totalOrdersCount: totalOrders,
       kpiMetrics: [
         DashboardKpiMetric(
           title: 'Total Revenue',
-          value: 'KES 485,740',
-          changeBadge: '32%',
-          isPositive: true,
-          accentColor: Color(0xFF2DA1E7),
+          value: 'KES $totalRevenue',
+          changeBadge: totalRevenue > 0 ? '+100%' : '0%',
+          isPositive: totalRevenue > 0,
+          accentColor: const Color(0xFF2DA1E7),
           icon: Icons.monetization_on_outlined,
-          sparklineHeights: [0.95, 0.55, 0.80, 0.42, 0.35, 0.62],
+          sparklineHeights: totalRevenue > 0
+              ? const [0.2, 0.4, 0.6, 0.8, 1.0, 0.9]
+              : const [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
         ),
         DashboardKpiMetric(
           title: 'Total Orders',
-          value: '2,152',
-          changeBadge: '12%',
-          isPositive: true,
-          accentColor: Color(0xFFDCA842),
+          value: '$totalOrders',
+          changeBadge: totalOrders > 0 ? '+$totalOrders' : '0',
+          isPositive: totalOrders > 0,
+          accentColor: const Color(0xFFDCA842),
           icon: Icons.inventory_2_outlined,
-          sparklineHeights: [0.92, 0.52, 0.78, 0.40, 0.32, 0.58],
+          sparklineHeights: totalOrders > 0
+              ? const [0.3, 0.5, 0.7, 0.8, 0.9, 1.0]
+              : const [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
         ),
         DashboardKpiMetric(
-          title: 'Total Products',
-          value: '459',
-          changeBadge: '-21%',
-          isPositive: false,
-          accentColor: Color(0xFF1FBF75),
+          title: 'Active Wash Queue',
+          value: '$activeOrders',
+          changeBadge: activeOrders > 0 ? 'Live' : 'Clear',
+          isPositive: true,
+          accentColor: const Color(0xFF1FBF75),
           icon: Icons.workspace_premium_outlined,
-          sparklineHeights: [0.94, 0.54, 0.82, 0.44, 0.36, 0.60],
+          sparklineHeights: activeOrders > 0
+              ? const [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+              : const [0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
         ),
       ],
-      topCustomers: [
-        DashboardTopCustomer(
-          name: 'John Kamau',
-          totalSpent: 'KES 48,500',
-          ordersCountLabel: '12+ Orders',
-          growthBadge: '9%',
-          initials: 'JK',
-          avatarBackground: Color(0xFF1E3A8A),
-          avatarAccent: Color(0xFF93C5FD),
-        ),
-        DashboardTopCustomer(
-          name: 'Moncy James',
-          totalSpent: 'KES 74,200',
-          ordersCountLabel: '19+ Orders',
-          growthBadge: '18%',
-          initials: 'MJ',
-          avatarBackground: Color(0xFF0F766E),
-          avatarAccent: Color(0xFF5EEAD4),
-        ),
-        DashboardTopCustomer(
-          name: 'Anastasia Yesenenko',
-          totalSpent: 'KES 38,900',
-          ordersCountLabel: '15+ Orders',
-          growthBadge: '12%',
-          initials: 'AY',
-          avatarBackground: Color(0xFFDCA842),
-          avatarAccent: Color(0xFF152042),
-        ),
-        DashboardTopCustomer(
-          name: 'Polly Matthews',
-          totalSpent: 'KES 41,600',
-          ordersCountLabel: '16+ Orders',
-          growthBadge: '14%',
-          initials: 'PM',
-          avatarBackground: Color(0xFF0284C7),
-          avatarAccent: Color(0xFFE0F2FE),
-        ),
-        DashboardTopCustomer(
-          name: 'Grace Wanjiku',
-          totalSpent: 'KES 62,400',
-          ordersCountLabel: '21+ Orders',
-          growthBadge: '22%',
-          initials: 'GW',
-          avatarBackground: Color(0xFF334155),
-          avatarAccent: Color(0xFFF8FAFC),
-        ),
-      ],
-      weeklyStatistics: [
+      topCustomers: topCustomers,
+      weeklyStatistics: const [
         OrderStatisticDayPoint(
           dayLabel: 'Mon',
-          completedRatio: 0.68,
-          pendingRatio: 0.62,
+          completedRatio: 0.0,
+          pendingRatio: 0.0,
         ),
         OrderStatisticDayPoint(
           dayLabel: 'Tue',
-          completedRatio: 0.52,
-          pendingRatio: 0.48,
+          completedRatio: 0.0,
+          pendingRatio: 0.0,
         ),
         OrderStatisticDayPoint(
           dayLabel: 'Wed',
-          completedRatio: 0.86,
-          pendingRatio: 0.80,
+          completedRatio: 0.0,
+          pendingRatio: 0.0,
         ),
         OrderStatisticDayPoint(
           dayLabel: 'Thu',
-          completedRatio: 0.50,
-          pendingRatio: 0.45,
+          completedRatio: 0.0,
+          pendingRatio: 0.0,
         ),
         OrderStatisticDayPoint(
           dayLabel: 'Fri',
-          completedRatio: 0.51,
-          pendingRatio: 0.46,
+          completedRatio: 0.0,
+          pendingRatio: 0.0,
         ),
         OrderStatisticDayPoint(
           dayLabel: 'Sat',
-          completedRatio: 0.50,
-          pendingRatio: 0.44,
+          completedRatio: 0.0,
+          pendingRatio: 0.0,
         ),
       ],
-      realtimeRevenueNormalized: [
-        0.38,
-        0.41,
-        0.36,
-        0.43,
-        0.39,
-        0.42,
-        0.38,
-        0.46,
-        0.45,
-        0.52,
-        0.50,
-        0.64,
-        0.53,
-        0.58,
-        0.72,
-        0.75,
-        0.92,
-        0.81,
-        0.84,
-        0.71,
-        0.73,
-        0.65,
-        0.66,
-        0.56,
-        0.58,
-        0.51,
-        0.46,
-        0.59,
-        0.52,
-        0.55,
-        0.45,
-      ],
+      realtimeRevenueNormalized: const [0.1, 0.1, 0.1, 0.1, 0.1],
     );
   }
 

@@ -23,14 +23,10 @@ void main() {
 
       expect(find.text('Operations Overview'), findsOneWidget);
       expect(find.text('Total Revenue'), findsOneWidget);
-      expect(find.text('KES 485,740'), findsOneWidget);
       expect(find.text('Total Orders'), findsOneWidget);
-      expect(find.text('2,152'), findsOneWidget);
-      expect(find.text('Total Products'), findsOneWidget);
-      expect(find.text('459'), findsOneWidget);
+      expect(find.text('Active Wash Queue'), findsOneWidget);
       expect(find.text('Quick Links'), findsOneWidget);
       expect(find.text('Top Customers'), findsOneWidget);
-      expect(find.text('Anastasia Yesenenko'), findsOneWidget);
       expect(find.text('Order Statistics'), findsOneWidget);
       expect(find.text('Real Time Revenue'), findsOneWidget);
 

@@ -225,4 +225,55 @@ void main() {
       }
     },
   );
+
+  testWidgets(
+    'End-to-End Journey 4: Zero-Dummy Verification -> Dynamic Metrics & Seamless Navigation',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1440, 1024);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(const ProviderScope(child: LaundryRidgeApp()));
+
+      // 1. Initial Login Screen
+      expect(find.text('HARBORRIDGE'), findsWidgets);
+      expect(find.text('Sign in with Email & PIN'), findsOneWidget);
+
+      // 2. Perform Login
+      await tester.tap(find.text('Sign in with Email & PIN'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // 3. Admin Dashboard verification - No hardcoded static dummies
+      expect(find.text('Operations Overview'), findsOneWidget);
+      expect(find.text('Total Revenue'), findsOneWidget);
+      expect(find.text('Total Orders'), findsOneWidget);
+      expect(find.text('Active Wash Queue'), findsOneWidget);
+      expect(find.text('Top Customers'), findsOneWidget);
+
+      // 4. Navigate to Production Kanban
+      await tester.tap(find.text('Order Status Screen'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Production Floor & Kanban Telemetry'), findsOneWidget);
+
+      // 5. Navigate to Inventory
+      await tester.tap(find.text('Inventory'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(
+        find.text('Consumables, Solvents & Packaging Inventory'),
+        findsOneWidget,
+      );
+
+      // 6. Navigate to Staff & Permissions
+      await tester.tap(find.text('Staff'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(
+        find.text('Staff Roster & Role-Based Menu Rights'),
+        findsOneWidget,
+      );
+    },
+  );
 }

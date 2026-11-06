@@ -948,6 +948,101 @@ class _TopCustomersFeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
+
+    if (customers.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 16.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              colors.freshSkyBlue,
+              const Color(0xFF124E8C),
+              colors.harborNavy,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(14.0),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1F152042),
+              blurRadius: 18.0,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Top Customers',
+                    style: textTheme.titleSmall?.copyWith(
+                      color: Colors.white,
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                InkWell(
+                  onTap: onViewAllTap,
+                  child: Text(
+                    'View All',
+                    style: textTheme.labelSmall?.copyWith(
+                      color: Colors.white,
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24.0),
+            Center(
+              child: Container(
+                width: 56.0,
+                height: 56.0,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.people_outline_rounded,
+                  color: Colors.white,
+                  size: 26.0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12.0),
+            Text(
+              'No Customer Orders Yet',
+              textAlign: TextAlign.center,
+              style: textTheme.titleSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 14.0,
+              ),
+            ),
+            const SizedBox(height: 4.0),
+            Text(
+              'Customer insights and ranking will populate automatically when transactions are recorded.',
+              textAlign: TextAlign.center,
+              style: textTheme.bodySmall?.copyWith(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 11.0,
+              ),
+            ),
+            const SizedBox(height: 16.0),
+          ],
+        ),
+      );
+    }
+
     final activeCustomer =
         customers[selectedIndex.clamp(0, customers.length - 1)];
 

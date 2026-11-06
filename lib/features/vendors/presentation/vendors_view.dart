@@ -90,24 +90,22 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
           .select('*')
           .order('created_at', ascending: false);
       if (!mounted) return;
-      final loaded =
-          (response as List).map((row) {
-            final map = row as Map<String, dynamic>;
-            return _VendorBranchRecord(
-              code: map['code'] as String? ?? 'VND-00',
-              branchName: map['branch_name'] as String? ?? 'Branch',
-              managerName: map['manager_name'] as String? ?? 'Manager',
-              location: map['location'] as String? ?? 'Location',
-              activeOrders: (map['active_orders'] as num?)?.toInt() ?? 0,
-              utilizationRatio:
-                  (map['utilization_ratio'] as num?)?.toDouble() ?? 0.8,
-              commissionRate:
-                  map['commission_rate'] as String? ?? '15% Split',
-              isOnline: map['is_online'] as bool? ?? true,
-              assignedWorkersCount:
-                  (map['assigned_workers_count'] as num?)?.toInt() ?? 1,
-            );
-          }).toList();
+      final loaded = (response as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        return _VendorBranchRecord(
+          code: map['code'] as String? ?? 'VND-00',
+          branchName: map['branch_name'] as String? ?? 'Branch',
+          managerName: map['manager_name'] as String? ?? 'Manager',
+          location: map['location'] as String? ?? 'Location',
+          activeOrders: (map['active_orders'] as num?)?.toInt() ?? 0,
+          utilizationRatio:
+              (map['utilization_ratio'] as num?)?.toDouble() ?? 0.8,
+          commissionRate: map['commission_rate'] as String? ?? '15% Split',
+          isOnline: map['is_online'] as bool? ?? true,
+          assignedWorkersCount:
+              (map['assigned_workers_count'] as num?)?.toInt() ?? 1,
+        );
+      }).toList();
       setState(() {
         _branches = loaded;
       });

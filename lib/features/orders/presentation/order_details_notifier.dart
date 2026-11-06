@@ -542,6 +542,9 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       actionFeedbackMessage:
           'Created order $newOrderId for ${newOrder.customerName}',
     );
+
+    ref.read(ordersRepositoryProvider).createOrder(newOrder);
+
     return newOrderId;
   }
 

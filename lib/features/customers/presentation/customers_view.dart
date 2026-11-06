@@ -239,8 +239,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                   AppEmptyState(
                     icon: Icons.people_outline_rounded,
                     title: 'Customer Directory Empty',
-                    description:
-                        'No customer profiles found for the selected tier. Enroll a new customer profile or reset active filters.',
+                    description: 'No customer profiles found for the selected tier. Enroll a new customer profile or reset active filters.',
                     actionLabel: 'Reset Filters',
                     actionIcon: Icons.refresh_rounded,
                     onAction: () => setState(() => _selectedTier = 'All'),
@@ -265,87 +264,89 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                             width: filtered[i].id == activeCustomer?.id
                                 ? 1.5
                                 : 1.0,
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 38.0,
-                            height: 38.0,
-                            decoration: BoxDecoration(
-                              color: colors.harborNavy,
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              filtered[i].name.substring(0, 1),
-                              style: textTheme.labelMedium?.copyWith(
-                                color: colors.harborGold,
-                                fontWeight: FontWeight.w800,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38.0,
+                              height: 38.0,
+                              decoration: BoxDecoration(
+                                color: colors.harborNavy,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                filtered[i].name.substring(0, 1),
+                                style: textTheme.labelMedium?.copyWith(
+                                  color: colors.harborGold,
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 10.0),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${filtered[i].name} • ${filtered[i].id}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.labelMedium?.copyWith(
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.textPrimary,
+                            const SizedBox(width: 10.0),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${filtered[i].name} • ${filtered[i].id}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: textTheme.labelMedium?.copyWith(
+                                      fontSize: 13.0,
+                                      fontWeight: FontWeight.w700,
+                                      color: colors.textPrimary,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  '${filtered[i].phone} • ${filtered[i].branch}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.bodySmall?.copyWith(
-                                    fontSize: 11.0,
-                                    color: colors.textSecondary,
+                                  Text(
+                                    '${filtered[i].phone} • ${filtered[i].branch}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: textTheme.bodySmall?.copyWith(
+                                      fontSize: 11.0,
+                                      color: colors.textSecondary,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8.0),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 120.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  filtered[i].totalSpend,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.labelMedium?.copyWith(
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.w800,
-                                    color: colors.textPrimary,
+                            const SizedBox(width: 8.0),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: 120.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    filtered[i].totalSpend,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: textTheme.labelMedium?.copyWith(
+                                      fontSize: 13.0,
+                                      fontWeight: FontWeight.w800,
+                                      color: colors.textPrimary,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  '${filtered[i].ordersCount} Ords • ${filtered[i].tier}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.labelSmall?.copyWith(
-                                    fontSize: 11.0,
-                                    color: colors.freshSkyBlue,
-                                    fontWeight: FontWeight.w600,
+                                  Text(
+                                    '${filtered[i].ordersCount} Ords • ${filtered[i].tier}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: textTheme.labelSmall?.copyWith(
+                                      fontSize: 11.0,
+                                      color: colors.freshSkyBlue,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
               ],
             ),
           );
@@ -367,8 +368,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                 ? const AppEmptyState(
                     icon: Icons.person_outline_rounded,
                     title: 'No Profile Selected',
-                    description:
-                        'Select a customer to view loyalty status, recent invoices, and preferences.',
+                    description: 'Select a customer to view loyalty status, recent invoices, and preferences.',
                   )
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,169 +397,174 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                           color: colors.textSecondary,
                         ),
                       ),
-                const SizedBox(height: 12.0),
-                Container(
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: colors.background,
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                      const SizedBox(height: 12.0),
+                      Container(
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: colors.background,
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Care Preference: ${activeCustomer.preferredService}',
+                              style: textTheme.bodySmall?.copyWith(
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w600,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4.0),
+                            Text(
+                              'Primary Branch: ${activeCustomer.branch}',
+                              style: textTheme.bodySmall?.copyWith(
+                                fontSize: 11.0,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14.0),
                       Text(
-                        'Care Preference: ${activeCustomer.preferredService}',
-                        style: textTheme.bodySmall?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w600,
+                        'Linked Orders (Click to open invoice):',
+                        style: textTheme.labelSmall?.copyWith(
+                          fontSize: 11.0,
+                          fontWeight: FontWeight.w700,
                           color: colors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 4.0),
+                      const SizedBox(height: 8.0),
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 8.0,
+                        children: activeCustomer.recentOrderIds.map((orderId) {
+                          return InteractivePressScale(
+                            onTap: () =>
+                                widget.onOpenOrderDetails?.call(orderId),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                                vertical: 7.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.freshSkyBlue.withValues(
+                                  alpha: 0.12,
+                                ),
+                                borderRadius: BorderRadius.circular(8.0),
+                                border: Border.all(color: colors.freshSkyBlue),
+                              ),
+                              child: Text(
+                                'View $orderId →',
+                                style: textTheme.labelSmall?.copyWith(
+                                  color: colors.harborNavy,
+                                  fontSize: 11.0,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 14.0),
+                      if (widget.onStartPosOrder != null)
+                        SizedBox(
+                          width: double.infinity,
+                          child: InteractivePressScale(
+                            onTap: widget.onStartPosOrder,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 11.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.harborNavy,
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '+ Create New POS Order for ${activeCustomer.name}',
+                                style: textTheme.labelMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 18.0),
+                      Divider(color: colors.borderSubtle),
+                      const SizedBox(height: 10.0),
                       Text(
-                        'Primary Branch: ${activeCustomer.branch}',
-                        style: textTheme.bodySmall?.copyWith(
-                          fontSize: 11.0,
-                          color: colors.textSecondary,
+                        'Quick Register Walk-in Customer',
+                        style: textTheme.labelMedium?.copyWith(
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: _newNameController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: 'Enter customer full name',
+                          filled: true,
+                          fillColor: colors.background,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 10.0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(color: colors.borderSubtle),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      TextField(
+                        controller: _newPhoneController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: 'Use customer mobile number',
+                          filled: true,
+                          fillColor: colors.background,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 10.0,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(color: colors.borderSubtle),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10.0),
+                      SizedBox(
+                        width: double.infinity,
+                        child: InteractivePressScale(
+                          onTap: _addNewCustomer,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10.0),
+                            decoration: BoxDecoration(
+                              color: colors.accentGreen,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Save Customer Profile',
+                              style: textTheme.labelMedium?.copyWith(
+                                color: Colors.white,
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 14.0),
-                Text(
-                  'Linked Orders (Click to open invoice):',
-                  style: textTheme.labelSmall?.copyWith(
-                    fontSize: 11.0,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  children: activeCustomer.recentOrderIds.map((orderId) {
-                    return InteractivePressScale(
-                      onTap: () => widget.onOpenOrderDetails?.call(orderId),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 7.0,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.freshSkyBlue.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8.0),
-                          border: Border.all(color: colors.freshSkyBlue),
-                        ),
-                        child: Text(
-                          'View $orderId →',
-                          style: textTheme.labelSmall?.copyWith(
-                            color: colors.harborNavy,
-                            fontSize: 11.0,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 14.0),
-                if (widget.onStartPosOrder != null)
-                  SizedBox(
-                    width: double.infinity,
-                    child: InteractivePressScale(
-                      onTap: widget.onStartPosOrder,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 11.0),
-                        decoration: BoxDecoration(
-                          color: colors.harborNavy,
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '+ Create New POS Order for ${activeCustomer.name}',
-                          style: textTheme.labelMedium?.copyWith(
-                            color: Colors.white,
-                            fontSize: 12.0,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 18.0),
-                Divider(color: colors.borderSubtle),
-                const SizedBox(height: 10.0),
-                Text(
-                  'Quick Register Walk-in Customer',
-                  style: textTheme.labelMedium?.copyWith(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                TextField(
-                  controller: _newNameController,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: 'Enter customer full name',
-                    filled: true,
-                    fillColor: colors.background,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                      vertical: 10.0,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: BorderSide(color: colors.borderSubtle),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                TextField(
-                  controller: _newPhoneController,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: 'Use customer mobile number',
-                    filled: true,
-                    fillColor: colors.background,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                      vertical: 10.0,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: BorderSide(color: colors.borderSubtle),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10.0),
-                SizedBox(
-                  width: double.infinity,
-                  child: InteractivePressScale(
-                    onTap: _addNewCustomer,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      decoration: BoxDecoration(
-                        color: colors.accentGreen,
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Save Customer Profile',
-                        style: textTheme.labelMedium?.copyWith(
-                          color: Colors.white,
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           );
 
           if (isDesktop) {
