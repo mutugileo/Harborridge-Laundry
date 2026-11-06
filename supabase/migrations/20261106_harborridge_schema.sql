@@ -191,3 +191,4 @@ CREATE POLICY "Allow public write payments" ON public.payment_transactions FOR A
 
 CREATE POLICY "Allow public read settlements" ON public.settlement_batches FOR SELECT TO anon, authenticated USING (true);
 CREATE POLICY "Allow public write settlements" ON public.settlement_batches FOR ALL TO anon, authenticated USING (true);
+

@@ -353,7 +353,8 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
             const AppEmptyState(
               icon: Icons.insights_rounded,
               title: 'Awaiting Live Orders',
-              description: 'No active orders found in the database. Intake tickets to track revenue trajectories, turnaround SLA compliance, and branch margins.',
+              description:
+                  'No active orders found in the database. Intake tickets to track revenue trajectories, turnaround SLA compliance, and branch margins.',
             )
           else ...[
             LayoutBuilder(

@@ -485,7 +485,8 @@ class OrdersPageView extends StatelessWidget {
       return AppEmptyState(
         icon: Icons.receipt_long_rounded,
         title: 'No Orders Found',
-        description: 'No orders match your active filter criteria. Intake a new laundry batch or reset filters.',
+        description:
+            'No orders match your active filter criteria. Intake a new laundry batch or reset filters.',
         actionLabel: 'POS Order Intake',
         actionIcon: Icons.add_shopping_cart_rounded,
         onAction: () => _showAddItemsCatalogModal(context),

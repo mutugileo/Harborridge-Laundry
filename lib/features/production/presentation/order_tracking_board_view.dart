@@ -484,14 +484,13 @@ class _OrderTrackingBoardViewState
       case OrderTrackingStatus.success:
         if (state.orders.isEmpty) {
           return Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 36.0,
-              horizontal: 16.0,
-            ),
+            padding:
+                const EdgeInsets.symmetric(vertical: 36.0, horizontal: 16.0),
             child: AppEmptyState(
               icon: Icons.view_kanban_outlined,
               title: 'Production Queue is Clear',
-              description: 'No orders currently in the washing, drying, or folding queues. Intake a new laundry ticket to start production.',
+              description:
+                  'No orders currently in the washing, drying, or folding queues. Intake a new laundry ticket to start production.',
               actionLabel: '+ POS Order Intake',
               actionIcon: Icons.add_shopping_cart_rounded,
               onAction: widget.onNewOrderIntake,

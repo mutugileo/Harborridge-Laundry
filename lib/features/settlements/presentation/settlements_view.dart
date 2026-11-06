@@ -152,29 +152,30 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
           .select('*')
           .order('created_at', ascending: false);
       if (!mounted) return;
-      final loaded = (response as List).map((row) {
-        final map = row as Map<String, dynamic>;
-        final gross = (map['gross_volume_kes'] as num?)?.toInt() ?? 0;
-        final commRate =
-            (map['commission_rate_percent'] as num?)?.toInt() ?? 15;
-        final commFee = (gross * (commRate / 100.0)).round();
-        return _SettlementBatchRecord(
-          batchCode: map['batch_code'] as String? ?? 'STL-00',
-          vendorName: map['vendor_name'] as String? ?? 'Partner Vendor',
-          ordersCovered: map['orders_covered'] as String? ?? '0 Orders',
-          grossVolumeKes: gross,
-          commissionRatePercent: commRate,
-          commissionFeeKes: commFee,
-          netPayoutKes:
-              (map['net_payout_kes'] as num?)?.toInt() ?? (gross - commFee),
-          status: map['status'] as String? ?? 'Ready for Payout',
-          cycle: SettlementCycleFilter.week46,
-          disbursalMethod: map['disbursal_method'] as String? ?? 'M-Pesa B2B',
-          accountNumber: map['account_number'] as String? ?? '',
-          reconciledTimestamp:
-              map['reconciled_timestamp'] as String? ?? 'Audited',
-        );
-      }).toList();
+      final loaded =
+          (response as List).map((row) {
+            final map = row as Map<String, dynamic>;
+            final gross = (map['gross_volume_kes'] as num?)?.toInt() ?? 0;
+            final commRate =
+                (map['commission_rate_percent'] as num?)?.toInt() ?? 15;
+            final commFee = (gross * (commRate / 100.0)).round();
+            return _SettlementBatchRecord(
+              batchCode: map['batch_code'] as String? ?? 'STL-00',
+              vendorName: map['vendor_name'] as String? ?? 'Partner Vendor',
+              ordersCovered: map['orders_covered'] as String? ?? '0 Orders',
+              grossVolumeKes: gross,
+              commissionRatePercent: commRate,
+              commissionFeeKes: commFee,
+              netPayoutKes: (map['net_payout_kes'] as num?)?.toInt() ??
+                  (gross - commFee),
+              status: map['status'] as String? ?? 'Ready for Payout',
+              cycle: SettlementCycleFilter.week46,
+              disbursalMethod: map['disbursal_method'] as String? ?? 'M-Pesa B2B',
+              accountNumber: map['account_number'] as String? ?? '',
+              reconciledTimestamp: map['reconciled_timestamp'] as String? ??
+                  'Audited',
+            );
+          }).toList();
       setState(() {
         _batches = loaded;
       });
@@ -1189,7 +1190,8 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
       return AppEmptyState(
         icon: Icons.balance_rounded,
         title: 'Settlement Ledger Empty',
-        description: 'No matching settlement batches found. Create a payout batch or reset active filters.',
+        description:
+            'No matching settlement batches found. Create a payout batch or reset active filters.',
         actionLabel: '+ New Settlement Batch',
         actionIcon: Icons.post_add_rounded,
         onAction: () => setState(() => _showCreateBatchPanel = true),

@@ -148,22 +148,23 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
           .select('*')
           .order('created_at', ascending: false);
       if (!mounted) return;
-      final loaded = (response as List).map((row) {
-        final map = row as Map<String, dynamic>;
-        return _PaymentLedgerRow(
-          txId: map['tx_id'] as String? ?? 'TXN-00',
-          orderId: map['order_id'] as String? ?? '',
-          customerName: map['customer_name'] as String? ?? 'Customer',
-          channel: map['channel'] as String? ?? 'M-Pesa',
-          referenceCode: map['reference_code'] as String? ?? '',
-          amountKes: (map['amount_kes'] as num?)?.toInt() ?? 0,
-          balanceDueKes: (map['balance_due_kes'] as num?)?.toInt() ?? 0,
-          status: map['status'] as String? ?? 'Paid',
-          timestamp: map['timestamp'] as String? ?? '',
-          periodScope: PaymentPeriodFilter.today,
-          customerPhone: map['customer_phone'] as String? ?? '',
-        );
-      }).toList();
+      final loaded =
+          (response as List).map((row) {
+            final map = row as Map<String, dynamic>;
+            return _PaymentLedgerRow(
+              txId: map['tx_id'] as String? ?? 'TXN-00',
+              orderId: map['order_id'] as String? ?? '',
+              customerName: map['customer_name'] as String? ?? 'Customer',
+              channel: map['channel'] as String? ?? 'M-Pesa',
+              referenceCode: map['reference_code'] as String? ?? '',
+              amountKes: (map['amount_kes'] as num?)?.toInt() ?? 0,
+              balanceDueKes: (map['balance_due_kes'] as num?)?.toInt() ?? 0,
+              status: map['status'] as String? ?? 'Paid',
+              timestamp: map['timestamp'] as String? ?? '',
+              periodScope: PaymentPeriodFilter.today,
+              customerPhone: map['customer_phone'] as String? ?? '',
+            );
+          }).toList();
       setState(() {
         _rows = loaded;
       });
@@ -1113,7 +1114,8 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
       return AppEmptyState(
         icon: Icons.account_balance_wallet_outlined,
         title: 'Payment Ledger Empty',
-        description: 'No matching payment transactions found. Record an intake payment receipt or reset search criteria.',
+        description:
+            'No matching payment transactions found. Record an intake payment receipt or reset search criteria.',
         actionLabel: '+ Record Payment',
         actionIcon: Icons.add_card_rounded,
         onAction: () => setState(() => _showAddPaymentPanel = true),
