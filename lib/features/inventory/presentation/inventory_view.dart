@@ -372,6 +372,9 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
         .where((i) => i.category == 'Packaging')
         .fold<int>(0, (sum, i) => sum + i.quantity);
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 768.0;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Column(
@@ -397,44 +400,59 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
                   alignment: WrapAlignment.spaceBetween,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 36.0,
-                          height: 36.0,
-                          decoration: BoxDecoration(
-                            color: colors.freshSkyBlue.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Icon(
-                            Icons.inventory_2_outlined,
-                            size: 19.0,
-                            color: colors.freshSkyBlue,
-                          ),
-                        ),
-                        const SizedBox(width: 12.0),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Consumables, Solvents & Packaging Inventory',
-                              style: textTheme.titleMedium?.copyWith(
-                                fontSize: 17.0,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textPrimary,
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isMobile
+                            ? (screenWidth - 48.0).clamp(200.0, 500.0)
+                            : 600.0,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 36.0,
+                            height: 36.0,
+                            decoration: BoxDecoration(
+                              color: colors.freshSkyBlue.withValues(
+                                alpha: 0.12,
                               ),
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
-                            Text(
-                              'Detergents, dry-clean solvents, packaging rolls & auto-dosing ledger',
-                              style: textTheme.bodySmall?.copyWith(
-                                fontSize: 11.5,
-                                color: colors.textSecondary,
-                              ),
+                            child: Icon(
+                              Icons.inventory_2_outlined,
+                              size: 19.0,
+                              color: colors.freshSkyBlue,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Consumables, Solvents & Packaging Inventory',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontSize: 17.0,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  'Detergents, dry-clean solvents, packaging rolls & auto-dosing ledger',
+                                  maxLines: isMobile ? 2 : 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    fontSize: 11.5,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Wrap(
                       spacing: 8.0,
@@ -507,7 +525,9 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
                                 const SizedBox(width: 5.0),
                                 Text(
                                   lowStockItems.isNotEmpty
-                                      ? 'Auto-Replenish Low Stock (${lowStockItems.length})'
+                                      ? (isMobile
+                                            ? 'Replenish (${lowStockItems.length})'
+                                            : 'Auto-Replenish Low Stock (${lowStockItems.length})')
                                       : 'Stock Healthy',
                                   style: textTheme.labelSmall?.copyWith(
                                     color: Colors.white,

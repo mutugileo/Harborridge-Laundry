@@ -479,51 +479,67 @@ class _PaymentsViewState extends State<PaymentsView> {
     required AppMotion motion,
     required TextTheme textTheme,
   }) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 768.0;
+
     return Wrap(
       spacing: 12.0,
       runSpacing: 10.0,
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 38.0,
-              height: 38.0,
-              decoration: BoxDecoration(
-                color: colors.freshSkyBlue.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Icon(
-                Icons.account_balance_wallet_outlined,
-                size: 20.0,
-                color: colors.freshSkyBlue,
-              ),
-            ),
-            const SizedBox(width: 12.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Invoices & Payment Ledger',
-                  style: textTheme.titleLarge?.copyWith(
-                    fontSize: AppTypography.pageTitleSize,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isMobile
+                ? (screenWidth - 48.0).clamp(200.0, 500.0)
+                : 600.0,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38.0,
+                height: 38.0,
+                decoration: BoxDecoration(
+                  color: colors.freshSkyBlue.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10.0),
                 ),
-                const SizedBox(height: 2.0),
-                Text(
-                  'Official statement of accounts, M-Pesa reconciliations & receivables ledger',
-                  style: textTheme.bodySmall?.copyWith(
-                    fontSize: AppTypography.captionSize,
-                    color: colors.textSecondary,
-                  ),
+                child: Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 20.0,
+                  color: colors.freshSkyBlue,
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Invoices & Payment Ledger',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleLarge?.copyWith(
+                        fontSize: AppTypography.pageTitleSize,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2.0),
+                    Text(
+                      'Official statement of accounts, M-Pesa reconciliations & receivables ledger',
+                      maxLines: isMobile ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: AppTypography.captionSize,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         Wrap(
           spacing: 8.0,
@@ -1266,25 +1282,34 @@ class _PaymentsViewState extends State<PaymentsView> {
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.verified_outlined,
-                      size: 15.0,
-                      color: colors.accentGreen,
-                    ),
-                    const SizedBox(width: 6.0),
-                    Text(
-                      'HARBORRIDGE STATEMENT OF ACCOUNT • BILLING LEDGER',
-                      style: textTheme.labelSmall?.copyWith(
-                        fontSize: AppTypography.microSize,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: colors.harborNavy,
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.sizeOf(context).width - 64.0,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.verified_outlined,
+                        size: 15.0,
+                        color: colors.accentGreen,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6.0),
+                      Flexible(
+                        child: Text(
+                          'HARBORRIDGE STATEMENT OF ACCOUNT • BILLING LEDGER',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.labelSmall?.copyWith(
+                            fontSize: AppTypography.microSize,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: colors.harborNavy,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Text(
                   'Currency: KES • Statement Verified with M-Pesa Daraja & Cashier Till',
@@ -1347,8 +1372,10 @@ class _PaymentsViewState extends State<PaymentsView> {
                     color: colors.textSecondary,
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                Wrap(
+                  spacing: 14.0,
+                  runSpacing: 6.0,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       'Total Billed: KES ${_PaymentLedgerRow._formatAmount(totalFilterAmount + totalFilterBalance)}',
@@ -1358,7 +1385,6 @@ class _PaymentsViewState extends State<PaymentsView> {
                         color: colors.textPrimary,
                       ),
                     ),
-                    const SizedBox(width: 14.0),
                     Text(
                       'Cleared: KES ${_PaymentLedgerRow._formatAmount(totalFilterAmount)}',
                       style: textTheme.labelSmall?.copyWith(
@@ -1367,7 +1393,6 @@ class _PaymentsViewState extends State<PaymentsView> {
                         color: colors.accentGreen,
                       ),
                     ),
-                    const SizedBox(width: 14.0),
                     Text(
                       'Balance Due: KES ${_PaymentLedgerRow._formatAmount(totalFilterBalance)}',
                       style: textTheme.labelSmall?.copyWith(
@@ -1822,12 +1847,16 @@ class _PaymentsViewState extends State<PaymentsView> {
                       ),
                     ),
                     const SizedBox(width: 8.0),
-                    Text(
-                      rows[i].amountLabel,
-                      style: textTheme.labelMedium?.copyWith(
-                        fontSize: AppTypography.bodySize,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
+                    Flexible(
+                      child: Text(
+                        rows[i].amountLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.labelMedium?.copyWith(
+                          fontSize: AppTypography.bodySize,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
                       ),
                     ),
                   ],
@@ -1849,14 +1878,18 @@ class _PaymentsViewState extends State<PaymentsView> {
                       ),
                     ),
                     const SizedBox(width: 8.0),
-                    Text(
-                      rows[i].balanceLabel,
-                      style: textTheme.labelSmall?.copyWith(
-                        fontSize: AppTypography.captionSize,
-                        fontWeight: FontWeight.w600,
-                        color: rows[i].balanceDueKes == 0
-                            ? colors.accentGreen
-                            : colors.accentOrange,
+                    Flexible(
+                      child: Text(
+                        rows[i].balanceLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.labelSmall?.copyWith(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: FontWeight.w600,
+                          color: rows[i].balanceDueKes == 0
+                              ? colors.accentGreen
+                              : colors.accentOrange,
+                        ),
                       ),
                     ),
                   ],
@@ -1865,20 +1898,32 @@ class _PaymentsViewState extends State<PaymentsView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        _buildChannelBadge(rows[i].channel, colors, textTheme),
-                        const SizedBox(width: 6.0),
-                        Text(
-                          rows[i].referenceCode,
-                          style: textTheme.bodySmall?.copyWith(
-                            fontSize: AppTypography.microSize,
-                            color: colors.textSecondary,
+                    Expanded(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildChannelBadge(
+                            rows[i].channel,
+                            colors,
+                            textTheme,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6.0),
+                          Flexible(
+                            child: Text(
+                              rows[i].referenceCode,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodySmall?.copyWith(
+                                fontSize: AppTypography.microSize,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    if (rows[i].status != 'Paid')
+                    if (rows[i].status != 'Paid') ...[
+                      const SizedBox(width: 6.0),
                       InteractivePressScale(
                         onTap: () {
                           final idx = _rows.indexWhere(
@@ -1905,6 +1950,7 @@ class _PaymentsViewState extends State<PaymentsView> {
                           ),
                         ),
                       ),
+                    ],
                   ],
                 ),
               ],

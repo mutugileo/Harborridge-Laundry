@@ -516,6 +516,7 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
     AppMotion motion,
     WorkerAccount worker,
   ) {
+    final isMobile = MediaQuery.sizeOf(context).width < 768.0;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
       decoration: BoxDecoration(
@@ -546,27 +547,33 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
                 ),
               ),
               const SizedBox(width: 12.0),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Vendor & Branch Processing Network',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontSize: AppTypography.pageTitleSize,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Vendor & Branch Processing Network',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontSize: AppTypography.pageTitleSize,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    'Partner plant capacity, commission agreements, and real-time intake routing for ${worker.fullName}.',
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: AppTypography.captionSize,
-                      color: colors.textSecondary,
+                    const SizedBox(height: 2.0),
+                    Text(
+                      'Partner plant capacity, commission agreements, and real-time intake routing for ${worker.fullName}.',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: AppTypography.captionSize,
+                        color: colors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -596,8 +603,10 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
                   const SizedBox(width: 6.0),
                   Text(
                     _showOnboardPanel
-                        ? 'Close Onboarding Form'
-                        : '+ Onboard Partner Branch',
+                        ? (isMobile ? 'Close Form' : 'Close Onboarding Form')
+                        : (isMobile
+                              ? '+ Onboard Branch'
+                              : '+ Onboard Partner Branch'),
                     style: textTheme.labelSmall?.copyWith(
                       fontSize: AppTypography.captionSize,
                       fontWeight: FontWeight.w700,
@@ -1156,14 +1165,18 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
                                 : colors.freshSkyBlue,
                           ),
                           const SizedBox(width: 4.0),
-                          Text(
-                            'My Branch (${user.branch})',
-                            style: textTheme.labelSmall?.copyWith(
-                              fontSize: AppTypography.captionSize,
-                              fontWeight: FontWeight.w700,
-                              color: _onlyUserBranch
-                                  ? Colors.white
-                                  : colors.textPrimary,
+                          Flexible(
+                            child: Text(
+                              'My Branch (${user.branch})',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.labelSmall?.copyWith(
+                                fontSize: AppTypography.captionSize,
+                                fontWeight: FontWeight.w700,
+                                color: _onlyUserBranch
+                                    ? Colors.white
+                                    : colors.textPrimary,
+                              ),
                             ),
                           ),
                         ],

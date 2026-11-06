@@ -282,12 +282,14 @@ class _DashboardTopUtilityRow extends StatelessWidget {
 
     return Wrap(
       spacing: 12.0,
-      runSpacing: 12.0,
+      runSpacing: 10.0,
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
+        Wrap(
+          spacing: 10.0,
+          runSpacing: 6.0,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               'Operations Overview',
@@ -297,7 +299,6 @@ class _DashboardTopUtilityRow extends StatelessWidget {
                 color: colors.textPrimary,
               ),
             ),
-            const SizedBox(width: 14.0),
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 12.0,
@@ -330,8 +331,10 @@ class _DashboardTopUtilityRow extends StatelessWidget {
             ),
           ],
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 6.0,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             InteractivePressScale(
               onTap: onUpgradeTap,
@@ -367,7 +370,6 @@ class _DashboardTopUtilityRow extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12.0),
             SizedBox(
               width: 58.0,
               height: 28.0,
@@ -410,13 +412,9 @@ class _DashboardTopUtilityRow extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8.0),
             _UtilityIconCircle(icon: Icons.notifications_none_rounded),
-            const SizedBox(width: 6.0),
             _UtilityIconCircle(icon: Icons.settings_outlined),
-            const SizedBox(width: 6.0),
             _UtilityIconCircle(icon: Icons.wb_sunny_outlined),
-            const SizedBox(width: 8.0),
             _MiniCircleAvatar(
               initials: 'HR',
               backgroundColor: colors.harborGold,
@@ -501,8 +499,10 @@ class _DashboardFilterActionToolbar extends StatelessWidget {
             ),
           ),
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 6.0,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             InteractivePressScale(
               onTap: onExportTap,
@@ -536,7 +536,6 @@ class _DashboardFilterActionToolbar extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 10.0),
             InteractivePressScale(
               onTap: onNewOrderTap,
               child: Container(

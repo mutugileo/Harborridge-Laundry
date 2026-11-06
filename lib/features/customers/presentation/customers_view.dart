@@ -292,13 +292,15 @@ class _CustomersViewState extends State<CustomersView> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12.0),
+                          const SizedBox(width: 10.0),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   '${filtered[i].name} • ${filtered[i].id}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: textTheme.labelMedium?.copyWith(
                                     fontSize: 13.0,
                                     fontWeight: FontWeight.w700,
@@ -307,6 +309,8 @@ class _CustomersViewState extends State<CustomersView> {
                                 ),
                                 Text(
                                   '${filtered[i].phone} • ${filtered[i].branch}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: textTheme.bodySmall?.copyWith(
                                     fontSize: 11.0,
                                     color: colors.textSecondary,
@@ -315,26 +319,34 @@ class _CustomersViewState extends State<CustomersView> {
                               ],
                             ),
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                filtered[i].totalSpend,
-                                style: textTheme.labelMedium?.copyWith(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w800,
-                                  color: colors.textPrimary,
+                          const SizedBox(width: 8.0),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 120.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  filtered[i].totalSpend,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.labelMedium?.copyWith(
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.w800,
+                                    color: colors.textPrimary,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '${filtered[i].ordersCount} Orders • ${filtered[i].tier}',
-                                style: textTheme.labelSmall?.copyWith(
-                                  fontSize: 11.0,
-                                  color: colors.freshSkyBlue,
-                                  fontWeight: FontWeight.w600,
+                                Text(
+                                  '${filtered[i].ordersCount} Ords • ${filtered[i].tier}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.labelSmall?.copyWith(
+                                    fontSize: 11.0,
+                                    color: colors.freshSkyBlue,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),

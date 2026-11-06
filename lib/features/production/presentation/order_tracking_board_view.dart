@@ -100,9 +100,13 @@ class _OrderTrackingBoardViewState
     final colors = context.colors;
     final motion = context.motion;
     final textTheme = Theme.of(context).textTheme;
+    final isMobile = MediaQuery.sizeOf(context).width < 600.0;
 
     return Padding(
-      padding: const EdgeInsets.all(22.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12.0 : 22.0,
+        vertical: 16.0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -130,26 +134,33 @@ class _OrderTrackingBoardViewState
                     ),
                   ),
                   const SizedBox(width: 12.0),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Production Floor & Kanban Telemetry',
-                        style: textTheme.titleLarge?.copyWith(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Production Floor & Kanban Telemetry',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.titleLarge?.copyWith(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2.0),
-                      Text(
-                        'Live stage tracking across In Queue, Cleaning, Drying, and Fold stations • ${state.orders.length} active loads',
-                        style: textTheme.bodySmall?.copyWith(
-                          fontSize: AppTypography.captionSize,
-                          color: colors.textSecondary,
+                        const SizedBox(height: 2.0),
+                        Text(
+                          'Live stage tracking across In Queue, Cleaning, Drying, and Fold stations • ${state.orders.length} active loads',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            fontSize: AppTypography.captionSize,
+                            color: colors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -160,51 +171,57 @@ class _OrderTrackingBoardViewState
                 children: [
                   // Workflow Tabs matching production reference
                   Container(
+                    constraints: BoxConstraints(
+                      maxWidth: isMobile ? 280.0 : double.infinity,
+                    ),
                     padding: const EdgeInsets.all(3.0),
                     decoration: BoxDecoration(
                       color: colors.background,
                       borderRadius: BorderRadius.circular(99.0),
                       border: Border.all(color: colors.borderSubtle),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final tab in BoardWorkflowTab.values)
-                          InteractivePressScale(
-                            onTap: () {
-                              if (tab == BoardWorkflowTab.newOrder) {
-                                widget.onNewOrderIntake?.call();
-                              } else {
-                                setState(() => _selectedWorkflowTab = tab);
-                              }
-                            },
-                            child: AnimatedContainer(
-                              duration: motion.shortDuration,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 11.0,
-                                vertical: 5.0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _selectedWorkflowTab == tab
-                                    ? colors.harborNavy
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(99.0),
-                              ),
-                              child: Text(
-                                tab.label,
-                                style: textTheme.labelSmall?.copyWith(
-                                  fontSize: AppTypography.captionSize,
-                                  fontWeight: _selectedWorkflowTab == tab
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final tab in BoardWorkflowTab.values)
+                            InteractivePressScale(
+                              onTap: () {
+                                if (tab == BoardWorkflowTab.newOrder) {
+                                  widget.onNewOrderIntake?.call();
+                                } else {
+                                  setState(() => _selectedWorkflowTab = tab);
+                                }
+                              },
+                              child: AnimatedContainer(
+                                duration: motion.shortDuration,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 11.0,
+                                  vertical: 5.0,
+                                ),
+                                decoration: BoxDecoration(
                                   color: _selectedWorkflowTab == tab
-                                      ? Colors.white
-                                      : colors.textSecondary,
+                                      ? colors.harborNavy
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(99.0),
+                                ),
+                                child: Text(
+                                  tab.label,
+                                  style: textTheme.labelSmall?.copyWith(
+                                    fontSize: AppTypography.captionSize,
+                                    fontWeight: _selectedWorkflowTab == tab
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: _selectedWorkflowTab == tab
+                                        ? Colors.white
+                                        : colors.textSecondary,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(

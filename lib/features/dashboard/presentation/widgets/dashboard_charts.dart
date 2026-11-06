@@ -64,14 +64,15 @@ class OrderStatisticsChartCard extends StatelessWidget {
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 12.0,
+                runSpacing: 6.0,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   _LegendPillIndicator(
                     color: colors.freshSkyBlue,
                     label: 'Completed',
                   ),
-                  const SizedBox(width: 16.0),
                   _LegendPillIndicator(
                     color: colors.harborGold,
                     label: 'Pending',
@@ -166,12 +167,16 @@ class OrderStatisticsChartCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: points
                             .map(
-                              (point) => Text(
-                                point.dayLabel,
-                                style: textTheme.labelSmall?.copyWith(
-                                  fontSize: 11.0,
-                                  color: colors.textSecondary,
-                                  fontWeight: FontWeight.w500,
+                              (point) => Expanded(
+                                child: Text(
+                                  point.dayLabel,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  style: textTheme.labelSmall?.copyWith(
+                                    fontSize: 10.0,
+                                    color: colors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             )
@@ -264,12 +269,16 @@ class RealtimeRevenueChartCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: timeLabels
                       .map(
-                        (label) => Text(
-                          label,
-                          style: textTheme.labelSmall?.copyWith(
-                            fontSize: 11.0,
-                            color: colors.textSecondary,
-                            fontWeight: FontWeight.w500,
+                        (label) => Expanded(
+                          child: Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            style: textTheme.labelSmall?.copyWith(
+                              fontSize: 10.0,
+                              color: colors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       )

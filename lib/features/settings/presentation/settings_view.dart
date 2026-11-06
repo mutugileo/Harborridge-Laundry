@@ -237,6 +237,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     AppColors colors,
     AppMotion motion,
   ) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 768.0;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
       decoration: BoxDecoration(
@@ -250,52 +253,59 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36.0,
-                height: 36.0,
-                decoration: BoxDecoration(
-                  color: colors.harborNavy.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8.0),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isMobile
+                  ? (screenWidth - 68.0).clamp(200.0, 500.0)
+                  : 600.0,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36.0,
+                  height: 36.0,
+                  decoration: BoxDecoration(
+                    color: colors.harborNavy.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Icon(
+                    Icons.tune_rounded,
+                    size: 20.0,
+                    color: colors.harborNavy,
+                  ),
                 ),
-                child: Icon(
-                  Icons.tune_rounded,
-                  size: 20.0,
-                  color: colors.harborNavy,
-                ),
-              ),
-              const SizedBox(width: 12.0),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'System Configuration & Store Preferences',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'System Configuration & Store Preferences',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2.0),
-                    Text(
-                      'Configure Harborridge Laundry Service tax rules, SMS pickup alerts, and thermal tag printing.',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: 12.0,
-                        color: colors.textSecondary,
+                      const SizedBox(height: 2.0),
+                      Text(
+                        'Configure Harborridge Laundry Service tax rules, SMS pickup alerts, and thermal tag printing.',
+                        maxLines: isMobile ? 2 : 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 12.0,
+                          color: colors.textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Wrap(
             spacing: 8.0,
@@ -534,6 +544,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     AppColors colors,
     WorkerAccount worker,
   ) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 768.0;
+
     return Container(
       padding: const EdgeInsets.all(14.0),
       decoration: BoxDecoration(
@@ -547,78 +560,97 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 38.0,
-                height: 38.0,
-                decoration: BoxDecoration(
-                  color: colors.harborNavy,
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Center(
-                  child: Text(
-                    worker.initials,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: colors.harborGold,
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w800,
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isMobile
+                  ? (screenWidth - 48.0).clamp(200.0, 500.0)
+                  : 600.0,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 38.0,
+                  height: 38.0,
+                  decoration: BoxDecoration(
+                    color: colors.harborNavy,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      worker.initials,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colors.harborGold,
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12.0),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        worker.fullName,
-                        style: textTheme.labelMedium?.copyWith(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 6.0),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6.0,
-                          vertical: 2.0,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.freshSkyBlue.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(4.0),
-                        ),
-                        child: Text(
-                          worker.roleTitle,
-                          style: textTheme.labelSmall?.copyWith(
-                            fontSize: 9.0,
-                            fontWeight: FontWeight.w700,
-                            color: colors.freshSkyBlue,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              worker.fullName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.labelMedium?.copyWith(
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
                           ),
+                          const SizedBox(width: 6.0),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6.0,
+                              vertical: 2.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.freshSkyBlue.withValues(
+                                alpha: 0.12,
+                              ),
+                              borderRadius: BorderRadius.circular(4.0),
+                            ),
+                            child: Text(
+                              worker.roleTitle,
+                              style: textTheme.labelSmall?.copyWith(
+                                fontSize: 9.0,
+                                fontWeight: FontWeight.w700,
+                                color: colors.freshSkyBlue,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        '${worker.email} • Branch: ${worker.branch}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 11.0,
+                          color: colors.textSecondary,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    '${worker.email} • Branch: ${worker.branch}',
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 11.0,
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 6.0,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -651,7 +683,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   ],
                 ),
               ),
-              const SizedBox(width: 8.0),
               InteractivePressScale(
                 onTap: () => showChangeWorkerPinDialog(context),
                 child: Container(
@@ -710,13 +741,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         children: [
           Icon(icon, size: 15.0, color: colors.harborNavy),
           const SizedBox(width: 8.0),
-          Text(
-            title,
-            style: textTheme.labelSmall?.copyWith(
-              fontSize: 10.0,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.35,
-              color: colors.textSecondary,
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.labelSmall?.copyWith(
+                fontSize: 10.0,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.35,
+                color: colors.textSecondary,
+              ),
             ),
           ),
         ],
@@ -789,6 +824,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     TextTheme textTheme,
     AppColors colors,
   ) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 768.0;
+
     final specs = [
       (
         'Primary Facility Branch',
@@ -842,13 +880,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   color: colors.harborNavy,
                 ),
                 const SizedBox(width: 8.0),
-                Text(
-                  'MASTER SYSTEM SPECIFICATIONS & STORE PROFILE',
-                  style: textTheme.labelSmall?.copyWith(
-                    fontSize: 10.0,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.35,
-                    color: colors.textSecondary,
+                Expanded(
+                  child: Text(
+                    'MASTER SYSTEM SPECIFICATIONS & STORE PROFILE',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelSmall?.copyWith(
+                      fontSize: 10.0,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.35,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -862,31 +904,54 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 horizontal: 16.0,
                 vertical: 11.0,
               ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 200.0,
-                    child: Text(
-                      specs[i].$1,
-                      style: textTheme.labelSmall?.copyWith(
-                        fontSize: 11.0,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textSecondary,
-                      ),
+              child: isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          specs[i].$1,
+                          style: textTheme.labelSmall?.copyWith(
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w600,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 3.0),
+                        Text(
+                          specs[i].$2,
+                          style: textTheme.bodySmall?.copyWith(
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w500,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        SizedBox(
+                          width: 200.0,
+                          child: Text(
+                            specs[i].$1,
+                            style: textTheme.labelSmall?.copyWith(
+                              fontSize: 11.0,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            specs[i].$2,
+                            style: textTheme.bodySmall?.copyWith(
+                              fontSize: 12.0,
+                              fontWeight: FontWeight.w500,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      specs[i].$2,
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w500,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ],

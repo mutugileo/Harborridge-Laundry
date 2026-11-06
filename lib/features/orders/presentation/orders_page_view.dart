@@ -662,6 +662,28 @@ class _FilterDropdownPill<T> extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final isActive = value != null;
 
+    final constrainedItems = items.map((item) {
+      Widget content = item.child;
+      if (content is Text) {
+        content = Text(
+          content.data ?? '',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: content.style,
+        );
+      }
+      return DropdownMenuItem<T>(
+        key: item.key,
+        value: item.value,
+        enabled: item.enabled,
+        alignment: item.alignment,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 170.0),
+          child: content,
+        ),
+      );
+    }).toList();
+
     return Container(
       height: 32.0,
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -689,7 +711,7 @@ class _FilterDropdownPill<T> extends StatelessWidget {
             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
             color: isActive ? colors.brandPrimary : colors.textPrimary,
           ),
-          items: items,
+          items: constrainedItems,
           onChanged: onChanged,
         ),
       ),

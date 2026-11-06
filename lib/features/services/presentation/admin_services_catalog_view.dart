@@ -187,8 +187,10 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
   Widget _buildGarmentCatalogSection(BuildContext context, AppColors colors) {
     final textTheme = Theme.of(context).textTheme;
 
+    final isMobile = MediaQuery.sizeOf(context).width < 600.0;
+
     return Container(
-      padding: const EdgeInsets.all(22.0),
+      padding: EdgeInsets.all(isMobile ? 12.0 : 22.0),
       decoration: BoxDecoration(
         color: colors.cardBackground,
         borderRadius: BorderRadius.circular(14.0),
@@ -396,8 +398,10 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
       (sum, entry) => sum + entry.value,
     );
 
+    final isMobile = MediaQuery.sizeOf(context).width < 600.0;
+
     return Container(
-      padding: const EdgeInsets.all(22.0),
+      padding: EdgeInsets.all(isMobile ? 12.0 : 22.0),
       decoration: BoxDecoration(
         color: colors.cardBackground,
         borderRadius: BorderRadius.circular(14.0),
@@ -528,51 +532,81 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
             prefixIcon: Icons.phone_outlined,
           ),
           const SizedBox(height: 12.0),
-          Row(
-            children: [
-              Expanded(
-                child: _IntakeDropdownField(
-                  label: 'Vendor / Branch',
-                  value: _selectedBranch,
-                  options: _branches,
-                  onChanged: (val) => setState(() => _selectedBranch = val),
+          if (isMobile) ...[
+            _IntakeDropdownField(
+              label: 'Vendor / Branch',
+              value: _selectedBranch,
+              options: _branches,
+              onChanged: (val) => setState(() => _selectedBranch = val),
+            ),
+            const SizedBox(height: 12.0),
+            _IntakeDropdownField(
+              label: 'Delivery Method',
+              value: _selectedDeliveryMethod,
+              options: _deliveryMethods,
+              onChanged: (val) => setState(() => _selectedDeliveryMethod = val),
+            ),
+            const SizedBox(height: 12.0),
+            _IntakeDropdownField(
+              label: 'Assigned Rider / Staff',
+              value: _selectedRider,
+              options: _riders,
+              onChanged: (val) => setState(() => _selectedRider = val),
+            ),
+            const SizedBox(height: 12.0),
+            _IntakeDropdownField(
+              label: 'Payment Status',
+              value: _selectedPaymentStatus,
+              options: const ['Paid', 'Partial', 'Unpaid'],
+              onChanged: (val) => setState(() => _selectedPaymentStatus = val),
+            ),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(
+                  child: _IntakeDropdownField(
+                    label: 'Vendor / Branch',
+                    value: _selectedBranch,
+                    options: _branches,
+                    onChanged: (val) => setState(() => _selectedBranch = val),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10.0),
-              Expanded(
-                child: _IntakeDropdownField(
-                  label: 'Delivery Method',
-                  value: _selectedDeliveryMethod,
-                  options: _deliveryMethods,
-                  onChanged: (val) =>
-                      setState(() => _selectedDeliveryMethod = val),
+                const SizedBox(width: 10.0),
+                Expanded(
+                  child: _IntakeDropdownField(
+                    label: 'Delivery Method',
+                    value: _selectedDeliveryMethod,
+                    options: _deliveryMethods,
+                    onChanged: (val) =>
+                        setState(() => _selectedDeliveryMethod = val),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12.0),
-          Row(
-            children: [
-              Expanded(
-                child: _IntakeDropdownField(
-                  label: 'Assigned Rider / Staff',
-                  value: _selectedRider,
-                  options: _riders,
-                  onChanged: (val) => setState(() => _selectedRider = val),
+              ],
+            ),
+            const SizedBox(height: 12.0),
+            Row(
+              children: [
+                Expanded(
+                  child: _IntakeDropdownField(
+                    label: 'Assigned Rider / Staff',
+                    value: _selectedRider,
+                    options: _riders,
+                    onChanged: (val) => setState(() => _selectedRider = val),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10.0),
-              Expanded(
-                child: _IntakeDropdownField(
-                  label: 'Payment Status',
-                  value: _selectedPaymentStatus,
-                  options: const ['Paid', 'Partial', 'Unpaid'],
-                  onChanged: (val) =>
-                      setState(() => _selectedPaymentStatus = val),
+                const SizedBox(width: 10.0),
+                Expanded(
+                  child: _IntakeDropdownField(
+                    label: 'Payment Status',
+                    value: _selectedPaymentStatus,
+                    options: const ['Paid', 'Partial', 'Unpaid'],
+                    onChanged: (val) =>
+                        setState(() => _selectedPaymentStatus = val),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16.0),
           Divider(color: colors.borderSubtle, height: 1.0),
           const SizedBox(height: 14.0),
@@ -644,6 +678,8 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
                               children: [
                                 Text(
                                   entry.key.displayName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: textTheme.bodySmall?.copyWith(
                                     fontSize: 12.0,
                                     fontWeight: FontWeight.w600,
@@ -652,6 +688,8 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
                                 ),
                                 Text(
                                   'KES ${entry.key.defaultRate.toStringAsFixed(0)} × ${entry.value} • [$_selectedServiceType]',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: textTheme.labelSmall?.copyWith(
                                     fontSize: 11.0,
                                     color: colors.textSecondary,
@@ -755,13 +793,18 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Garments Sub Total:',
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: 12.0,
-                        color: colors.textSecondary,
+                    Expanded(
+                      child: Text(
+                        'Garments Sub Total:',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 12.0,
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8.0),
                     Text(
                       'KES ${itemsSubTotal.toStringAsFixed(2)}',
                       style: textTheme.bodySmall?.copyWith(
@@ -776,13 +819,18 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Service Addons:',
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: 12.0,
-                        color: colors.textSecondary,
+                    Expanded(
+                      child: Text(
+                        'Service Addons:',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 12.0,
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8.0),
                     Text(
                       'KES ${addonsTotal.toStringAsFixed(2)}',
                       style: textTheme.bodySmall?.copyWith(
@@ -799,14 +847,19 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Total Amount:',
-                      style: textTheme.titleSmall?.copyWith(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.w700,
-                        color: colors.harborNavy,
+                    Expanded(
+                      child: Text(
+                        'Total Amount:',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleSmall?.copyWith(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w700,
+                          color: colors.harborNavy,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8.0),
                     Text(
                       'KES ${grandTotal.toStringAsFixed(2)}',
                       style: textTheme.titleMedium?.copyWith(
@@ -852,7 +905,8 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
                 ),
                 alignment: Alignment.center,
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(
                       Icons.receipt_long_rounded,
@@ -860,12 +914,18 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
                       color: Colors.white,
                     ),
                     const SizedBox(width: 8.0),
-                    Text(
-                      'Create Order & View Invoice',
-                      style: textTheme.labelMedium?.copyWith(
-                        color: Colors.white,
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w700,
+                    Flexible(
+                      child: Text(
+                        isMobile
+                            ? 'Create Order & Invoice'
+                            : 'Create Order & View Invoice',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.labelMedium?.copyWith(
+                          color: Colors.white,
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -983,46 +1043,50 @@ class _IntakeDropdownField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 5.0),
-        PopupMenuButton<String>(
-          onSelected: onChanged,
-          itemBuilder: (context) => options
-              .map(
-                (opt) => PopupMenuItem<String>(
-                  value: opt,
-                  child: Text(opt, style: textTheme.bodySmall),
-                ),
-              )
-              .toList(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10.0,
-              vertical: 9.0,
-            ),
-            decoration: BoxDecoration(
-              color: colors.background,
-              borderRadius: BorderRadius.circular(8.0),
-              border: Border.all(color: colors.borderSubtle),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
+        SizedBox(
+          width: double.infinity,
+          child: PopupMenuButton<String>(
+            onSelected: onChanged,
+            itemBuilder: (context) => options
+                .map(
+                  (opt) => PopupMenuItem<String>(
+                    value: opt,
+                    child: Text(opt, style: textTheme.bodySmall),
+                  ),
+                )
+                .toList(),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10.0,
+                vertical: 9.0,
+              ),
+              decoration: BoxDecoration(
+                color: colors.background,
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(color: colors.borderSubtle),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
                     ),
                   ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 16.0,
-                  color: colors.textSecondary,
-                ),
-              ],
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 16.0,
+                    color: colors.textSecondary,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1072,12 +1136,16 @@ class _AddonToggleChip extends StatelessWidget {
               color: isSelected ? colors.freshSkyBlue : colors.textSecondary,
             ),
             const SizedBox(width: 6.0),
-            Text(
-              label,
-              style: textTheme.labelSmall?.copyWith(
-                fontSize: 11.0,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? colors.harborNavy : colors.textSecondary,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.labelSmall?.copyWith(
+                  fontSize: 11.0,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? colors.harborNavy : colors.textSecondary,
+                ),
               ),
             ),
           ],

@@ -440,57 +440,67 @@ class _SettlementsViewState extends State<SettlementsView> {
     required AppMotion motion,
     required TextTheme textTheme,
   }) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 768.0;
+
     return Wrap(
       spacing: 12.0,
       runSpacing: 10.0,
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 38.0,
-              height: 38.0,
-              decoration: BoxDecoration(
-                color: colors.freshSkyBlue.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10.0),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isMobile
+                ? (screenWidth - 48.0).clamp(200.0, 500.0)
+                : 600.0,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38.0,
+                height: 38.0,
+                decoration: BoxDecoration(
+                  color: colors.freshSkyBlue.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Icon(
+                  Icons.balance_rounded,
+                  size: 20.0,
+                  color: colors.freshSkyBlue,
+                ),
               ),
-              child: Icon(
-                Icons.balance_rounded,
-                size: 20.0,
-                color: colors.freshSkyBlue,
-              ),
-            ),
-            const SizedBox(width: 12.0),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Vendor Payouts & Commission Settlements',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Vendor Payouts & Commission Settlements',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    'Automated commission split, escrow disbursements & partner payout statement',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 12.0,
-                      color: colors.textSecondary,
+                    const SizedBox(height: 2.0),
+                    Text(
+                      'Automated commission split, escrow disbursements & partner payout statement',
+                      maxLines: isMobile ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: 12.0,
+                        color: colors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         Wrap(
           spacing: 8.0,
@@ -1300,25 +1310,34 @@ class _SettlementsViewState extends State<SettlementsView> {
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.verified_outlined,
-                      size: 15.0,
-                      color: colors.accentGreen,
-                    ),
-                    const SizedBox(width: 6.0),
-                    Text(
-                      'HARBORRIDGE SETTLEMENT STATEMENT & VENDOR REMITTANCE LEDGER',
-                      style: textTheme.labelSmall?.copyWith(
-                        fontSize: AppTypography.microSize,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: colors.harborNavy,
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.sizeOf(context).width - 64.0,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.verified_outlined,
+                        size: 15.0,
+                        color: colors.accentGreen,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6.0),
+                      Flexible(
+                        child: Text(
+                          'HARBORRIDGE SETTLEMENT STATEMENT & VENDOR REMITTANCE LEDGER',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.labelSmall?.copyWith(
+                            fontSize: AppTypography.microSize,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: colors.harborNavy,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 Text(
                   'Currency: KES • Authorized Commission Split via Central Escrow Pool',
@@ -1824,49 +1843,61 @@ class _SettlementsViewState extends State<SettlementsView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6.0,
-                            vertical: 2.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.harborNavy,
-                            borderRadius: BorderRadius.circular(4.0),
-                          ),
-                          child: Text(
-                            batches[i].batchCode,
-                            style: textTheme.labelSmall?.copyWith(
-                              fontSize: AppTypography.microSize,
-                              fontWeight: FontWeight.w800,
-                              color: colors.harborGold,
+                    Expanded(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6.0,
+                              vertical: 2.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.harborNavy,
+                              borderRadius: BorderRadius.circular(4.0),
+                            ),
+                            child: Text(
+                              batches[i].batchCode,
+                              style: textTheme.labelSmall?.copyWith(
+                                fontSize: AppTypography.microSize,
+                                fontWeight: FontWeight.w800,
+                                color: colors.harborGold,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8.0),
-                        InkWell(
-                          onTap: () => widget.onFilterOrdersByBranch?.call(
-                            batches[i].vendorName,
-                          ),
-                          child: Text(
-                            '${batches[i].vendorName} →',
-                            style: textTheme.labelMedium?.copyWith(
-                              fontSize: AppTypography.captionSize,
-                              fontWeight: FontWeight.w700,
-                              color: colors.freshSkyBlue,
-                              decoration: TextDecoration.underline,
+                          const SizedBox(width: 8.0),
+                          Flexible(
+                            child: InkWell(
+                              onTap: () => widget.onFilterOrdersByBranch?.call(
+                                batches[i].vendorName,
+                              ),
+                              child: Text(
+                                '${batches[i].vendorName} →',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.labelMedium?.copyWith(
+                                  fontSize: AppTypography.captionSize,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.freshSkyBlue,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Text(
-                      batches[i].netPayout,
-                      style: textTheme.labelMedium?.copyWith(
-                        fontSize: AppTypography.bodySize,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
+                    const SizedBox(width: 8.0),
+                    Flexible(
+                      child: Text(
+                        batches[i].netPayout,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.labelMedium?.copyWith(
+                          fontSize: AppTypography.bodySize,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
                       ),
                     ),
                   ],
@@ -1887,12 +1918,16 @@ class _SettlementsViewState extends State<SettlementsView> {
                       ),
                     ),
                     const SizedBox(width: 8.0),
-                    Text(
-                      'Gross: ${batches[i].grossVolume}',
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: AppTypography.captionSize,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textSecondary,
+                    Flexible(
+                      child: Text(
+                        'Gross: ${batches[i].grossVolume}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ),
                   ],
@@ -1901,23 +1936,31 @@ class _SettlementsViewState extends State<SettlementsView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.account_balance_outlined,
-                          size: 13.0,
-                          color: colors.textSecondary,
-                        ),
-                        const SizedBox(width: 4.0),
-                        Text(
-                          '${batches[i].disbursalMethod} • ${batches[i].accountNumber}',
-                          style: textTheme.bodySmall?.copyWith(
-                            fontSize: AppTypography.microSize,
+                    Expanded(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.account_balance_outlined,
+                            size: 13.0,
                             color: colors.textSecondary,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4.0),
+                          Flexible(
+                            child: Text(
+                              '${batches[i].disbursalMethod} • ${batches[i].accountNumber}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodySmall?.copyWith(
+                                fontSize: AppTypography.microSize,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 6.0),
                     if (batches[i].status != 'Settled')
                       InteractivePressScale(
                         onTap: () {

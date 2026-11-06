@@ -108,6 +108,8 @@ class _StaffViewState extends ConsumerState<StaffView> {
     final colors = context.colors;
     final motion = context.motion;
     final textTheme = Theme.of(context).textTheme;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 768.0;
 
     final filteredWorkers = _roleFilter == 'All'
         ? authState.workers
@@ -140,50 +142,73 @@ class _StaffViewState extends ConsumerState<StaffView> {
                   alignment: WrapAlignment.spaceBetween,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Staff Roster & Role-Based Menu Rights',
-                          style: textTheme.titleMedium?.copyWith(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        Text(
-                          'Add new workers, configure their allowed vs. excepted menus, and switch sessions with one click.',
-                          style: textTheme.bodySmall?.copyWith(
-                            fontSize: 12.0,
-                            color: colors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0,
-                            vertical: 7.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.freshSkyBlue.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(99.0),
-                          ),
-                          child: Text(
-                            'Active Session: ${authState.currentWorker.fullName} (${authState.currentWorker.allowedModulesCount}/${AppModuleKey.values.length} menus)',
-                            style: textTheme.labelSmall?.copyWith(
-                              fontSize: 11.0,
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isMobile
+                            ? (screenWidth - 48.0).clamp(200.0, 500.0)
+                            : 600.0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Staff Roster & Role-Based Menu Rights',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontSize: 18.0,
                               fontWeight: FontWeight.w700,
-                              color: colors.harborNavy,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4.0),
+                          Text(
+                            'Add new workers, configure their allowed vs. excepted menus, and switch sessions with one click.',
+                            maxLines: isMobile ? 2 : 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.bodySmall?.copyWith(
+                              fontSize: 12.0,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: isMobile
+                                ? (screenWidth - 48.0).clamp(180.0, 400.0)
+                                : 400.0,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 7.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.freshSkyBlue.withValues(
+                                alpha: 0.12,
+                              ),
+                              borderRadius: BorderRadius.circular(99.0),
+                            ),
+                            child: Text(
+                              'Active Session: ${authState.currentWorker.fullName} (${authState.currentWorker.allowedModulesCount}/${AppModuleKey.values.length} menus)',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.labelSmall?.copyWith(
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w700,
+                                color: colors.harborNavy,
+                              ),
                             ),
                           ),
                         ),
-                        if (widget.onOpenLoginPortal != null) ...[
-                          const SizedBox(width: 10.0),
+                        if (widget.onOpenLoginPortal != null)
                           InteractivePressScale(
                             onTap: widget.onOpenLoginPortal,
                             child: Container(
@@ -216,7 +241,6 @@ class _StaffViewState extends ConsumerState<StaffView> {
                               ),
                             ),
                           ),
-                        ],
                       ],
                     ),
                   ],
@@ -723,78 +747,83 @@ class _WorkerPermissionsCard extends StatelessWidget {
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 38.0,
-                    height: 38.0,
-                    decoration: BoxDecoration(
-                      color: isCurrentSession
-                          ? colors.harborNavy
-                          : colors.freshSkyBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      worker.initials,
-                      style: textTheme.labelMedium?.copyWith(
-                        color: Colors.white,
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w800,
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width - 64.0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 38.0,
+                      height: 38.0,
+                      decoration: BoxDecoration(
+                        color: isCurrentSession
+                            ? colors.harborNavy
+                            : colors.freshSkyBlue,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        worker.initials,
+                        style: textTheme.labelMedium?.copyWith(
+                          color: Colors.white,
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12.0),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: 8.0,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              worker.fullName,
-                              style: textTheme.titleSmall?.copyWith(
-                                fontSize: 14.0,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7.0,
-                                vertical: 2.0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.harborGold.withValues(
-                                  alpha: 0.22,
-                                ),
-                                borderRadius: BorderRadius.circular(99.0),
-                              ),
-                              child: Text(
-                                worker.id,
-                                style: textTheme.labelSmall?.copyWith(
-                                  fontSize: 10.0,
+                    const SizedBox(width: 12.0),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 8.0,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                worker.fullName,
+                                style: textTheme.titleSmall?.copyWith(
+                                  fontSize: 14.0,
                                   fontWeight: FontWeight.w700,
-                                  color: colors.harborNavy,
+                                  color: colors.textPrimary,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          '${worker.roleTitle} • ${worker.branch} • ${worker.email} • PIN: ${worker.pin}',
-                          style: textTheme.labelSmall?.copyWith(
-                            fontSize: 11.0,
-                            color: colors.textSecondary,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7.0,
+                                  vertical: 2.0,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.harborGold.withValues(
+                                    alpha: 0.22,
+                                  ),
+                                  borderRadius: BorderRadius.circular(99.0),
+                                ),
+                                child: Text(
+                                  worker.id,
+                                  style: textTheme.labelSmall?.copyWith(
+                                    fontSize: 10.0,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.harborNavy,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          Text(
+                            '${worker.roleTitle} • ${worker.branch} • ${worker.email} • PIN: ${worker.pin}',
+                            style: textTheme.labelSmall?.copyWith(
+                              fontSize: 11.0,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Wrap(
                 spacing: 8.0,

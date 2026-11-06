@@ -144,6 +144,9 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
               .where((b) => b.branch == _selectedBranchFilter)
               .toList();
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 768.0;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Column(
@@ -169,44 +172,59 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
                   alignment: WrapAlignment.spaceBetween,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 36.0,
-                          height: 36.0,
-                          decoration: BoxDecoration(
-                            color: colors.freshSkyBlue.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Icon(
-                            Icons.insights_rounded,
-                            size: 19.0,
-                            color: colors.freshSkyBlue,
-                          ),
-                        ),
-                        const SizedBox(width: 12.0),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Executive Operations & Financial Reports',
-                              style: textTheme.titleMedium?.copyWith(
-                                fontSize: 17.0,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textPrimary,
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isMobile
+                            ? (screenWidth - 48.0).clamp(200.0, 500.0)
+                            : 600.0,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 36.0,
+                            height: 36.0,
+                            decoration: BoxDecoration(
+                              color: colors.freshSkyBlue.withValues(
+                                alpha: 0.12,
                               ),
+                              borderRadius: BorderRadius.circular(8.0),
                             ),
-                            Text(
-                              'Turnaround SLA compliance, service mix revenue & branch margins • $_selectedPeriod',
-                              style: textTheme.bodySmall?.copyWith(
-                                fontSize: 11.5,
-                                color: colors.textSecondary,
-                              ),
+                            child: Icon(
+                              Icons.insights_rounded,
+                              size: 19.0,
+                              color: colors.freshSkyBlue,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Executive Operations & Financial Reports',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontSize: 17.0,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  'Turnaround SLA compliance, service mix revenue & branch margins • $_selectedPeriod',
+                                  maxLines: isMobile ? 2 : 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    fontSize: 11.5,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Wrap(
                       spacing: 6.0,
@@ -576,22 +594,22 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 4.0,
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Expanded(
-                          child: Text(
-                            item.service,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: textTheme.titleSmall?.copyWith(
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textPrimary,
-                            ),
+                        Text(
+                          item.service,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.titleSmall?.copyWith(
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
                           ),
                         ),
-                        const SizedBox(width: 8.0),
                         Text(
                           '${item.revenue} • ${item.ordersCount} (${(item.share * 100).round()}%)',
                           style: textTheme.labelMedium?.copyWith(

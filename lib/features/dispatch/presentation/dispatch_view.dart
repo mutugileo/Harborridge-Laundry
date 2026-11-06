@@ -389,7 +389,7 @@ class _DispatchViewState extends State<DispatchView> {
                         color: colors.freshSkyBlue,
                       ),
                       const SizedBox(width: 8.0),
-                      Flexible(
+                      Expanded(
                         child: Text(
                           'LIVE FLEET RUNS & DISPATCH HANDOFF MANIFEST',
                           maxLines: 1,
@@ -402,7 +402,7 @@ class _DispatchViewState extends State<DispatchView> {
                           ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8.0),
                       Text(
                         '${filteredRuns.length} Active Route Entries',
                         style: textTheme.labelSmall?.copyWith(
@@ -476,6 +476,8 @@ class _DispatchViewState extends State<DispatchView> {
     AppColors colors,
     AppMotion motion,
   ) {
+    final isMobile = MediaQuery.sizeOf(context).width < 768.0;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
       decoration: BoxDecoration(
@@ -506,27 +508,33 @@ class _DispatchViewState extends State<DispatchView> {
                 ),
               ),
               const SizedBox(width: 12.0),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Pickup & Delivery Dispatch Command',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontSize: AppTypography.pageTitleSize,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Pickup & Delivery Dispatch Command',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontSize: AppTypography.pageTitleSize,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    'Live fleet courier routing, pickup manifests, and customer handover tracking.',
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: AppTypography.captionSize,
-                      color: colors.textSecondary,
+                    const SizedBox(height: 2.0),
+                    Text(
+                      'Live fleet courier routing, pickup manifests, and customer handover tracking.',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: AppTypography.captionSize,
+                        color: colors.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -557,8 +565,10 @@ class _DispatchViewState extends State<DispatchView> {
                   const SizedBox(width: 6.0),
                   Text(
                     _showSchedulePanel
-                        ? 'Close Dispatch Form'
-                        : '+ Schedule Dispatch Run',
+                        ? (isMobile ? 'Close Form' : 'Close Dispatch Form')
+                        : (isMobile
+                              ? '+ Schedule Run'
+                              : '+ Schedule Dispatch Run'),
                     style: textTheme.labelSmall?.copyWith(
                       fontSize: AppTypography.captionSize,
                       fontWeight: FontWeight.w700,
@@ -1542,24 +1552,32 @@ class _DispatchViewState extends State<DispatchView> {
                 ),
               ),
               const SizedBox(width: 8.0),
-              InkWell(
-                onTap: () => widget.onOpenOrderDetails?.call(run.orderId),
-                child: Text(
-                  run.orderId,
-                  style: textTheme.labelSmall?.copyWith(
-                    fontSize: AppTypography.captionSize,
-                    fontWeight: FontWeight.w700,
-                    color: colors.freshSkyBlue,
-                    decoration: TextDecoration.underline,
+              Flexible(
+                child: InkWell(
+                  onTap: () => widget.onOpenOrderDetails?.call(run.orderId),
+                  child: Text(
+                    run.orderId,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelSmall?.copyWith(
+                      fontSize: AppTypography.captionSize,
+                      fontWeight: FontWeight.w700,
+                      color: colors.freshSkyBlue,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                'ETA: ${run.etaWindow}',
-                style: textTheme.bodySmall?.copyWith(
-                  fontSize: AppTypography.captionSize,
-                  color: colors.textSecondary,
+              const SizedBox(width: 8.0),
+              Flexible(
+                child: Text(
+                  'ETA: ${run.etaWindow}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    fontSize: AppTypography.captionSize,
+                    color: colors.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -1590,12 +1608,16 @@ class _DispatchViewState extends State<DispatchView> {
                 color: colors.freshSkyBlue,
               ),
               const SizedBox(width: 4.0),
-              Text(
-                '${run.riderName} • ${run.branch}',
-                style: textTheme.bodySmall?.copyWith(
-                  fontSize: AppTypography.captionSize,
-                  fontWeight: FontWeight.w600,
-                  color: colors.harborNavy,
+              Expanded(
+                child: Text(
+                  '${run.riderName} • ${run.branch}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: FontWeight.w600,
+                    color: colors.harborNavy,
+                  ),
                 ),
               ),
             ],
