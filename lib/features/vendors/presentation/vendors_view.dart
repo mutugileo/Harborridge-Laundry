@@ -4,6 +4,8 @@ import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
+import 'package:laundry_ridge/core/supabase/supabase_config.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 class _VendorBranchRecord {
@@ -66,74 +68,7 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
   late final TextEditingController _commissionController;
   late final TextEditingController _searchController;
 
-  late List<_VendorBranchRecord> _branches = const [
-    _VendorBranchRecord(
-      code: 'VND-01',
-      branchName: 'LaundryGo Nairobi',
-      managerName: 'Grace Wanjiku',
-      location: 'CBD • Kenyatta Ave Hub',
-      activeOrders: 14,
-      utilizationRatio: 0.94,
-      commissionRate: '15% Platform Split',
-      isOnline: true,
-      assignedWorkersCount: 6,
-    ),
-    _VendorBranchRecord(
-      code: 'VND-02',
-      branchName: 'Harborridge Main',
-      managerName: 'Elena Rostova',
-      location: 'Flagship Plant • Industrial Area',
-      activeOrders: 28,
-      utilizationRatio: 0.88,
-      commissionRate: 'Owned Flagship (0%)',
-      isOnline: true,
-      assignedWorkersCount: 12,
-    ),
-    _VendorBranchRecord(
-      code: 'VND-03',
-      branchName: 'LaundryGo Westlands',
-      managerName: 'David Ochieng',
-      location: 'Westlands • Ring Road Parklands',
-      activeOrders: 9,
-      utilizationRatio: 0.78,
-      commissionRate: '15% Platform Split',
-      isOnline: true,
-      assignedWorkersCount: 5,
-    ),
-    _VendorBranchRecord(
-      code: 'VND-04',
-      branchName: 'LaundryGo Kilimani',
-      managerName: 'Amina Hassan',
-      location: 'Kilimani • Yaya Centre Dropoff',
-      activeOrders: 11,
-      utilizationRatio: 0.82,
-      commissionRate: '12% Partner Split',
-      isOnline: true,
-      assignedWorkersCount: 4,
-    ),
-    _VendorBranchRecord(
-      code: 'VND-05',
-      branchName: 'Harborridge Kilimani',
-      managerName: 'Marcus Vance',
-      location: 'Kilimani • Argwings Kodhek Plaza',
-      activeOrders: 8,
-      utilizationRatio: 0.70,
-      commissionRate: 'Owned Branch (0%)',
-      isOnline: false,
-      assignedWorkersCount: 3,
-    ),
-    _VendorBranchRecord(
-      code: 'VND-06',
-      branchName: 'Ridge Eco-Cleaners',
-      managerName: 'Samuel Karanja',
-      location: 'Karen • Waterfront Processing Plant',
-      activeOrders: 16,
-      utilizationRatio: 0.85,
-      commissionRate: '18% Specialty Split',
-      isOnline: true,
-      assignedWorkersCount: 7,
-    ),
-  ];
+  late List<_VendorBranchRecord> _branches = const [];
 
   @override
   void initState() {
@@ -143,6 +78,38 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
     _locationController = TextEditingController();
     _commissionController = TextEditingController(text: '15% Partner Split');
     _searchController = TextEditingController();
+    _loadSupabaseVendors();
+  }
+
+  Future<void> _loadSupabaseVendors() async {
+    final client = ref.read(supabaseClientProvider);
+    if (client == null) return;
+    try {
+      final response = await client
+          .from('partner_vendors')
+          .select('*')
+          .order('created_at', ascending: false);
+      if (!mounted) return;
+      final loaded = (response as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        return _VendorBranchRecord(
+          code: map['code'] as String? ?? 'VND-00',
+          branchName: map['branch_name'] as String? ?? 'Branch',
+          managerName: map['manager_name'] as String? ?? 'Manager',
+          location: map['location'] as String? ?? 'Location',
+          activeOrders: (map['active_orders'] as num?)?.toInt() ?? 0,
+          utilizationRatio:
+              (map['utilization_ratio'] as num?)?.toDouble() ?? 0.8,
+          commissionRate: map['commission_rate'] as String? ?? '15% Split',
+          isOnline: map['is_online'] as bool? ?? true,
+          assignedWorkersCount:
+              (map['assigned_workers_count'] as num?)?.toInt() ?? 1,
+        );
+      }).toList();
+      setState(() {
+        _branches = loaded;
+      });
+    } catch (_) {}
   }
 
   @override
@@ -427,55 +394,21 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
 
                 // Manifest Rows
                 if (filteredBranches.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(36.0),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.search_off_outlined,
-                            size: 32.0,
-                            color: colors.textSecondary,
-                          ),
-                          const SizedBox(height: 8.0),
-                          Text(
-                            'No vendor hubs match the selected filters for ${currentWorker.fullName}',
-                            style: textTheme.bodySmall?.copyWith(
-                              fontSize: AppTypography.captionSize,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 10.0),
-                          InteractivePressScale(
-                            onTap: () => setState(() {
-                              _selectedStatusFilter = 'All Vendors';
-                              _onlyUserBranch = false;
-                              _searchController.clear();
-                              _searchQuery = '';
-                            }),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                                vertical: 6.0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.freshSkyBlue,
-                                borderRadius: BorderRadius.circular(6.0),
-                              ),
-                              child: const Text(
-                                'Reset Vendor Filters',
-                                style: TextStyle(
-                                  fontSize: 11.0,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  AppEmptyState(
+                    icon: Icons.storefront_outlined,
+                    title: 'No Partner Vendors Enrolled',
+                    description:
+                        'No vendor hubs match the selected filters for ${currentWorker.fullName}. Onboard a partner branch to route wash loads.',
+                    actionLabel: '+ Onboard Branch',
+                    actionIcon: Icons.add_business_rounded,
+                    onAction: () => setState(() => _showOnboardPanel = true),
+                    secondaryActionLabel: 'Reset Filters',
+                    onSecondaryAction: () => setState(() {
+                      _selectedStatusFilter = 'All Vendors';
+                      _onlyUserBranch = false;
+                      _searchController.clear();
+                      _searchQuery = '';
+                    }),
                   )
                 else
                   LayoutBuilder(

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
+import 'package:laundry_ridge/core/supabase/supabase_config.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 enum SettlementStatusFilter {
@@ -92,16 +95,16 @@ class _SettlementBatchRecord {
   }
 }
 
-class SettlementsView extends StatefulWidget {
+class SettlementsView extends ConsumerStatefulWidget {
   const SettlementsView({super.key, this.onFilterOrdersByBranch});
 
   final ValueChanged<String>? onFilterOrdersByBranch;
 
   @override
-  State<SettlementsView> createState() => _SettlementsViewState();
+  ConsumerState<SettlementsView> createState() => _SettlementsViewState();
 }
 
-class _SettlementsViewState extends State<SettlementsView> {
+class _SettlementsViewState extends ConsumerState<SettlementsView> {
   String _searchQuery = '';
   SettlementStatusFilter _selectedStatus = SettlementStatusFilter.all;
   String _selectedBranch = 'All Branches';
@@ -126,64 +129,7 @@ class _SettlementsViewState extends State<SettlementsView> {
     'Harborridge Central Hub',
   ];
 
-  late List<_SettlementBatchRecord> _batches = [
-    const _SettlementBatchRecord(
-      batchCode: 'STL-401',
-      vendorName: 'LaundryGo Nairobi',
-      ordersCovered: '142 Completed Orders • 1,280 lbs',
-      grossVolumeKes: 146500,
-      commissionRatePercent: 15,
-      commissionFeeKes: 21975,
-      netPayoutKes: 124525,
-      status: 'Settled',
-      cycle: SettlementCycleFilter.week44,
-      disbursalMethod: 'M-Pesa B2B',
-      accountNumber: 'Till 994820',
-      reconciledTimestamp: '01 Nov 2026 • Disbursed via Daraja B2B',
-    ),
-    const _SettlementBatchRecord(
-      batchCode: 'STL-402',
-      vendorName: 'LaundryGo Westlands',
-      ordersCovered: '96 Completed Orders • 840 lbs',
-      grossVolumeKes: 104000,
-      commissionRatePercent: 15,
-      commissionFeeKes: 15600,
-      netPayoutKes: 88400,
-      status: 'Ready for Payout',
-      cycle: SettlementCycleFilter.week45,
-      disbursalMethod: 'KCB EFT',
-      accountNumber: 'A/C 1184920481',
-      reconciledTimestamp: '04 Nov 2026 • Verified & Audited',
-    ),
-    const _SettlementBatchRecord(
-      batchCode: 'STL-403',
-      vendorName: 'LaundryGo Kilimani',
-      ordersCovered: '112 Completed Orders • 990 lbs',
-      grossVolumeKes: 118200,
-      commissionRatePercent: 12,
-      commissionFeeKes: 14184,
-      netPayoutKes: 104016,
-      status: 'Ready for Payout',
-      cycle: SettlementCycleFilter.week45,
-      disbursalMethod: 'M-Pesa B2B',
-      accountNumber: 'Till 882019',
-      reconciledTimestamp: '05 Nov 2026 • Batch Closed',
-    ),
-    const _SettlementBatchRecord(
-      batchCode: 'STL-404',
-      vendorName: 'Harborridge Central Hub',
-      ordersCovered: '104 Completed Orders • 920 lbs',
-      grossVolumeKes: 146500,
-      commissionRatePercent: 15,
-      commissionFeeKes: 22725,
-      netPayoutKes: 123775,
-      status: 'Settled',
-      cycle: SettlementCycleFilter.week46,
-      disbursalMethod: 'Stanbic Bank',
-      accountNumber: 'A/C 0100482910',
-      reconciledTimestamp: '06 Nov 2026 • Escrow Cleared',
-    ),
-  ];
+  late List<_SettlementBatchRecord> _batches = const [];
 
   @override
   void initState() {
@@ -194,6 +140,45 @@ class _SettlementsViewState extends State<SettlementsView> {
       text: '84 Completed Orders • 760 lbs',
     );
     _accountNumberController = TextEditingController(text: 'Till 994820');
+    _loadSupabaseSettlements();
+  }
+
+  Future<void> _loadSupabaseSettlements() async {
+    final client = ref.read(supabaseClientProvider);
+    if (client == null) return;
+    try {
+      final response = await client
+          .from('settlement_batches')
+          .select('*')
+          .order('created_at', ascending: false);
+      if (!mounted) return;
+      final loaded = (response as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        final gross = (map['gross_volume_kes'] as num?)?.toInt() ?? 0;
+        final commRate =
+            (map['commission_rate_percent'] as num?)?.toInt() ?? 15;
+        final commFee = (gross * (commRate / 100.0)).round();
+        return _SettlementBatchRecord(
+          batchCode: map['batch_code'] as String? ?? 'STL-00',
+          vendorName: map['vendor_name'] as String? ?? 'Partner Vendor',
+          ordersCovered: map['orders_covered'] as String? ?? '0 Orders',
+          grossVolumeKes: gross,
+          commissionRatePercent: commRate,
+          commissionFeeKes: commFee,
+          netPayoutKes:
+              (map['net_payout_kes'] as num?)?.toInt() ?? (gross - commFee),
+          status: map['status'] as String? ?? 'Ready for Payout',
+          cycle: SettlementCycleFilter.week46,
+          disbursalMethod: map['disbursal_method'] as String? ?? 'M-Pesa B2B',
+          accountNumber: map['account_number'] as String? ?? '',
+          reconciledTimestamp:
+              map['reconciled_timestamp'] as String? ?? 'Audited',
+        );
+      }).toList();
+      setState(() {
+        _batches = loaded;
+      });
+    } catch (_) {}
   }
 
   @override
@@ -1201,70 +1186,23 @@ class _SettlementsViewState extends State<SettlementsView> {
     required List<_SettlementBatchRecord> batches,
   }) {
     if (batches.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(36.0),
-        decoration: BoxDecoration(
-          color: colors.cardBackground,
-          borderRadius: BorderRadius.circular(14.0),
-          border: Border.all(color: colors.borderSubtle),
-        ),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Icon(
-              Icons.balance_outlined,
-              size: 40.0,
-              color: colors.textTertiary,
-            ),
-            const SizedBox(height: 12.0),
-            Text(
-              'No matching settlement batches found',
-              style: textTheme.titleSmall?.copyWith(
-                fontSize: AppTypography.subtitleSize,
-                fontWeight: FontWeight.w700,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4.0),
-            Text(
-              'Try clearing keywords or switching status to "All Statuses".',
-              style: textTheme.bodySmall?.copyWith(
-                fontSize: AppTypography.captionSize,
-                color: colors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 14.0),
-            InteractivePressScale(
-              onTap: () {
-                _searchController.clear();
-                setState(() {
-                  _searchQuery = '';
-                  _selectedStatus = SettlementStatusFilter.all;
-                  _selectedBranch = 'All Branches';
-                  _selectedCycle = SettlementCycleFilter.all;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14.0,
-                  vertical: 8.0,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.harborNavy,
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Text(
-                  'Reset Filters',
-                  style: textTheme.labelSmall?.copyWith(
-                    fontSize: AppTypography.captionSize,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      return AppEmptyState(
+        icon: Icons.balance_rounded,
+        title: 'Settlement Ledger Empty',
+        description: 'No matching settlement batches found. Create a payout batch or reset active filters.',
+        actionLabel: '+ New Settlement Batch',
+        actionIcon: Icons.post_add_rounded,
+        onAction: () => setState(() => _showCreateBatchPanel = true),
+        secondaryActionLabel: 'Reset Filters',
+        onSecondaryAction: () {
+          _searchController.clear();
+          setState(() {
+            _searchQuery = '';
+            _selectedStatus = SettlementStatusFilter.all;
+            _selectedBranch = 'All Branches';
+            _selectedCycle = SettlementCycleFilter.all;
+          });
+        },
       );
     }
 

@@ -29,13 +29,25 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     try {
       final repository = ref.read(ordersRepositoryProvider);
       final allOrders = await repository.fetchOrders();
-      final order = await repository.fetchOrderDetail(orderId);
+      OrderDetail? order;
+      if (allOrders.isNotEmpty) {
+        order = allOrders.firstWhere(
+          (item) => item.orderId == orderId,
+          orElse: () => allOrders.first,
+        );
+      } else {
+        try {
+          order = await repository.fetchOrderDetail(orderId);
+        } catch (_) {
+          order = null;
+        }
+      }
       if (_disposed) return;
       state = state.copyWith(
         status: OrderDetailsUiStatus.success,
         orders: allOrders,
         order: order,
-        currentStatus: order.status,
+        currentStatus: order?.status ?? OrderProcessStatus.processing,
       );
     } catch (exception) {
       if (_disposed) return;
@@ -142,6 +154,10 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       state = state.copyWith(currentStatus: newStatus);
       return;
     }
+
+    ref
+        .read(ordersRepositoryProvider)
+        .updateOrderStatus(currentOrder.orderId, newStatus);
 
     final updatedOrder = OrderDetail(
       orderId: currentOrder.orderId,

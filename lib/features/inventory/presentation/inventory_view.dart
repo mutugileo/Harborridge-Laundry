@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
+import 'package:laundry_ridge/core/supabase/supabase_config.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_state.dart';
@@ -95,86 +97,7 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
   late final TextEditingController _newSkuCostController;
   late final TextEditingController _newSkuQtyController;
 
-  late List<_InventoryStockItem> _items = const [
-    _InventoryStockItem(
-      sku: 'INV-01',
-      name: 'Eco-Enzyme Liquid Detergent (20L Drums)',
-      category: 'Detergents',
-      supplier: 'Diversey East Africa',
-      unitLabel: 'Drums',
-      unitCostKes: 4800,
-      quantity: 14,
-      maxCapacity: 20,
-      reorderPoint: 6,
-      daysRemaining: 19,
-      linkedService: 'Wash & Fold • Wet Wash',
-    ),
-    _InventoryStockItem(
-      sku: 'INV-02',
-      name: 'Perchloroethylene Dry Clean Solvent (20L)',
-      category: 'Solvents',
-      supplier: 'ChemiClean Nairobi',
-      unitLabel: 'Drums',
-      unitCostKes: 9200,
-      quantity: 3,
-      maxCapacity: 12,
-      reorderPoint: 4,
-      daysRemaining: 4,
-      linkedService: 'Dry Cleaning (Suits & Silk)',
-    ),
-    _InventoryStockItem(
-      sku: 'INV-03',
-      name: 'Lavender & Linen Extra Fragrance Concentrate',
-      category: 'Addons',
-      supplier: 'AromaCare Kenya',
-      unitLabel: 'Bottles',
-      unitCostKes: 1650,
-      quantity: 18,
-      maxCapacity: 24,
-      reorderPoint: 6,
-      daysRemaining: 24,
-      linkedService: 'Extra Fragrance Addon (+KES 10)',
-    ),
-    _InventoryStockItem(
-      sku: 'INV-04',
-      name: 'Oxi-Active Stain Removal Booster (5L)',
-      category: 'Addons',
-      supplier: 'Diversey East Africa',
-      unitLabel: 'Bottles',
-      unitCostKes: 2400,
-      quantity: 4,
-      maxCapacity: 15,
-      reorderPoint: 5,
-      daysRemaining: 5,
-      linkedService: 'Stain Removal Addon (+KES 30)',
-    ),
-    _InventoryStockItem(
-      sku: 'INV-05',
-      name: 'Harborridge Poly Garment Covers & Wire Hangers',
-      category: 'Packaging',
-      supplier: 'Nairobi PackWorks',
-      unitLabel: 'Bundles',
-      unitCostKes: 3100,
-      quantity: 22,
-      maxCapacity: 30,
-      reorderPoint: 8,
-      daysRemaining: 28,
-      linkedService: 'Wash & Iron • Suit Packaging',
-    ),
-    _InventoryStockItem(
-      sku: 'INV-06',
-      name: 'Waterproof Thermal Barcode Tag Rolls (1000/roll)',
-      category: 'Packaging',
-      supplier: 'LabelTech Kenya',
-      unitLabel: 'Rolls',
-      unitCostKes: 1900,
-      quantity: 11,
-      maxCapacity: 16,
-      reorderPoint: 4,
-      daysRemaining: 21,
-      linkedService: 'POS Garment Tagging',
-    ),
-  ];
+  late List<_InventoryStockItem> _items = const [];
 
   final List<_InventoryLogEntry> _sessionLogs = [];
 
@@ -189,6 +112,38 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
     _newSkuUnitController = TextEditingController(text: 'Drums');
     _newSkuCostController = TextEditingController(text: '4500');
     _newSkuQtyController = TextEditingController(text: '12');
+    _loadSupabaseInventory();
+  }
+
+  Future<void> _loadSupabaseInventory() async {
+    final client = ref.read(supabaseClientProvider);
+    if (client == null) return;
+    try {
+      final response = await client
+          .from('inventory_items')
+          .select('*')
+          .order('created_at', ascending: true);
+      if (!mounted) return;
+      final loaded = (response as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        return _InventoryStockItem(
+          sku: map['sku'] as String? ?? 'INV-00',
+          name: map['name'] as String? ?? 'Item',
+          category: map['category'] as String? ?? 'Detergents',
+          supplier: map['supplier'] as String? ?? 'Supplier',
+          unitLabel: map['unit'] as String? ?? 'Units',
+          unitCostKes: (map['unit_cost_kes'] as num?)?.toInt() ?? 0,
+          quantity: (map['quantity'] as num?)?.toInt() ?? 0,
+          maxCapacity: 25,
+          reorderPoint: (map['min_threshold'] as num?)?.toInt() ?? 5,
+          daysRemaining: 15,
+          linkedService: map['linked_service'] as String? ?? '',
+        );
+      }).toList();
+      setState(() {
+        _items = loaded;
+      });
+    } catch (_) {}
   }
 
   @override
@@ -952,10 +907,20 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
             }).toList(),
           ),
           const SizedBox(height: 16.0),
-          for (var i = 0; i < filtered.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12.0),
-            _buildStockItemTile(colors, textTheme, filtered[i]),
-          ],
+          if (filtered.isEmpty)
+            AppEmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'Inventory Ledger Empty',
+              description: 'No stock items match your search or filter. Add a stock SKU to track chemicals, solvents, and packaging.',
+              actionLabel: '+ Add Stock SKU',
+              actionIcon: Icons.add_box_rounded,
+              onAction: () => setState(() => _showAddSkuPanel = true),
+            )
+          else
+            for (var i = 0; i < filtered.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12.0),
+              _buildStockItemTile(colors, textTheme, filtered[i]),
+            ],
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_spacing.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/garment_catalog_grid.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
@@ -481,14 +482,13 @@ class OrdersPageView extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     if (orders.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 48.0, horizontal: 24.0),
-        child: Center(
-          child: Text(
-            'No matching orders found. Adjust your search or filters.',
-            style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
-          ),
-        ),
+      return AppEmptyState(
+        icon: Icons.receipt_long_rounded,
+        title: 'No Orders Found',
+        description: 'No orders match your active filter criteria. Intake a new laundry batch or reset filters.',
+        actionLabel: 'POS Order Intake',
+        actionIcon: Icons.add_shopping_cart_rounded,
+        onAction: () => _showAddItemsCatalogModal(context),
       );
     }
 

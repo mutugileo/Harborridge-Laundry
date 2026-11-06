@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 
@@ -348,50 +349,58 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
           const SizedBox(height: 14.0),
 
           // Row 2: Visual Analytics (Left = Revenue Trajectory Chart, Right = Service Mix Donut + Breakdown)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isDesktop = constraints.maxWidth >= 960.0;
+          if (liveOrderCount == 0)
+            const AppEmptyState(
+              icon: Icons.insights_rounded,
+              title: 'Awaiting Live Orders',
+              description: 'No active orders found in the database. Intake tickets to track revenue trajectories, turnaround SLA compliance, and branch margins.',
+            )
+          else ...[
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 960.0;
 
-              final trendChartCard = _buildRevenueTrendCard(
-                colors,
-                textTheme,
-                motion,
-              );
-              final serviceMixCard = _buildServiceMixCard(
-                colors,
-                textTheme,
-                serviceBreakdown,
-              );
+                final trendChartCard = _buildRevenueTrendCard(
+                  colors,
+                  textTheme,
+                  motion,
+                );
+                final serviceMixCard = _buildServiceMixCard(
+                  colors,
+                  textTheme,
+                  serviceBreakdown,
+                );
 
-              if (isDesktop) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                if (isDesktop) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 56, child: trendChartCard),
+                      const SizedBox(width: 16.0),
+                      Expanded(flex: 44, child: serviceMixCard),
+                    ],
+                  );
+                }
+
+                return Column(
                   children: [
-                    Expanded(flex: 56, child: trendChartCard),
-                    const SizedBox(width: 16.0),
-                    Expanded(flex: 44, child: serviceMixCard),
+                    trendChartCard,
+                    const SizedBox(height: 16.0),
+                    serviceMixCard,
                   ],
                 );
-              }
+              },
+            ),
+            const SizedBox(height: 16.0),
 
-              return Column(
-                children: [
-                  trendChartCard,
-                  const SizedBox(height: 16.0),
-                  serviceMixCard,
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 16.0),
-
-          // Row 3: Branch & Rider Performance Matrix
-          _buildBranchPerformanceMatrix(
-            colors,
-            textTheme,
-            motion,
-            filteredBranches,
-          ),
+            // Row 3: Branch & Rider Performance Matrix
+            _buildBranchPerformanceMatrix(
+              colors,
+              textTheme,
+              motion,
+              filteredBranches,
+            ),
+          ],
         ],
       ),
     );

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/features/production/domain/production_order_card.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class OrderTrackingRepository {
   Future<List<ProductionOrderCard>> fetchProductionOrders();
@@ -129,8 +131,62 @@ class InMemoryOrderTrackingRepository implements OrderTrackingRepository {
   }
 }
 
+class SupabaseOrderTrackingRepository implements OrderTrackingRepository {
+  SupabaseOrderTrackingRepository(this._client);
+
+  final SupabaseClient _client;
+
+  @override
+  Future<List<ProductionOrderCard>> fetchProductionOrders() async {
+    try {
+      final response = await _client
+          .from('orders')
+          .select('*')
+          .order('created_at', ascending: false);
+
+      final list = (response as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        final stageStr = map['status'] as String? ?? 'washing';
+        final stage = switch (stageStr) {
+          'processing' => ProductionStage.toDo,
+          'washing' => ProductionStage.cleaning,
+          'cleaning' => ProductionStage.cleaning,
+          'ironing' => ProductionStage.drying,
+          'completed' => ProductionStage.fold,
+          'delivered' => ProductionStage.fold,
+          _ => ProductionStage.toDo,
+        };
+
+        return ProductionOrderCard(
+          orderNumber: map['order_id'] as String? ?? '',
+          customerName: map['customer_name'] as String? ?? 'Walk-in Customer',
+          itemCountOrWeight: map['primary_service'] as String? ?? '1 Load',
+          serviceType: map['primary_service'] as String? ?? 'Wash & Fold',
+          priority: OrderPriority.urgent,
+          stationNumber: '#1',
+          timeReceived: map['order_date'] as String? ?? '',
+          dueTime: map['delivery_date'] as String? ?? '',
+          assignedStaff: map['assigned_staff'] as String? ?? 'Attendant',
+          stage: stage,
+          progress: stage == ProductionStage.fold ? 1.0 : 0.5,
+          statusNote: map['processing_stage_label'] as String? ?? 'In Progress',
+          isStageComplete: stage == ProductionStage.fold,
+        );
+      }).toList();
+
+      return list;
+    } catch (_) {
+      return const [];
+    }
+  }
+}
+
 final orderTrackingRepositoryProvider = Provider<OrderTrackingRepository>((
   ref,
 ) {
+  final client = ref.watch(supabaseClientProvider);
+  if (client != null) {
+    return SupabaseOrderTrackingRepository(client);
+  }
   return InMemoryOrderTrackingRepository();
 });

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_spacing.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/core/widgets/order_header_bar.dart';
 import 'package:laundry_ridge/core/widgets/order_sidebar.dart';
@@ -364,7 +365,18 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
         }
 
         final order = state.order;
-        if (order == null) return const SizedBox.shrink();
+        if (order == null) {
+          return Center(
+            child: AppEmptyState(
+              icon: Icons.receipt_long_rounded,
+              title: 'No Order Selected',
+              description: 'Select an order from the list or intake a new ticket to inspect breakdown.',
+              actionLabel: 'Browse All Orders',
+              actionIcon: Icons.list_alt_rounded,
+              onAction: notifier.showOrdersList,
+            ),
+          );
+        }
 
         final isMultiColumn = constraints.maxWidth >= 680.0;
 

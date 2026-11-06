@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/app_skeleton.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/production/domain/production_order_card.dart';
@@ -481,6 +482,23 @@ class _OrderTrackingBoardViewState
         );
 
       case OrderTrackingStatus.success:
+        if (state.orders.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 36.0,
+              horizontal: 16.0,
+            ),
+            child: AppEmptyState(
+              icon: Icons.view_kanban_outlined,
+              title: 'Production Queue is Clear',
+              description: 'No orders currently in the washing, drying, or folding queues. Intake a new laundry ticket to start production.',
+              actionLabel: '+ POS Order Intake',
+              actionIcon: Icons.add_shopping_cart_rounded,
+              onAction: widget.onNewOrderIntake,
+            ),
+          );
+        }
+
         return LayoutBuilder(
           key: const ValueKey('tracking_columns'),
           builder: (context, constraints) {

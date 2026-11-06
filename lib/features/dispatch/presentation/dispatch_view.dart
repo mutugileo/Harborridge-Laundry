@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
+import 'package:laundry_ridge/core/supabase/supabase_config.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 class _DispatchRunItem {
@@ -47,7 +50,7 @@ class _DispatchRunItem {
   }
 }
 
-class DispatchView extends StatefulWidget {
+class DispatchView extends ConsumerStatefulWidget {
   const DispatchView({
     super.key,
     this.onOpenOrderDetails,
@@ -58,10 +61,10 @@ class DispatchView extends StatefulWidget {
   final ValueChanged<String>? onFilterOrdersByBranch;
 
   @override
-  State<DispatchView> createState() => _DispatchViewState();
+  ConsumerState<DispatchView> createState() => _DispatchViewState();
 }
 
-class _DispatchViewState extends State<DispatchView> {
+class _DispatchViewState extends ConsumerState<DispatchView> {
   static const List<String> _validStages = [
     'Pickup assigned',
     'In Transit',
@@ -89,63 +92,7 @@ class _DispatchViewState extends State<DispatchView> {
   late final TextEditingController _zoneController;
   late final TextEditingController _searchController;
 
-  late List<_DispatchRunItem> _runs = const [
-    _DispatchRunItem(
-      runId: 'DSP-104',
-      orderId: 'LG-2026-00125',
-      customerName: 'John Kamau',
-      zone: 'Kilimani • Argwings Kodhek Rd',
-      branch: 'LaundryGo Nairobi',
-      riderName: 'Peter Mwangi',
-      etaWindow: '14:15 – 14:45',
-      stage: 'Pickup assigned',
-      bagCount: '2 Laundry Bags (11.5 kg)',
-    ),
-    _DispatchRunItem(
-      runId: 'DSP-105',
-      orderId: '#ORD-0006',
-      customerName: 'Moncy James',
-      zone: 'Westlands • Waiyaki Way Suite 4B',
-      branch: 'Harborridge Main',
-      riderName: 'David Otieno',
-      etaWindow: '15:00 – 15:30',
-      stage: 'In Transit',
-      bagCount: '21 Garments • Hanger Van',
-    ),
-    _DispatchRunItem(
-      runId: 'DSP-106',
-      orderId: 'LG-2026-00126',
-      customerName: 'Grace Wanjiku',
-      zone: 'Lavington • James Gichuru Rd',
-      branch: 'LaundryGo Westlands',
-      riderName: 'Samuel Karanja',
-      etaWindow: '15:30 – 16:00',
-      stage: 'Out for Delivery',
-      bagCount: '3 Suit Covers + 1 Folded Bag',
-    ),
-    _DispatchRunItem(
-      runId: 'DSP-107',
-      orderId: 'LG-2026-00128',
-      customerName: 'Polly Matthews',
-      zone: 'Riverside Drive • Block C',
-      branch: 'Harborridge Main',
-      riderName: 'Peter Mwangi',
-      etaWindow: 'Completed 13:20',
-      stage: 'Delivered',
-      bagCount: '16 Items • Express Care',
-    ),
-    _DispatchRunItem(
-      runId: 'DSP-108',
-      orderId: 'LG-2026-00130',
-      customerName: 'Amina Abdi',
-      zone: 'Parklands • 3rd Avenue',
-      branch: 'LaundryGo Westlands',
-      riderName: 'David Otieno',
-      etaWindow: '16:00 – 16:30',
-      stage: 'Pickup assigned',
-      bagCount: '4 Heavy Blankets & Duvets',
-    ),
-  ];
+  late List<_DispatchRunItem> _runs = const [];
 
   @override
   void initState() {
@@ -156,6 +103,36 @@ class _DispatchViewState extends State<DispatchView> {
       text: 'Upper Hill • Hospital Rd Tower',
     );
     _searchController = TextEditingController();
+    _loadSupabaseDispatch();
+  }
+
+  Future<void> _loadSupabaseDispatch() async {
+    final client = ref.read(supabaseClientProvider);
+    if (client == null) return;
+    try {
+      final response = await client
+          .from('dispatch_runs')
+          .select('*')
+          .order('created_at', ascending: false);
+      if (!mounted) return;
+      final loaded = (response as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        return _DispatchRunItem(
+          runId: map['run_id'] as String? ?? 'DSP-00',
+          orderId: map['order_id'] as String? ?? '',
+          customerName: map['customer_name'] as String? ?? 'Customer',
+          zone: map['zone'] as String? ?? '',
+          branch: map['branch'] as String? ?? 'Harborridge Main',
+          riderName: map['rider_name'] as String? ?? 'Rider',
+          etaWindow: map['eta_window'] as String? ?? '',
+          stage: map['stage'] as String? ?? 'Pickup assigned',
+          bagCount: map['bag_count'] as String? ?? '1 Bag',
+        );
+      }).toList();
+      setState(() {
+        _runs = loaded;
+      });
+    } catch (_) {}
   }
 
   @override
@@ -417,28 +394,13 @@ class _DispatchViewState extends State<DispatchView> {
 
                 // Manifest Rows
                 if (filteredRuns.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(36.0),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.search_off_outlined,
-                            size: 32.0,
-                            color: colors.textSecondary,
-                          ),
-                          const SizedBox(height: 8.0),
-                          Text(
-                            'No dispatch runs match the selected criteria',
-                            style: textTheme.bodySmall?.copyWith(
-                              fontSize: AppTypography.captionSize,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  AppEmptyState(
+                    icon: Icons.near_me_outlined,
+                    title: 'Dispatch Manifest Empty',
+                    description: 'No active courier runs or pickup tickets found matching filters. Schedule a dispatch route.',
+                    actionLabel: '+ Schedule Dispatch Run',
+                    actionIcon: Icons.add_road_rounded,
+                    onAction: () => setState(() => _showSchedulePanel = true),
                   )
                 else
                   LayoutBuilder(

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
+import 'package:laundry_ridge/core/supabase/supabase_config.dart';
+import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 enum PaymentStatusFilter {
@@ -91,16 +94,16 @@ class _PaymentLedgerRow {
   }
 }
 
-class PaymentsView extends StatefulWidget {
+class PaymentsView extends ConsumerStatefulWidget {
   const PaymentsView({super.key, this.onOpenOrderDetails});
 
   final ValueChanged<String>? onOpenOrderDetails;
 
   @override
-  State<PaymentsView> createState() => _PaymentsViewState();
+  ConsumerState<PaymentsView> createState() => _PaymentsViewState();
 }
 
-class _PaymentsViewState extends State<PaymentsView> {
+class _PaymentsViewState extends ConsumerState<PaymentsView> {
   String _searchQuery = '';
   PaymentStatusFilter _selectedStatusFilter = PaymentStatusFilter.all;
   String _selectedChannel = 'All Channels';
@@ -123,112 +126,7 @@ class _PaymentsViewState extends State<PaymentsView> {
     'Bank Transfer',
   ];
 
-  late List<_PaymentLedgerRow> _rows = [
-    const _PaymentLedgerRow(
-      txId: 'TXN-9041',
-      orderId: 'LG-2026-00125',
-      customerName: 'John Kamau',
-      channel: 'M-Pesa',
-      referenceCode: 'MP-QK93JDL82P',
-      amountKes: 1500,
-      balanceDueKes: 0,
-      status: 'Paid',
-      timestamp: '06 Nov 2026 • 09:30 AM',
-      periodScope: PaymentPeriodFilter.today,
-      customerPhone: '+254 712 345 678',
-    ),
-    const _PaymentLedgerRow(
-      txId: 'TXN-9042',
-      orderId: '#ORD-0006',
-      customerName: 'Moncy James',
-      channel: 'Cash',
-      referenceCode: 'CSH-REG-892',
-      amountKes: 3850,
-      balanceDueKes: 1850,
-      status: 'Partial',
-      timestamp: '06 Nov 2026 • 10:15 AM',
-      periodScope: PaymentPeriodFilter.today,
-      customerPhone: '+254 722 890 123',
-    ),
-    const _PaymentLedgerRow(
-      txId: 'TXN-9043',
-      orderId: 'LG-2026-00126',
-      customerName: 'Grace Wanjiku',
-      channel: 'M-Pesa',
-      referenceCode: 'MP-RK84N021X',
-      amountKes: 3200,
-      balanceDueKes: 0,
-      status: 'Paid',
-      timestamp: '05 Nov 2026 • 12:18 PM',
-      periodScope: PaymentPeriodFilter.thisWeek,
-      customerPhone: '+254 733 456 789',
-    ),
-    const _PaymentLedgerRow(
-      txId: 'TXN-9044',
-      orderId: 'LG-2026-00127',
-      customerName: 'Anastasia Yesenenko',
-      channel: 'Card',
-      referenceCode: 'VISA-AUTH-4912',
-      amountKes: 2800,
-      balanceDueKes: 2800,
-      status: 'Unpaid',
-      timestamp: '05 Nov 2026 • 01:45 PM',
-      periodScope: PaymentPeriodFilter.thisWeek,
-      customerPhone: '+254 799 112 233',
-    ),
-    const _PaymentLedgerRow(
-      txId: 'TXN-9045',
-      orderId: 'LG-2026-00128',
-      customerName: 'Polly Matthews',
-      channel: 'M-Pesa',
-      referenceCode: 'MP-TN299K49Z',
-      amountKes: 4500,
-      balanceDueKes: 0,
-      status: 'Paid',
-      timestamp: '04 Nov 2026 • 03:20 PM',
-      periodScope: PaymentPeriodFilter.thisWeek,
-      customerPhone: '+254 720 987 654',
-    ),
-    const _PaymentLedgerRow(
-      txId: 'TXN-9046',
-      orderId: 'LG-2026-00129',
-      customerName: 'David Mutiso',
-      channel: 'Bank Transfer',
-      referenceCode: 'EFT-KCB-99410',
-      amountKes: 6400,
-      balanceDueKes: 0,
-      status: 'Paid',
-      timestamp: '03 Nov 2026 • 11:40 AM',
-      periodScope: PaymentPeriodFilter.thisWeek,
-      customerPhone: '+254 714 556 677',
-    ),
-    const _PaymentLedgerRow(
-      txId: 'TXN-9047',
-      orderId: 'LG-2026-00130',
-      customerName: 'Faith Chebet',
-      channel: 'Cash',
-      referenceCode: 'CSH-REG-901',
-      amountKes: 1600,
-      balanceDueKes: 400,
-      status: 'Partial',
-      timestamp: '02 Nov 2026 • 02:15 PM',
-      periodScope: PaymentPeriodFilter.thisMonth,
-      customerPhone: '+254 788 334 455',
-    ),
-    const _PaymentLedgerRow(
-      txId: 'TXN-9048',
-      orderId: 'LG-2026-00131',
-      customerName: 'Peter Ochieng',
-      channel: 'Card',
-      referenceCode: 'MC-AUTH-7731',
-      amountKes: 2100,
-      balanceDueKes: 0,
-      status: 'Paid',
-      timestamp: '01 Nov 2026 • 04:50 PM',
-      periodScope: PaymentPeriodFilter.thisMonth,
-      customerPhone: '+254 711 223 344',
-    ),
-  ];
+  late List<_PaymentLedgerRow> _rows = const [];
 
   @override
   void initState() {
@@ -238,6 +136,38 @@ class _PaymentsViewState extends State<PaymentsView> {
     _customerController = TextEditingController(text: 'Liam O\'Connor');
     _amountKesController = TextEditingController(text: '2200');
     _referenceController = TextEditingController(text: 'MP-LR99120');
+    _loadSupabasePayments();
+  }
+
+  Future<void> _loadSupabasePayments() async {
+    final client = ref.read(supabaseClientProvider);
+    if (client == null) return;
+    try {
+      final response = await client
+          .from('payment_transactions')
+          .select('*')
+          .order('created_at', ascending: false);
+      if (!mounted) return;
+      final loaded = (response as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        return _PaymentLedgerRow(
+          txId: map['tx_id'] as String? ?? 'TXN-00',
+          orderId: map['order_id'] as String? ?? '',
+          customerName: map['customer_name'] as String? ?? 'Customer',
+          channel: map['channel'] as String? ?? 'M-Pesa',
+          referenceCode: map['reference_code'] as String? ?? '',
+          amountKes: (map['amount_kes'] as num?)?.toInt() ?? 0,
+          balanceDueKes: (map['balance_due_kes'] as num?)?.toInt() ?? 0,
+          status: map['status'] as String? ?? 'Paid',
+          timestamp: map['timestamp'] as String? ?? '',
+          periodScope: PaymentPeriodFilter.today,
+          customerPhone: map['customer_phone'] as String? ?? '',
+        );
+      }).toList();
+      setState(() {
+        _rows = loaded;
+      });
+    } catch (_) {}
   }
 
   @override
@@ -1180,70 +1110,23 @@ class _PaymentsViewState extends State<PaymentsView> {
     required List<_PaymentLedgerRow> rows,
   }) {
     if (rows.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(36.0),
-        decoration: BoxDecoration(
-          color: colors.cardBackground,
-          borderRadius: BorderRadius.circular(14.0),
-          border: Border.all(color: colors.borderSubtle),
-        ),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 40.0,
-              color: colors.textTertiary,
-            ),
-            const SizedBox(height: 12.0),
-            Text(
-              'No matching payment transactions found',
-              style: textTheme.titleSmall?.copyWith(
-                fontSize: AppTypography.subtitleSize,
-                fontWeight: FontWeight.w700,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4.0),
-            Text(
-              'Try clearing search keywords or selecting "All Statuses" & "All Channels".',
-              style: textTheme.bodySmall?.copyWith(
-                fontSize: AppTypography.captionSize,
-                color: colors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 14.0),
-            InteractivePressScale(
-              onTap: () {
-                _searchController.clear();
-                setState(() {
-                  _searchQuery = '';
-                  _selectedStatusFilter = PaymentStatusFilter.all;
-                  _selectedChannel = 'All Channels';
-                  _selectedPeriod = PaymentPeriodFilter.all;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14.0,
-                  vertical: 8.0,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.harborNavy,
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Text(
-                  'Reset Filters',
-                  style: textTheme.labelSmall?.copyWith(
-                    fontSize: AppTypography.captionSize,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      return AppEmptyState(
+        icon: Icons.account_balance_wallet_outlined,
+        title: 'Payment Ledger Empty',
+        description: 'No matching payment transactions found. Record an intake payment receipt or reset search criteria.',
+        actionLabel: '+ Record Payment',
+        actionIcon: Icons.add_card_rounded,
+        onAction: () => setState(() => _showAddPaymentPanel = true),
+        secondaryActionLabel: 'Reset Filters',
+        onSecondaryAction: () {
+          _searchController.clear();
+          setState(() {
+            _searchQuery = '';
+            _selectedStatusFilter = PaymentStatusFilter.all;
+            _selectedChannel = 'All Channels';
+            _selectedPeriod = PaymentPeriodFilter.all;
+          });
+        },
       );
     }
 

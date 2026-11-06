@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
+import 'package:laundry_ridge/features/orders/data/supabase_orders_repository.dart';
 import 'package:laundry_ridge/features/orders/domain/order_addon.dart';
 import 'package:laundry_ridge/features/orders/domain/order_detail.dart';
 import 'package:laundry_ridge/features/orders/domain/order_item.dart';
@@ -9,6 +11,8 @@ import 'package:laundry_ridge/features/orders/domain/order_payment.dart';
 abstract class OrdersRepository {
   Future<List<OrderDetail>> fetchOrders();
   Future<OrderDetail> fetchOrderDetail(String orderId);
+  Future<void> updateOrderStatus(String orderId, OrderProcessStatus status);
+  Future<void> createOrder(OrderDetail order);
 }
 
 class MockOrdersRepository implements OrdersRepository {
@@ -393,8 +397,25 @@ class MockOrdersRepository implements OrdersRepository {
       orElse: () => _orders[1],
     );
   }
+
+  @override
+  Future<void> updateOrderStatus(
+    String orderId,
+    OrderProcessStatus status,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+
+  @override
+  Future<void> createOrder(OrderDetail order) async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
 }
 
 final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  if (client != null) {
+    return SupabaseOrdersRepository(client);
+  }
   return MockOrdersRepository();
 });
