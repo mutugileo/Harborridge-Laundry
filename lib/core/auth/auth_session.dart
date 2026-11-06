@@ -125,6 +125,19 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
   static const List<WorkerAccount> initialWorkers = [
     WorkerAccount(
       id: 'WRK-001',
+      fullName: 'Codzure Admin',
+      email: 'codzuresolutions@gmail.com',
+      pin: '1234',
+      phone: '+254 700 000 001',
+      roleTitle: 'Super Admin',
+      role: OperatorRole.admin,
+      branch: 'Harborridge Main',
+      shiftLabel: 'All Day • Full Access',
+      isActive: true,
+      exceptedModules: {},
+    ),
+    WorkerAccount(
+      id: 'WRK-002',
       fullName: 'Elena Rostova',
       email: 'elena.rostova@harborridgelaundry.com',
       pin: '1234',
@@ -137,7 +150,7 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
       exceptedModules: {},
     ),
     WorkerAccount(
-      id: 'WRK-002',
+      id: 'WRK-003',
       fullName: 'Sarah Jenkins',
       email: 'sarah.jenkins@harborridgelaundry.com',
       pin: '2222',
@@ -154,7 +167,7 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
       },
     ),
     WorkerAccount(
-      id: 'WRK-003',
+      id: 'WRK-004',
       fullName: 'Marcus Vance',
       email: 'marcus.vance@harborridgelaundry.com',
       pin: '3333',
@@ -172,7 +185,7 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
       },
     ),
     WorkerAccount(
-      id: 'WRK-004',
+      id: 'WRK-005',
       fullName: 'Peter Mwangi',
       email: 'peter.mwangi@harborridgelaundry.com',
       pin: '4444',
@@ -193,7 +206,7 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
       },
     ),
     WorkerAccount(
-      id: 'WRK-005',
+      id: 'WRK-006',
       fullName: 'David Ochieng',
       email: 'david.ochieng@harborridgelaundry.com',
       pin: '5555',
