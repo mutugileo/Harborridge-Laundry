@@ -471,8 +471,8 @@ class _SettlementsViewState extends State<SettlementsView> {
                     'Vendor Payouts & Commission Settlements',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.titleLarge?.copyWith(
-                      fontSize: AppTypography.pageTitleSize,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontSize: 16.0,
                       fontWeight: FontWeight.w700,
                       color: colors.textPrimary,
                     ),
@@ -483,7 +483,7 @@ class _SettlementsViewState extends State<SettlementsView> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textTheme.bodySmall?.copyWith(
-                      fontSize: AppTypography.captionSize,
+                      fontSize: 12.0,
                       color: colors.textSecondary,
                     ),
                   ),
@@ -1718,8 +1718,8 @@ class _SettlementsViewState extends State<SettlementsView> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: textTheme.labelMedium?.copyWith(
-                fontSize: AppTypography.bodySize,
-                fontWeight: FontWeight.w800,
+                fontSize: 12.0,
+                fontWeight: FontWeight.w700,
                 color: colors.textPrimary,
               ),
             ),
@@ -2017,9 +2017,9 @@ class _SettlementMetricStripTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.labelSmall?.copyWith(
-                    fontSize: AppTypography.microSize,
+                    fontSize: 10.0,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.35,
                     color: colors.textSecondary,
                   ),
                 ),
@@ -2028,8 +2028,8 @@ class _SettlementMetricStripTile extends StatelessWidget {
                   data.value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleMedium?.copyWith(
-                    fontSize: AppTypography.bodySize,
+                  style: textTheme.titleSmall?.copyWith(
+                    fontSize: 15.0,
                     fontWeight: FontWeight.w800,
                     color: colors.textPrimary,
                   ),
@@ -2040,7 +2040,7 @@ class _SettlementMetricStripTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.bodySmall?.copyWith(
-                    fontSize: AppTypography.microSize,
+                    fontSize: AppTypography.captionSize,
                     fontWeight: FontWeight.w600,
                     color: data.metaColor,
                   ),
