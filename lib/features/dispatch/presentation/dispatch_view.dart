@@ -190,21 +190,6 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
           })
           .catchError((_) {});
     }
-
-    final client = ref.read(supabaseClientProvider);
-    if (client != null) {
-      client.from('dispatch_runs').insert({
-        'run_id': newRun.runId,
-        'order_id': newRun.orderId,
-        'customer_name': newRun.customerName,
-        'zone': newRun.zone,
-        'bag_count': newRun.bagCount,
-        'branch': newRun.branch,
-        'rider_name': newRun.riderName,
-        'eta_window': newRun.etaWindow,
-        'stage': newRun.stage,
-      }).catchError((_) {});
-    }
   }
 
   void _updateRunStage(int index, String newStage) {
@@ -229,13 +214,6 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
           .eq('run_id', current.runId)
           .catchError((_) {});
     }
-
-    final client = ref.read(supabaseClientProvider);
-    if (client != null) {
-      client.from('dispatch_runs').update({
-        'stage': newStage,
-      }).eq('run_id', current.runId).catchError((_) {});
-    }
   }
 
   void _reassignRider(int index, String newRider) {
@@ -258,13 +236,6 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
           .update({'rider_name': newRider})
           .eq('run_id', current.runId)
           .catchError((_) {});
-    }
-
-    final client = ref.read(supabaseClientProvider);
-    if (client != null) {
-      client.from('dispatch_runs').update({
-        'rider_name': newRider,
-      }).eq('run_id', current.runId).catchError((_) {});
     }
   }
 

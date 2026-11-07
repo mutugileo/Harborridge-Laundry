@@ -107,6 +107,31 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
             ),
         ];
 
+    final weekBuckets = List.filled(6, 0);
+    final weekRevenues = List.filled(6, 0);
+    for (var i = 0; i < ordersState.orders.length; i++) {
+      final o = ordersState.orders[i];
+      final bucket = i % 6;
+      weekBuckets[bucket]++;
+      final amt =
+          int.tryParse(o.displayAmount.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      weekRevenues[bucket] += amt;
+    }
+    final maxBucket = weekBuckets.fold<int>(0, math.max);
+    final maxRevenue = weekRevenues.fold<int>(0, math.max);
+    final volumeRatios = weekBuckets
+        .map((b) => maxBucket > 0 ? (b / maxBucket).clamp(0.2, 1.0) : 0.3)
+        .toList();
+    final revenueRatios = weekRevenues
+        .map((r) => maxRevenue > 0 ? (r / maxRevenue).clamp(0.2, 1.0) : 0.3)
+        .toList();
+
+    final chartValues = switch (_selectedChartMetric) {
+      'Order Volume' => volumeRatios,
+      'SLA Compliance' => const [0.92, 0.95, 0.93, 0.97, 0.96, 0.98],
+      _ => revenueRatios,
+    };
+
     final filteredBranches = _selectedBranchFilter == 'All Branches'
         ? branchPerformance
         : branchPerformance
@@ -332,6 +357,7 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
                   colors,
                   textTheme,
                   motion,
+                  chartValues,
                 );
                 final serviceMixCard = _buildServiceMixCard(
                   colors,
@@ -378,6 +404,7 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
     AppColors colors,
     TextTheme textTheme,
     AppMotion motion,
+    List<double> chartValues,
   ) {
     const metrics = ['Revenue', 'Order Volume', 'SLA Compliance'];
 
@@ -465,6 +492,7 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
               painter: _ReportsTrajectoryChartPainter(
                 metric: _selectedChartMetric,
                 period: _selectedPeriod,
+                chartValues: chartValues,
                 primaryColor: colors.freshSkyBlue,
                 secondaryColor: colors.harborGold,
                 navyColor: colors.harborNavy,
@@ -1067,6 +1095,7 @@ class _ReportsTrajectoryChartPainter extends CustomPainter {
   const _ReportsTrajectoryChartPainter({
     required this.metric,
     required this.period,
+    required this.chartValues,
     required this.primaryColor,
     required this.secondaryColor,
     required this.navyColor,
@@ -1075,6 +1104,7 @@ class _ReportsTrajectoryChartPainter extends CustomPainter {
 
   final String metric;
   final String period;
+  final List<double> chartValues;
   final Color primaryColor;
   final Color secondaryColor;
   final Color navyColor;
@@ -1091,11 +1121,9 @@ class _ReportsTrajectoryChartPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    final values = switch (metric) {
-      'Order Volume' => const [0.52, 0.68, 0.61, 0.84, 0.76, 0.91],
-      'SLA Compliance' => const [0.88, 0.91, 0.94, 0.93, 0.96, 0.98],
-      _ => const [0.58, 0.49, 0.82, 0.66, 0.74, 0.89],
-    };
+    final values = chartValues.isNotEmpty
+        ? chartValues
+        : const [0.58, 0.49, 0.82, 0.66, 0.74, 0.89];
 
     final count = values.length;
     final slotWidth = size.width / count;
@@ -1152,7 +1180,9 @@ class _ReportsTrajectoryChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ReportsTrajectoryChartPainter oldDelegate) {
-    return oldDelegate.metric != metric || oldDelegate.period != period;
+    return oldDelegate.metric != metric ||
+        oldDelegate.period != period ||
+        oldDelegate.chartValues != chartValues;
   }
 }
 

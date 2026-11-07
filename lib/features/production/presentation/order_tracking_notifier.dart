@@ -56,7 +56,9 @@ class OrderTrackingNotifier extends Notifier<OrderTrackingState> {
     ref
         .read(orderTrackingRepositoryProvider)
         .updateOrderStage(orderNumber, targetStage);
-    ref.read(orderTrackingRepositoryProvider).updateOrderStage(orderNumber, targetStage);
+    ref
+        .read(orderTrackingRepositoryProvider)
+        .updateOrderStage(orderNumber, targetStage);
   }
 
   void advanceOrderToNextStage(String orderNumber) {
@@ -85,7 +87,9 @@ class OrderTrackingNotifier extends Notifier<OrderTrackingState> {
     ref
         .read(orderTrackingRepositoryProvider)
         .reassignStaff(orderNumber, staffName);
-    ref.read(orderTrackingRepositoryProvider).reassignStaff(orderNumber, staffName);
+    ref
+        .read(orderTrackingRepositoryProvider)
+        .reassignStaff(orderNumber, staffName);
   }
 
   void selectWorkflowTab(BoardWorkflowTab tab) {

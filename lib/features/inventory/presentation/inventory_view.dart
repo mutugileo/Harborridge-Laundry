@@ -227,21 +227,6 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
           })
           .catchError((_) {});
     }
-
-    final client = ref.read(supabaseClientProvider);
-    if (client != null) {
-      client.from('inventory_items').insert({
-        'sku': newItem.sku,
-        'name': newItem.name,
-        'category': newItem.category,
-        'supplier': newItem.supplier,
-        'unit': newItem.unitLabel,
-        'unit_cost_kes': newItem.unitCostKes,
-        'quantity': newItem.quantity,
-        'min_threshold': newItem.reorderPoint,
-        'linked_service': newItem.linkedService,
-      }).catchError((_) {});
-    }
   }
 
   void _adjustStock(int index, int delta, {String? customReason}) {
@@ -287,14 +272,6 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
           })
           .eq('sku', item.sku)
           .catchError((_) {});
-    }
-
-    final client = ref.read(supabaseClientProvider);
-    if (client != null) {
-      client.from('inventory_items').update({
-        'quantity': nextQty,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('sku', item.sku).catchError((_) {});
     }
   }
 
