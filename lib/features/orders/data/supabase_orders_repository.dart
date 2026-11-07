@@ -141,6 +141,119 @@ class SupabaseOrdersRepository implements OrdersRepository {
                   )
                   .toList(),
             );
+
+        for (final p in order.payments) {
+          final txId = 'TXN-${DateTime.now().millisecondsSinceEpoch % 100000}';
+          final channelClean = p.method.replaceAll('[', '').replaceAll(']', '');
+          final billed = order.totalAmount.toInt();
+          final paid = p.amount.toInt();
+          await _client.from('payment_transactions').insert({
+            'tx_id': txId,
+            'order_id': order.orderId,
+            'customer_name': order.customerName,
+            'customer_phone': order.customerPhone,
+            'channel': channelClean.isEmpty ? 'M-Pesa Express' : channelClean,
+            'reference_code':
+                'MP-${DateTime.now().millisecondsSinceEpoch % 10000}',
+            'total_billed_kes': billed > 0 ? billed : paid,
+            'amount_paid_kes': paid,
+            'balance_due_kes': (billed - paid).clamp(0, 999999),
+            'status': order.paymentStatusLabel,
+          });
+        }
+      }
+
+      if (order.assignedRider.isNotEmpty &&
+          order.assignedRider != 'Unassigned') {
+        final runId = 'DSP-${DateTime.now().millisecondsSinceEpoch % 10000}';
+        await _client.from('dispatch_runs').insert({
+          'run_id': runId,
+          'order_id': order.orderId,
+          'customer_name': order.customerName,
+          'zone': order.vendorBranch,
+          'bag_count': '${order.items.length} Items • Intake',
+          'branch': order.vendorBranch,
+          'rider_name': order.assignedRider,
+          'eta_window': '16:00 – 17:30',
+          'stage': order.deliveryStatusLabel,
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> recordPayment(String orderId, OrderPayment payment) async {
+    try {
+      await _client.from('order_payments').insert({
+        'order_id': orderId,
+        'amount': payment.amount,
+        'payment_date': payment.date,
+        'method': payment.method,
+      });
+
+      await _client
+          .from('orders')
+          .update({
+            'payment_status_label': 'Paid',
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', orderId);
+
+      final txId = 'TXN-${DateTime.now().millisecondsSinceEpoch % 100000}';
+      final channelClean = payment.method
+          .replaceAll('[', '')
+          .replaceAll(']', '');
+      await _client.from('payment_transactions').insert({
+        'tx_id': txId,
+        'order_id': orderId,
+        'customer_name': 'Walk-in Customer',
+        'customer_phone': '',
+        'channel': channelClean.isEmpty ? 'M-Pesa Express' : channelClean,
+        'reference_code': 'MP-${DateTime.now().millisecondsSinceEpoch % 10000}',
+        'total_billed_kes': payment.amount.toInt(),
+        'amount_paid_kes': payment.amount.toInt(),
+        'balance_due_kes': 0,
+        'status': 'Paid',
+      });
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> updateOrder(OrderDetail order) async {
+    try {
+      await _client
+          .from('orders')
+          .update({
+            'display_amount': order.displayAmount,
+            'payment_status_label': order.paymentStatusLabel,
+            'processing_stage_label': order.processingStageLabel,
+            'status': order.status.name,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', order.orderId);
+
+      if (order.items.isNotEmpty) {
+        await _client
+            .from('order_items')
+            .delete()
+            .eq('order_id', order.orderId);
+        await _client
+            .from('order_items')
+            .insert(
+              order.items
+                  .map(
+                    (item) => {
+                      'order_id': order.orderId,
+                      'item_index': item.index,
+                      'service_name': item.serviceName,
+                      'service_type': item.serviceType,
+                      'rate': item.rate,
+                      'quantity': item.quantity,
+                      'garment_type': item.garmentType.name,
+                    },
+                  )
+                  .toList(),
+            );
       }
     } catch (_) {}
   }

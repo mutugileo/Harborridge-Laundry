@@ -294,6 +294,8 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       actionFeedbackMessage:
           'Added ${garment.displayName} to ${updatedOrder.orderId}',
     );
+
+    ref.read(ordersRepositoryProvider).updateOrder(updatedOrder);
   }
 
   void decrementCatalogGarment(GarmentType garment) {
@@ -377,16 +379,20 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       catalogQuantities: updatedCounts,
       actionFeedbackMessage: 'Updated ${garment.displayName} quantity',
     );
+
+    ref.read(ordersRepositoryProvider).updateOrder(updatedOrder);
   }
 
   void recordPayment({required double amount, required String method}) {
     final currentOrder = state.order;
     if (currentOrder == null) return;
 
-    final updatedPayments = [
-      ...currentOrder.payments,
-      OrderPayment(amount: amount, date: '05/11/2026', method: '[$method]'),
-    ];
+    final newPayment = OrderPayment(
+      amount: amount,
+      date: '05/11/2026',
+      method: '[$method]',
+    );
+    final updatedPayments = [...currentOrder.payments, newPayment];
 
     final updatedOrder = OrderDetail(
       orderId: currentOrder.orderId,
@@ -426,6 +432,10 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       actionFeedbackMessage:
           'Payment of KES ${amount.toStringAsFixed(2)} recorded.',
     );
+
+    ref
+        .read(ordersRepositoryProvider)
+        .recordPayment(currentOrder.orderId, newPayment);
   }
 
   void triggerPrintInvoice() {

@@ -172,6 +172,39 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
       _feedbackBanner =
           'Dispatched $runCode ($orderId • $customer) to rider $_newRunRider';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('dispatch_runs')
+          .insert({
+            'run_id': newRun.runId,
+            'order_id': newRun.orderId,
+            'customer_name': newRun.customerName,
+            'zone': newRun.zone,
+            'bag_count': newRun.bagCount,
+            'branch': newRun.branch,
+            'rider_name': newRun.riderName,
+            'eta_window': newRun.etaWindow,
+            'stage': newRun.stage,
+          })
+          .catchError((_) {});
+    }
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client.from('dispatch_runs').insert({
+        'run_id': newRun.runId,
+        'order_id': newRun.orderId,
+        'customer_name': newRun.customerName,
+        'zone': newRun.zone,
+        'bag_count': newRun.bagCount,
+        'branch': newRun.branch,
+        'rider_name': newRun.riderName,
+        'eta_window': newRun.etaWindow,
+        'stage': newRun.stage,
+      }).catchError((_) {});
+    }
   }
 
   void _updateRunStage(int index, String newStage) {
@@ -187,6 +220,22 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
       _feedbackBanner =
           'Updated ${current.runId} (${current.orderId}) status to "$newStage"';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('dispatch_runs')
+          .update({'stage': newStage})
+          .eq('run_id', current.runId)
+          .catchError((_) {});
+    }
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client.from('dispatch_runs').update({
+        'stage': newStage,
+      }).eq('run_id', current.runId).catchError((_) {});
+    }
   }
 
   void _reassignRider(int index, String newRider) {
@@ -201,6 +250,22 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
       _feedbackBanner =
           'Reassigned ${current.runId} to fleet courier $newRider';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('dispatch_runs')
+          .update({'rider_name': newRider})
+          .eq('run_id', current.runId)
+          .catchError((_) {});
+    }
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client.from('dispatch_runs').update({
+        'rider_name': newRider,
+      }).eq('run_id', current.runId).catchError((_) {});
+    }
   }
 
   List<_DispatchRunItem> get _filteredRuns {

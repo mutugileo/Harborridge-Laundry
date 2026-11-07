@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class OrderTrackingRepository {
   Future<List<ProductionOrderCard>> fetchProductionOrders();
+  Future<void> updateOrderStage(String orderNumber, ProductionStage stage);
+  Future<void> reassignStaff(String orderNumber, String staffName);
 }
 
 class InMemoryOrderTrackingRepository implements OrderTrackingRepository {
@@ -129,6 +131,19 @@ class InMemoryOrderTrackingRepository implements OrderTrackingRepository {
       ),
     ];
   }
+
+  @override
+  Future<void> updateOrderStage(
+    String orderNumber,
+    ProductionStage stage,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+
+  @override
+  Future<void> reassignStaff(String orderNumber, String staffName) async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
 }
 
 class SupabaseOrderTrackingRepository implements OrderTrackingRepository {
@@ -178,6 +193,49 @@ class SupabaseOrderTrackingRepository implements OrderTrackingRepository {
     } catch (_) {
       return const [];
     }
+  }
+
+  @override
+  Future<void> updateOrderStage(
+    String orderNumber,
+    ProductionStage stage,
+  ) async {
+    final statusStr = switch (stage) {
+      ProductionStage.toDo => 'processing',
+      ProductionStage.cleaning => 'washing',
+      ProductionStage.drying => 'ironing',
+      ProductionStage.fold => 'completed',
+    };
+    final stageLabel = switch (stage) {
+      ProductionStage.toDo => 'Received',
+      ProductionStage.cleaning => 'Washing',
+      ProductionStage.drying => 'Drying & Ironing',
+      ProductionStage.fold => 'Folded & Ready',
+    };
+
+    try {
+      await _client
+          .from('orders')
+          .update({
+            'status': statusStr,
+            'processing_stage_label': stageLabel,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', orderNumber);
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> reassignStaff(String orderNumber, String staffName) async {
+    try {
+      await _client
+          .from('orders')
+          .update({
+            'assigned_staff': staffName,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('order_id', orderNumber);
+    } catch (_) {}
   }
 }
 

@@ -92,15 +92,23 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
       if (!mounted) return;
       final loaded = (response as List).map((row) {
         final map = row as Map<String, dynamic>;
+        final code =
+            map['branch_code'] as String? ?? map['code'] as String? ?? 'VND-00';
+        final commVal = map['commission_rate'];
+        final commStr = commVal != null ? '$commVal% Split' : '15% Split';
         return _VendorBranchRecord(
-          code: map['code'] as String? ?? 'VND-00',
+          code: code,
           branchName: map['branch_name'] as String? ?? 'Branch',
           managerName: map['manager_name'] as String? ?? 'Manager',
           location: map['location'] as String? ?? 'Location',
-          activeOrders: (map['active_orders'] as num?)?.toInt() ?? 0,
+          activeOrders:
+              (map['orders_count'] ?? map['active_orders'] as num?)?.toInt() ??
+              0,
           utilizationRatio:
               (map['utilization_ratio'] as num?)?.toDouble() ?? 0.8,
-          commissionRate: map['commission_rate'] as String? ?? '15% Split',
+          commissionRate: map['commission_rate'] is String
+              ? map['commission_rate'] as String
+              : commStr,
           isOnline: map['is_online'] as bool? ?? true,
           assignedWorkersCount:
               (map['assigned_workers_count'] as num?)?.toInt() ?? 1,
@@ -162,6 +170,25 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
       _statusMessage =
           'Onboarded partner branch $code ($name) under $commission';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('partner_vendors')
+          .insert({
+            'branch_code': newBranch.code,
+            'branch_name': newBranch.branchName,
+            'location': newBranch.location,
+            'contact_phone': '+254 700 000 000',
+            'manager_name': newBranch.managerName,
+            'intake_status': 'Active Intake',
+            'revenue_kes': 0,
+            'orders_count': newBranch.activeOrders,
+            'commission_rate': 0.15,
+            'is_franchise': true,
+          })
+          .catchError((_) {});
+    }
   }
 
   void _toggleBranchOnline(int index) {
@@ -178,6 +205,17 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
       _statusMessage =
           '${current.branchName} intake status set to ${nextOnline ? 'Online • Accepting' : 'Maintenance Pause'}';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('partner_vendors')
+          .update({
+            'intake_status': nextOnline ? 'Active Intake' : 'Maintenance Pause',
+          })
+          .eq('branch_code', current.code)
+          .catchError((_) {});
+    }
   }
 
   List<_VendorBranchRecord> _getFilteredBranches(WorkerAccount user) {

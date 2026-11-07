@@ -150,16 +150,22 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
       if (!mounted) return;
       final loaded = (response as List).map((row) {
         final map = row as Map<String, dynamic>;
+        final billed = (map['total_billed_kes'] as num?)?.toInt() ?? 0;
+        final paid =
+            (map['amount_paid_kes'] ?? map['amount_kes'] as num?)?.toInt() ?? 0;
+        final amount = paid > 0 ? paid : billed;
         return _PaymentLedgerRow(
           txId: map['tx_id'] as String? ?? 'TXN-00',
           orderId: map['order_id'] as String? ?? '',
           customerName: map['customer_name'] as String? ?? 'Customer',
           channel: map['channel'] as String? ?? 'M-Pesa',
           referenceCode: map['reference_code'] as String? ?? '',
-          amountKes: (map['amount_kes'] as num?)?.toInt() ?? 0,
+          amountKes: amount,
           balanceDueKes: (map['balance_due_kes'] as num?)?.toInt() ?? 0,
           status: map['status'] as String? ?? 'Paid',
-          timestamp: map['timestamp'] as String? ?? '',
+          timestamp: map['created_at'] != null
+              ? '${map['created_at']}'.split('T').first
+              : 'Live Entry',
           periodScope: PaymentPeriodFilter.today,
           customerPhone: map['customer_phone'] as String? ?? '',
         );
@@ -213,6 +219,25 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
       _statusBanner =
           'Recorded $nextTxId (KES ${_PaymentLedgerRow._formatAmount(parsedAmount)} via $_newPaymentChannel • $reference) for $orderId ($customer)';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('payment_transactions')
+          .insert({
+            'tx_id': newRow.txId,
+            'order_id': newRow.orderId,
+            'customer_name': newRow.customerName,
+            'customer_phone': newRow.customerPhone,
+            'channel': newRow.channel,
+            'reference_code': newRow.referenceCode,
+            'total_billed_kes': newRow.amountKes,
+            'amount_paid_kes': newRow.amountKes,
+            'balance_due_kes': 0,
+            'status': newRow.status,
+          })
+          .catchError((_) {});
+    }
   }
 
   void _settleRow(int index) {
@@ -232,6 +257,15 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
       _statusBanner =
           'Collected full KES balance for ${row.orderId} (${row.customerName}) via ${row.channel} • Ledger updated.';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('payment_transactions')
+          .update({'status': 'Paid', 'balance_due_kes': 0})
+          .eq('tx_id', row.txId)
+          .catchError((_) {});
+    }
   }
 
   void _exportStatement() {

@@ -13,6 +13,8 @@ abstract class OrdersRepository {
   Future<OrderDetail> fetchOrderDetail(String orderId);
   Future<void> updateOrderStatus(String orderId, OrderProcessStatus status);
   Future<void> createOrder(OrderDetail order);
+  Future<void> recordPayment(String orderId, OrderPayment payment);
+  Future<void> updateOrder(OrderDetail order);
 }
 
 class MockOrdersRepository implements OrdersRepository {
@@ -408,6 +410,16 @@ class MockOrdersRepository implements OrdersRepository {
 
   @override
   Future<void> createOrder(OrderDetail order) async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+
+  @override
+  Future<void> recordPayment(String orderId, OrderPayment payment) async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+
+  @override
+  Future<void> updateOrder(OrderDetail order) async {
     await Future<void>.delayed(const Duration(milliseconds: 50));
   }
 }

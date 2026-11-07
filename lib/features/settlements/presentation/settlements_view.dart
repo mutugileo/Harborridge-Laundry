@@ -221,6 +221,41 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
       _statusMessage =
           'Generated $batchCode for $_newBatchBranch (Net Payout: KES ${_SettlementBatchRecord._formatNumber(netKes)} via $_newBatchDisbursal)';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('settlement_batches')
+          .insert({
+            'batch_code': newBatch.batchCode,
+            'vendor_name': newBatch.vendorName,
+            'period_label': 'Cycle Nov 2026',
+            'orders_count': 84,
+            'gross_volume_kes': newBatch.grossVolumeKes,
+            'commission_split_kes': newBatch.commissionFeeKes,
+            'net_payout_kes': newBatch.netPayoutKes,
+            'disbursal_method': newBatch.disbursalMethod,
+            'account_number': newBatch.accountNumber,
+            'status': newBatch.status,
+          })
+          .catchError((_) {});
+    }
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client.from('settlement_batches').insert({
+        'batch_code': newBatch.batchCode,
+        'vendor_name': newBatch.vendorName,
+        'period_label': 'Cycle Nov 2026',
+        'orders_count': 84,
+        'gross_volume_kes': newBatch.grossVolumeKes,
+        'commission_split_kes': newBatch.commissionFeeKes,
+        'net_payout_kes': newBatch.netPayoutKes,
+        'disbursal_method': newBatch.disbursalMethod,
+        'account_number': newBatch.accountNumber,
+        'status': newBatch.status,
+      }).catchError((_) {});
+    }
   }
 
   void _disburseBatch(int index) {
@@ -240,6 +275,22 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
       _statusMessage =
           'Disbursed ${batch.netPayout} to ${batch.vendorName} (${batch.batchCode} • ${batch.disbursalMethod} ${batch.accountNumber})';
     });
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client
+          .from('settlement_batches')
+          .update({'status': 'Settled'})
+          .eq('batch_code', batch.batchCode)
+          .catchError((_) {});
+    }
+
+    final client = ref.read(supabaseClientProvider);
+    if (client != null) {
+      client.from('settlement_batches').update({
+        'status': 'Settled',
+      }).eq('batch_code', batch.batchCode).catchError((_) {});
+    }
   }
 
   void _exportRemittanceAdvice() {
