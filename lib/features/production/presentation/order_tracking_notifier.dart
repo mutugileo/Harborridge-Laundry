@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/features/production/data/order_tracking_repository.dart';
 import 'package:laundry_ridge/features/production/domain/production_order_card.dart';
 import 'package:laundry_ridge/features/production/presentation/order_tracking_state.dart';
@@ -10,7 +11,13 @@ class OrderTrackingNotifier extends Notifier<OrderTrackingState> {
   OrderTrackingState build() {
     _disposed = false;
     ref.onDispose(() => _disposed = true);
-    Future.microtask(loadProductionBoard);
+    // Reload on sign-in, clear on sign-out (see OrderDetailsNotifier.build).
+    final signedIn = ref.watch(
+      authSessionNotifierProvider.select(
+        (s) => s.isAuthenticated ? s.currentWorker.id : '',
+      ),
+    );
+    if (signedIn.isNotEmpty) Future.microtask(loadProductionBoard);
     return OrderTrackingState.initial();
   }
 

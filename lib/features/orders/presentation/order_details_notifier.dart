@@ -47,7 +47,13 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
   OrderDetailsUiState build() {
     _disposed = false;
     ref.onDispose(() => _disposed = true);
-    Future.microtask(() => loadOrderDetails('#ORD-0006'));
+    // Rebuilt (and data cleared) whenever the signed-in worker changes, so
+    // data loads after sign-in and nothing lingers after sign-out. Before
+    // sign-in the database refuses every read, so don't ask.
+    final signedInId = ref.watch(_signedInWorkerId);
+    if (signedInId.isNotEmpty) {
+      Future.microtask(() => loadOrderDetails('#ORD-0006'));
+    }
     return OrderDetailsUiState.initial();
   }
 
@@ -673,6 +679,15 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     state = state.copyWith(actionFeedbackMessage: null);
   }
 }
+
+/// The signed-in worker's id, or '' when signed out.
+final _signedInWorkerId = Provider<String>(
+  (ref) => ref.watch(
+    authSessionNotifierProvider.select(
+      (s) => s.isAuthenticated ? s.currentWorker.id : '',
+    ),
+  ),
+);
 
 final orderDetailsNotifierProvider =
     NotifierProvider<OrderDetailsNotifier, OrderDetailsUiState>(

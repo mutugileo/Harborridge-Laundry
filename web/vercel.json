@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/((?!.*\\.[\\w]+$|assets|canvaskit|icons).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
