@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:laundry_ridge/core/errors/app_failure.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/features/production/domain/production_order_card.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -195,6 +196,15 @@ class SupabaseOrderTrackingRepository implements OrderTrackingRepository {
     }
   }
 
+  static void _requireRow(List<Map<String, dynamic>> rows) {
+    if (rows.isEmpty) {
+      throw const AppFailure(
+        message: 'your account cannot update order progress',
+        code: 'forbidden',
+      );
+    }
+  }
+
   @override
   Future<void> updateOrderStage(
     String orderNumber,
@@ -221,8 +231,12 @@ class SupabaseOrderTrackingRepository implements OrderTrackingRepository {
             'processing_stage_label': stageLabel,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('order_id', orderNumber);
-    } catch (_) {}
+          .eq('order_id', orderNumber)
+          .select('order_id')
+          .then(_requireRow);
+    } on PostgrestException catch (error) {
+      throw AppFailure(message: error.message, code: error.code);
+    }
   }
 
   @override
@@ -234,8 +248,12 @@ class SupabaseOrderTrackingRepository implements OrderTrackingRepository {
             'assigned_staff': staffName,
             'updated_at': DateTime.now().toIso8601String(),
           })
-          .eq('order_id', orderNumber);
-    } catch (_) {}
+          .eq('order_id', orderNumber)
+          .select('order_id')
+          .then(_requireRow);
+    } on PostgrestException catch (error) {
+      throw AppFailure(message: error.message, code: error.code);
+    }
   }
 }
 

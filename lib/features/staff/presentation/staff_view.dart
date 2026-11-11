@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
+import 'package:laundry_ridge/core/auth/auth_backend.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/auth/change_pin_dialog.dart';
 import 'package:laundry_ridge/core/permissions/role_permission.dart';
@@ -9,9 +10,7 @@ import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 class StaffView extends ConsumerStatefulWidget {
-  const StaffView({super.key, this.onOpenLoginPortal});
-
-  final VoidCallback? onOpenLoginPortal;
+  const StaffView({super.key});
 
   @override
   ConsumerState<StaffView> createState() => _StaffViewState();
@@ -164,7 +163,7 @@ class _StaffViewState extends ConsumerState<StaffView> {
                           ),
                           const SizedBox(height: 4.0),
                           Text(
-                            'Add new workers, configure their allowed vs. excepted menus, and switch sessions with one click.',
+                            'Admins add worker logins, reset passwords and set which menus each worker can use.',
                             maxLines: isMobile ? 2 : 1,
                             overflow: TextOverflow.ellipsis,
                             style: textTheme.bodySmall?.copyWith(
@@ -209,46 +208,15 @@ class _StaffViewState extends ConsumerState<StaffView> {
                             ),
                           ),
                         ),
-                        if (widget.onOpenLoginPortal != null)
-                          InteractivePressScale(
-                            onTap: widget.onOpenLoginPortal,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14.0,
-                                vertical: 8.0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.harborNavy,
-                                borderRadius: BorderRadius.circular(99.0),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.login_rounded,
-                                    size: 14.0,
-                                    color: colors.harborGold,
-                                  ),
-                                  const SizedBox(width: 6.0),
-                                  Text(
-                                    'Open Login Screen',
-                                    style: textTheme.labelSmall?.copyWith(
-                                      color: Colors.white,
-                                      fontSize: 11.0,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ],
                 ),
                 AnimatedSwitcher(
                   duration: motion.shortDuration,
-                  child: authState.statusMessage == null
+                  child:
+                      (authState.statusMessage ?? authState.errorMessage) ==
+                          null
                       ? const SizedBox.shrink()
                       : Padding(
                           padding: const EdgeInsets.only(top: 12.0),
@@ -259,13 +227,18 @@ class _StaffViewState extends ConsumerState<StaffView> {
                               vertical: 9.0,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE6F8EF),
+                              color: authState.errorMessage != null
+                                  ? const Color(0xFFFEE2E2)
+                                  : const Color(0xFFE6F8EF),
                               borderRadius: BorderRadius.circular(8.0),
                             ),
                             child: Text(
-                              authState.statusMessage!,
+                              authState.errorMessage ??
+                                  authState.statusMessage!,
                               style: textTheme.labelSmall?.copyWith(
-                                color: const Color(0xFF15803D),
+                                color: authState.errorMessage != null
+                                    ? const Color(0xFFB91C1C)
+                                    : const Color(0xFF15803D),
                                 fontSize: 12.0,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -293,6 +266,7 @@ class _StaffViewState extends ConsumerState<StaffView> {
                 context,
                 colors,
                 textTheme,
+                authState,
                 authNotifier,
               );
 
@@ -404,10 +378,17 @@ class _StaffViewState extends ConsumerState<StaffView> {
               _WorkerPermissionsCard(
                 worker: workers[i],
                 isCurrentSession: workers[i].id == authState.currentWorker.id,
-                onToggleModule: (module) => authNotifier
-                    .toggleWorkerModuleException(workers[i].id, module),
-                onSwitchSession: () =>
-                    authNotifier.switchActiveWorker(workers[i]),
+                onToggleModule: authState.currentWorker.isAdmin
+                    ? (module) => authNotifier.toggleWorkerModuleException(
+                        workers[i].id,
+                        module,
+                      )
+                    : null,
+                onResetPassword:
+                    authState.currentWorker.isAdmin &&
+                        workers[i].id != authState.currentWorker.id
+                    ? () => _showResetPasswordDialog(workers[i])
+                    : null,
               ),
             ],
         ],
@@ -419,8 +400,10 @@ class _StaffViewState extends ConsumerState<StaffView> {
     BuildContext context,
     AppColors colors,
     TextTheme textTheme,
+    AuthPortalState authState,
     AuthSessionNotifier authNotifier,
   ) {
+    final canManage = authState.currentWorker.isAdmin;
     return Container(
       padding: const EdgeInsets.all(22.0),
       decoration: BoxDecoration(
@@ -476,9 +459,10 @@ class _StaffViewState extends ConsumerState<StaffView> {
           ),
           const SizedBox(height: 10.0),
           _StaffTextField(
-            label: 'Initial 4-Digit Security PIN',
-            hintText: 'Set initial 4-digit login PIN for worker',
+            label: 'Initial Password',
+            hintText: 'At least $kMinStaffPasswordLength characters',
             controller: _pinController,
+            obscureText: true,
           ),
           const SizedBox(height: 10.0),
           _StaffTextField(
@@ -633,89 +617,99 @@ class _StaffViewState extends ConsumerState<StaffView> {
             }).toList(),
           ),
           const SizedBox(height: 18.0),
-          Row(
-            children: [
-              Expanded(
-                child: InteractivePressScale(
-                  onTap: () {
-                    authNotifier.addWorkerFromAdmin(
+          if (!canManage)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10.0),
+              child: Text(
+                'Only an admin can add workers.',
+                style: textTheme.labelSmall?.copyWith(
+                  fontSize: 11.0,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary,
+                ),
+              ),
+            ),
+          InteractivePressScale(
+            onTap: !canManage || authState.isBusy
+                ? null
+                : () async {
+                    final created = await authNotifier.addWorker(
                       fullName: _nameController.text,
                       email: _emailController.text,
                       phone: _phoneController.text,
                       roleTitle: _selectedRole,
                       branch: _selectedBranch,
-                      initialPin: _pinController.text,
+                      initialPassword: _pinController.text,
                       exceptedModules: Set<AppModuleKey>.from(
                         _draftExceptedModules,
                       ),
                     );
-                    _nameController.clear();
-                    _emailController.clear();
-                    _pinController.text = '2026';
-                    _phoneController.clear();
+                    if (created != null && mounted) {
+                      _nameController.clear();
+                      _emailController.clear();
+                      _pinController.clear();
+                      _phoneController.clear();
+                    }
                   },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    decoration: BoxDecoration(
-                      color: colors.harborNavy,
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Add Worker',
-                      style: textTheme.labelMedium?.copyWith(
-                        color: Colors.white,
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
+            child: Container(
+              key: const ValueKey('staff_add_worker_button'),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              decoration: BoxDecoration(
+                color: canManage && !authState.isBusy
+                    ? colors.harborNavy
+                    : colors.textTertiary,
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                authState.isBusy ? 'Adding…' : 'Add Worker',
+                style: textTheme.labelMedium?.copyWith(
+                  color: Colors.white,
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 10.0),
-              Expanded(
-                child: InteractivePressScale(
-                  onTap: () {
-                    final created = authNotifier.addWorkerFromAdmin(
-                      fullName: _nameController.text,
-                      email: _emailController.text,
-                      phone: _phoneController.text,
-                      roleTitle: _selectedRole,
-                      branch: _selectedBranch,
-                      initialPin: _pinController.text,
-                      exceptedModules: Set<AppModuleKey>.from(
-                        _draftExceptedModules,
-                      ),
-                    );
-                    authNotifier.switchActiveWorker(created);
-                    _nameController.clear();
-                    _emailController.clear();
-                    _pinController.text = '2026';
-                    _phoneController.clear();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    decoration: BoxDecoration(
-                      color: colors.accentGreen,
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Add & Login as Worker',
-                      style: textTheme.labelMedium?.copyWith(
-                        color: Colors.white,
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _showResetPasswordDialog(WorkerAccount worker) async {
+    final controller = TextEditingController();
+    final newPassword = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Reset password for ${worker.fullName}'),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          autocorrect: false,
+          enableSuggestions: false,
+          decoration: const InputDecoration(
+            labelText: 'New password',
+            helperText: 'At least $kMinStaffPasswordLength characters',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            child: const Text('Reset Password'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (newPassword == null || !mounted) return;
+    await ref
+        .read(authSessionNotifierProvider.notifier)
+        .adminSetWorkerPassword(workerId: worker.id, newPassword: newPassword);
   }
 }
 
@@ -724,13 +718,17 @@ class _WorkerPermissionsCard extends StatelessWidget {
     required this.worker,
     required this.isCurrentSession,
     required this.onToggleModule,
-    required this.onSwitchSession,
+    required this.onResetPassword,
   });
 
   final WorkerAccount worker;
   final bool isCurrentSession;
-  final ValueChanged<AppModuleKey> onToggleModule;
-  final VoidCallback onSwitchSession;
+
+  /// Null when the viewer is not an admin.
+  final ValueChanged<AppModuleKey>? onToggleModule;
+
+  /// Null for the viewer's own card and for non-admins.
+  final VoidCallback? onResetPassword;
 
   @override
   Widget build(BuildContext context) {
@@ -813,7 +811,9 @@ class _WorkerPermissionsCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(99.0),
                                 ),
                                 child: Text(
-                                  worker.id,
+                                  worker.isActive
+                                      ? worker.role.name.toUpperCase()
+                                      : 'INACTIVE',
                                   style: textTheme.labelSmall?.copyWith(
                                     fontSize: 10.0,
                                     fontWeight: FontWeight.w700,
@@ -824,7 +824,7 @@ class _WorkerPermissionsCard extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            '${worker.roleTitle} • ${worker.branch} • ${worker.email} • PIN: ${worker.pin}',
+                            '${worker.roleTitle} • ${worker.branch} • ${worker.email}',
                             style: textTheme.labelSmall?.copyWith(
                               fontSize: 11.0,
                               color: colors.textSecondary,
@@ -857,7 +857,7 @@ class _WorkerPermissionsCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          'Change My PIN',
+                          'Change My Password',
                           style: textTheme.labelSmall?.copyWith(
                             fontSize: 11.0,
                             fontWeight: FontWeight.w700,
@@ -866,33 +866,28 @@ class _WorkerPermissionsCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  InteractivePressScale(
-                    onTap: onSwitchSession,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 7.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isCurrentSession
-                            ? const Color(0xFFE6F8EF)
-                            : colors.harborNavy,
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Text(
-                        isCurrentSession
-                            ? 'Active Logged-In Worker'
-                            : 'Switch Session to Worker',
-                        style: textTheme.labelSmall?.copyWith(
-                          fontSize: 11.0,
-                          fontWeight: FontWeight.w700,
-                          color: isCurrentSession
-                              ? const Color(0xFF15803D)
-                              : Colors.white,
+                  if (onResetPassword != null)
+                    InteractivePressScale(
+                      onTap: onResetPassword,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 7.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.harborNavy,
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Text(
+                          'Reset Password',
+                          style: textTheme.labelSmall?.copyWith(
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -904,7 +899,9 @@ class _WorkerPermissionsCard extends StatelessWidget {
             children: AppModuleKey.values.map((module) {
               final isAllowed = worker.canSeeModule(module);
               return InkWell(
-                onTap: () => onToggleModule(module),
+                onTap: onToggleModule == null
+                    ? null
+                    : () => onToggleModule!(module),
                 borderRadius: BorderRadius.circular(6.0),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -949,11 +946,13 @@ class _StaffTextField extends StatelessWidget {
     required this.label,
     required this.hintText,
     required this.controller,
+    this.obscureText = false,
   });
 
   final String label;
   final String hintText;
   final TextEditingController controller;
+  final bool obscureText;
 
   @override
   Widget build(BuildContext context) {
@@ -974,6 +973,9 @@ class _StaffTextField extends StatelessWidget {
         const SizedBox(height: 4.0),
         TextField(
           controller: controller,
+          obscureText: obscureText,
+          autocorrect: !obscureText,
+          enableSuggestions: !obscureText,
           style: textTheme.bodySmall?.copyWith(
             fontSize: 12.0,
             fontWeight: FontWeight.w600,

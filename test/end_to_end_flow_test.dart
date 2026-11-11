@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:laundry_ridge/app/app.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/permissions/role_permission.dart';
+import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
+import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
+
+import 'support/fake_auth_backend.dart';
 
 void main() {
   testWidgets(
@@ -13,15 +15,13 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(const ProviderScope(child: LaundryRidgeApp()));
+      final container = await pumpTestApp(tester);
 
       expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
-      expect(find.text('EMAIL & PIN SIGN IN'), findsOneWidget);
+      expect(find.text('STAFF SIGN IN'), findsOneWidget);
       expect(find.text('Register Worker'), findsNothing);
 
-      await tester.tap(find.text('Sign in with Email & PIN'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await signInThroughForm(tester);
 
       expect(find.text('Operations Overview'), findsOneWidget);
       expect(find.text('Total Revenue'), findsOneWidget);
@@ -38,10 +38,16 @@ void main() {
       expect(find.text('Customer / Owner Details'), findsOneWidget);
       expect(find.text('Create Order & View Invoice'), findsOneWidget);
 
+      container
+          .read(orderDetailsNotifierProvider.notifier)
+          .incrementPosGarment(GarmentType.shirt);
+      await tester.pump();
+
       await tester.ensureVisible(find.text('Create Order & View Invoice'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Order & View Invoice'));
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('LG-2026-00131'), findsWidgets);
@@ -60,25 +66,14 @@ void main() {
   );
 
   testWidgets(
-    'End-to-End Journey 2: Admin Registers Worker with Initial PIN -> Worker Changes PIN Inside App -> Logs Out & Logs In with New PIN',
+    'End-to-End Journey 2: Admin adds a worker with a password -> worker signs in with restricted menus -> changes password -> old password rejected',
     (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1440, 1024);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const LaundryRidgeApp(),
-        ),
-      );
-
-      await tester.tap(find.text('Sign in with Email & PIN'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      final container = await pumpTestApp(tester);
+      await signInThroughForm(tester);
 
       expect(find.text('Settlements'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
@@ -93,16 +88,18 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Register Worker & Assign Menu Rights'), findsOneWidget);
-      expect(find.text('Initial 4-Digit Security PIN'), findsOneWidget);
+      expect(find.text('Initial Password'), findsOneWidget);
+      expect(find.textContaining('PIN:'), findsNothing);
+      expect(find.text('Switch Session to Worker'), findsNothing);
 
       final authNotifier = container.read(authSessionNotifierProvider.notifier);
-      final newWorker = authNotifier.addWorkerFromAdmin(
+      final newWorker = await authNotifier.addWorker(
         fullName: 'Kelvin Mutua',
-        email: 'kelvin.mutua@harborridgelaundry.com',
+        email: 'kelvin.mutua@harborridge.test',
         phone: '+254 710 555 900',
         roleTitle: 'POS Counter Attendant',
         branch: 'LaundryGo Nairobi',
-        initialPin: '4321',
+        initialPassword: 'first-pass-123',
         exceptedModules: {
           AppModuleKey.settlements,
           AppModuleKey.staff,
@@ -110,43 +107,52 @@ void main() {
           AppModuleKey.vendors,
         },
       );
-      expect(newWorker.pin, '4321');
-      authNotifier.switchActiveWorker(newWorker);
+      expect(newWorker, isNotNull);
+      await tester.pump();
 
+      await tester.tap(find.text('Logout'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
 
+      await signInThroughForm(
+        tester,
+        email: 'kelvin.mutua@harborridge.test',
+        password: 'first-pass-123',
+      );
+
+      expect(
+        container.read(authSessionNotifierProvider).currentWorker.fullName,
+        'Kelvin Mutua',
+      );
       expect(find.text('Dashboard'), findsOneWidget);
       expect(find.text('Orders'), findsOneWidget);
       expect(find.text('Services'), findsOneWidget);
       expect(find.text('Settlements'), findsNothing);
       expect(find.text('Vendors'), findsNothing);
 
-      // Worker changes their own PIN inside the app via the header Change PIN button
       await tester.tap(find.byKey(const ValueKey('header_change_pin_button')));
       await tester.pumpAndSettle();
-
-      expect(find.text('Change My Security PIN'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('change_pin_current_input')),
+        findsOneWidget,
+      );
 
       await tester.enterText(
         find.byKey(const ValueKey('change_pin_current_input')),
-        '4321',
+        'first-pass-123',
       );
       await tester.enterText(
         find.byKey(const ValueKey('change_pin_new_input')),
-        '9876',
+        'second-pass-456',
       );
       await tester.enterText(
         find.byKey(const ValueKey('change_pin_confirm_input')),
-        '9876',
+        'second-pass-456',
       );
       await tester.tap(find.byKey(const ValueKey('submit_change_pin_button')));
       await tester.pumpAndSettle();
-
-      expect(
-        container.read(authSessionNotifierProvider).currentWorker.pin,
-        '9876',
-      );
+      expect(find.textContaining('Password updated'), findsOneWidget);
 
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
@@ -155,40 +161,31 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
-      expect(find.text('Username or Work Email'), findsOneWidget);
-      expect(find.text('Security PIN'), findsOneWidget);
+      expect(find.text('Work Email'), findsOneWidget);
+      expect(find.text('Password'), findsOneWidget);
 
-      // Verify old PIN ('4321') is rejected and new PIN ('9876') succeeds
-      await tester.enterText(
-        find.byKey(const ValueKey('login_email_input')),
-        'kelvin.mutua@harborridgelaundry.com',
+      await signInThroughForm(
+        tester,
+        email: 'kelvin.mutua@harborridge.test',
+        password: 'first-pass-123',
       );
-      await tester.enterText(
-        find.byKey(const ValueKey('login_pin_input')),
-        '4321',
-      );
-      await tester.tap(find.byKey(const ValueKey('login_submit_button')));
-      await tester.pump();
       expect(
         container.read(authSessionNotifierProvider).isAuthenticated,
         isFalse,
       );
-
-      await tester.enterText(
-        find.byKey(const ValueKey('login_pin_input')),
-        '9876',
+      expect(
+        find.text('That email and password do not match.'),
+        findsOneWidget,
       );
-      await tester.tap(find.byKey(const ValueKey('login_submit_button')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+
+      await signInThroughForm(
+        tester,
+        email: 'kelvin.mutua@harborridge.test',
+        password: 'second-pass-456',
+      );
       expect(
         container.read(authSessionNotifierProvider).isAuthenticated,
         isTrue,
-      );
-      expect(
-        container.read(authSessionNotifierProvider).currentWorker.fullName,
-        'Kelvin Mutua',
       );
     },
   );
@@ -200,11 +197,8 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(const ProviderScope(child: LaundryRidgeApp()));
-
-      await tester.tap(find.text('Sign in with Email & PIN'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await pumpTestApp(tester);
+      await signInThroughForm(tester);
 
       final tabsToVerify = <(String, String)>[
         ('Dispatch', 'Pickup & Delivery Dispatch Command'),
@@ -233,16 +227,15 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(const ProviderScope(child: LaundryRidgeApp()));
+      await pumpTestApp(tester);
 
-      // 1. Initial Login Screen
+      // 1. Initial Login Screen: nothing pre-filled
       expect(find.text('HARBORRIDGE'), findsWidgets);
-      expect(find.text('Sign in with Email & PIN'), findsOneWidget);
+      expect(find.text('Sign in'), findsOneWidget);
+      expect(find.text(kTestAdminEmail), findsNothing);
 
       // 2. Perform Login
-      await tester.tap(find.text('Sign in with Email & PIN'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await signInThroughForm(tester);
 
       // 3. Admin Dashboard verification - No hardcoded static dummies
       expect(find.text('Operations Overview'), findsOneWidget);

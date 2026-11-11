@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
+import 'package:laundry_ridge/core/supabase/remote_write.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
@@ -113,6 +114,14 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
     _loadSupabaseInventory();
   }
 
+  /// A write the screen already showed as done was rejected or failed:
+  /// say so, then reload what the server actually has.
+  void _handleWriteResult(String? failure) {
+    if (failure == null || !mounted) return;
+    setState(() => _statusBanner = 'Not saved: $failure');
+    _loadSupabaseInventory();
+  }
+
   Future<void> _loadSupabaseInventory() async {
     final client = ref.read(supabaseClientProvider);
     if (client == null) return;
@@ -141,7 +150,12 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
       setState(() {
         _items = loaded;
       });
-    } catch (_) {}
+    } catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _statusBanner = 'Could not load inventory from the server.',
+      );
+    }
   }
 
   @override
@@ -212,20 +226,19 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('inventory_items')
-          .insert({
-            'sku': newItem.sku,
-            'name': newItem.name,
-            'category': newItem.category,
-            'supplier': newItem.supplier,
-            'unit': newItem.unitLabel,
-            'unit_cost_kes': newItem.unitCostKes,
-            'quantity': newItem.quantity,
-            'min_threshold': newItem.reorderPoint,
-            'linked_service': newItem.linkedService,
-          })
-          .catchError((_) {});
+      runRemoteWrite(
+        client.from('inventory_items').insert({
+          'sku': newItem.sku,
+          'name': newItem.name,
+          'category': newItem.category,
+          'supplier': newItem.supplier,
+          'unit': newItem.unitLabel,
+          'unit_cost_kes': newItem.unitCostKes,
+          'quantity': newItem.quantity,
+          'min_threshold': newItem.reorderPoint,
+          'linked_service': newItem.linkedService,
+        }).select(),
+      ).then(_handleWriteResult);
     }
   }
 
@@ -264,14 +277,16 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('inventory_items')
-          .update({
-            'quantity': nextQty,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('sku', item.sku)
-          .catchError((_) {});
+      runRemoteWrite(
+        client
+            .from('inventory_items')
+            .update({
+              'quantity': nextQty,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('sku', item.sku)
+            .select(),
+      ).then(_handleWriteResult);
     }
   }
 

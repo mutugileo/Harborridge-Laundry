@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
+import 'package:laundry_ridge/core/supabase/remote_write.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
@@ -141,6 +142,14 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
     _loadSupabaseSettlements();
   }
 
+  /// A write the screen already showed as done was rejected or failed:
+  /// say so, then reload what the server actually has.
+  void _handleWriteResult(String? failure) {
+    if (failure == null || !mounted) return;
+    setState(() => _statusMessage = 'Not saved: $failure');
+    _loadSupabaseSettlements();
+  }
+
   Future<void> _loadSupabaseSettlements() async {
     final client = ref.read(supabaseClientProvider);
     if (client == null) return;
@@ -176,7 +185,13 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
       setState(() {
         _batches = loaded;
       });
-    } catch (_) {}
+    } catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _statusMessage =
+            'Could not load settlement batches from the server.',
+      );
+    }
   }
 
   @override
@@ -224,21 +239,20 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('settlement_batches')
-          .insert({
-            'batch_code': newBatch.batchCode,
-            'vendor_name': newBatch.vendorName,
-            'period_label': 'Cycle Nov 2026',
-            'orders_count': 84,
-            'gross_volume_kes': newBatch.grossVolumeKes,
-            'commission_split_kes': newBatch.commissionFeeKes,
-            'net_payout_kes': newBatch.netPayoutKes,
-            'disbursal_method': newBatch.disbursalMethod,
-            'account_number': newBatch.accountNumber,
-            'status': newBatch.status,
-          })
-          .catchError((_) {});
+      runRemoteWrite(
+        client.from('settlement_batches').insert({
+          'batch_code': newBatch.batchCode,
+          'vendor_name': newBatch.vendorName,
+          'period_label': 'Cycle Nov 2026',
+          'orders_count': 84,
+          'gross_volume_kes': newBatch.grossVolumeKes,
+          'commission_split_kes': newBatch.commissionFeeKes,
+          'net_payout_kes': newBatch.netPayoutKes,
+          'disbursal_method': newBatch.disbursalMethod,
+          'account_number': newBatch.accountNumber,
+          'status': newBatch.status,
+        }).select(),
+      ).then(_handleWriteResult);
     }
   }
 
@@ -262,11 +276,13 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('settlement_batches')
-          .update({'status': 'Settled'})
-          .eq('batch_code', batch.batchCode)
-          .catchError((_) {});
+      runRemoteWrite(
+        client
+            .from('settlement_batches')
+            .update({'status': 'Settled'})
+            .eq('batch_code', batch.batchCode)
+            .select(),
+      ).then(_handleWriteResult);
     }
   }
 

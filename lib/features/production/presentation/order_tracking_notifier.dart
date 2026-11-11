@@ -53,12 +53,29 @@ class OrderTrackingNotifier extends Notifier<OrderTrackingState> {
     }).toList();
 
     state = state.copyWith(orders: updatedOrders, clearDraggedOrder: true);
-    ref
-        .read(orderTrackingRepositoryProvider)
-        .updateOrderStage(orderNumber, targetStage);
-    ref
-        .read(orderTrackingRepositoryProvider)
-        .updateOrderStage(orderNumber, targetStage);
+    _persist(
+      () => ref
+          .read(orderTrackingRepositoryProvider)
+          .updateOrderStage(orderNumber, targetStage),
+      'Could not move $orderNumber',
+    );
+  }
+
+  /// The board updates immediately; if the server rejects the change, show
+  /// why and reload the board from the server so it matches reality.
+  Future<void> _persist(Future<void> Function() write, String what) async {
+    try {
+      await write();
+    } on Object catch (error) {
+      if (_disposed) return;
+      await loadProductionBoard();
+      if (_disposed) return;
+      state = state.copyWith(actionMessage: '$what: $error');
+    }
+  }
+
+  void clearActionMessage() {
+    state = state.copyWith(clearActionMessage: true);
   }
 
   void advanceOrderToNextStage(String orderNumber) {
@@ -84,12 +101,12 @@ class OrderTrackingNotifier extends Notifier<OrderTrackingState> {
     }).toList();
 
     state = state.copyWith(orders: updatedOrders);
-    ref
-        .read(orderTrackingRepositoryProvider)
-        .reassignStaff(orderNumber, staffName);
-    ref
-        .read(orderTrackingRepositoryProvider)
-        .reassignStaff(orderNumber, staffName);
+    _persist(
+      () => ref
+          .read(orderTrackingRepositoryProvider)
+          .reassignStaff(orderNumber, staffName),
+      'Could not reassign $orderNumber',
+    );
   }
 
   void selectWorkflowTab(BoardWorkflowTab tab) {

@@ -45,6 +45,15 @@ class _OrderTrackingBoardViewState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(orderTrackingNotifierProvider);
+    ref.listen(orderTrackingNotifierProvider.select((s) => s.actionMessage), (
+      _,
+      message,
+    ) {
+      if (message == null) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+      ref.read(orderTrackingNotifierProvider.notifier).clearActionMessage();
+    });
     final notifier = ref.read(orderTrackingNotifierProvider.notifier);
     final colors = context.colors;
     final motion = context.motion;

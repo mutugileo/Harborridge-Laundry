@@ -258,7 +258,7 @@ class OrderSidebar extends StatelessWidget {
                             const SizedBox(width: 12.0),
                             Expanded(
                               child: Text(
-                                'Change PIN',
+                                'Change Password',
                                 style: textTheme.bodySmall?.copyWith(
                                   fontSize: 12.0,
                                   fontWeight: FontWeight.w700,

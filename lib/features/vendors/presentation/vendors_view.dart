@@ -4,6 +4,7 @@ import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
+import 'package:laundry_ridge/core/supabase/remote_write.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
@@ -81,6 +82,14 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
     _loadSupabaseVendors();
   }
 
+  /// A write the screen already showed as done was rejected or failed:
+  /// say so, then reload what the server actually has.
+  void _handleWriteResult(String? failure) {
+    if (failure == null || !mounted) return;
+    setState(() => _statusMessage = 'Not saved: $failure');
+    _loadSupabaseVendors();
+  }
+
   Future<void> _loadSupabaseVendors() async {
     final client = ref.read(supabaseClientProvider);
     if (client == null) return;
@@ -117,7 +126,13 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
       setState(() {
         _branches = loaded;
       });
-    } catch (_) {}
+    } catch (error) {
+      if (!mounted) return;
+      setState(
+        () =>
+            _statusMessage = 'Could not load vendor branches from the server.',
+      );
+    }
   }
 
   @override
@@ -173,21 +188,20 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('partner_vendors')
-          .insert({
-            'branch_code': newBranch.code,
-            'branch_name': newBranch.branchName,
-            'location': newBranch.location,
-            'contact_phone': '+254 700 000 000',
-            'manager_name': newBranch.managerName,
-            'intake_status': 'Active Intake',
-            'revenue_kes': 0,
-            'orders_count': newBranch.activeOrders,
-            'commission_rate': 0.15,
-            'is_franchise': true,
-          })
-          .catchError((_) {});
+      runRemoteWrite(
+        client.from('partner_vendors').insert({
+          'branch_code': newBranch.code,
+          'branch_name': newBranch.branchName,
+          'location': newBranch.location,
+          'contact_phone': '+254 700 000 000',
+          'manager_name': newBranch.managerName,
+          'intake_status': 'Active Intake',
+          'revenue_kes': 0,
+          'orders_count': newBranch.activeOrders,
+          'commission_rate': 0.15,
+          'is_franchise': true,
+        }).select(),
+      ).then(_handleWriteResult);
     }
   }
 
@@ -208,13 +222,17 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('partner_vendors')
-          .update({
-            'intake_status': nextOnline ? 'Active Intake' : 'Maintenance Pause',
-          })
-          .eq('branch_code', current.code)
-          .catchError((_) {});
+      runRemoteWrite(
+        client
+            .from('partner_vendors')
+            .update({
+              'intake_status': nextOnline
+                  ? 'Active Intake'
+                  : 'Maintenance Pause',
+            })
+            .eq('branch_code', current.code)
+            .select(),
+      ).then(_handleWriteResult);
     }
   }
 

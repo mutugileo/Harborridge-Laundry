@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
+import 'package:laundry_ridge/core/errors/app_failure.dart';
+import 'package:laundry_ridge/core/utilities/client_ref.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/features/orders/data/orders_repository.dart';
 import 'package:laundry_ridge/features/orders/domain/order_addon.dart';
@@ -11,6 +13,35 @@ import 'package:laundry_ridge/features/orders/presentation/order_details_state.d
 
 class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
   bool _disposed = false;
+  bool _paymentInFlight = false;
+  bool _orderCreateInFlight = false;
+
+  /// Reused until the POS order is confirmed, so a retry after a dropped
+  /// response returns the same order instead of creating a second one.
+  String? _pendingOrderClientRef;
+
+  /// Item edits are saved one after another so a slow request cannot
+  /// overwrite a newer one.
+  Future<void> _itemSaveChain = Future<void>.value();
+
+  static String _failureMessage(Object error) =>
+      error is AppFailure ? error.message : error.toString();
+
+  void _saveItems(OrderDetail order) {
+    final repository = ref.read(ordersRepositoryProvider);
+    _itemSaveChain = _itemSaveChain.then((_) async {
+      try {
+        await repository.replaceOrderItems(order.orderId, order.items);
+      } on Object catch (error) {
+        if (_disposed) return;
+        state = state.copyWith(
+          actionFeedbackMessage:
+              'Could not save items for ${order.orderId}: ${_failureMessage(error)}. Reloading the order.',
+        );
+        await loadOrderDetails(order.orderId);
+      }
+    });
+  }
 
   @override
   OrderDetailsUiState build() {
@@ -149,16 +180,25 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     );
   }
 
-  void updateOrderStatus(OrderProcessStatus newStatus) {
+  Future<void> updateOrderStatus(OrderProcessStatus newStatus) async {
     final currentOrder = state.order;
     if (currentOrder == null) {
       state = state.copyWith(currentStatus: newStatus);
       return;
     }
 
-    ref
-        .read(ordersRepositoryProvider)
-        .updateOrderStatus(currentOrder.orderId, newStatus);
+    try {
+      await ref
+          .read(ordersRepositoryProvider)
+          .updateOrderStatus(currentOrder.orderId, newStatus);
+    } on Object catch (error) {
+      if (_disposed) return;
+      state = state.copyWith(
+        actionFeedbackMessage: 'Status not changed: ${_failureMessage(error)}',
+      );
+      return;
+    }
+    if (_disposed) return;
 
     final updatedOrder = OrderDetail(
       orderId: currentOrder.orderId,
@@ -209,6 +249,26 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     state = state.copyWith(isSidebarCollapsed: !state.isSidebarCollapsed);
   }
 
+  /// POS intake: changes only the new-order draft, never an existing order.
+  void incrementPosGarment(GarmentType garment) {
+    final updated = Map<GarmentType, int>.from(state.catalogQuantities);
+    updated[garment] = (updated[garment] ?? 0) + 1;
+    state = state.copyWith(catalogQuantities: updated);
+  }
+
+  /// POS intake: changes only the new-order draft, never an existing order.
+  void decrementPosGarment(GarmentType garment) {
+    final updated = Map<GarmentType, int>.from(state.catalogQuantities);
+    final next = (updated[garment] ?? 0) - 1;
+    if (next <= 0) {
+      updated.remove(garment);
+    } else {
+      updated[garment] = next;
+    }
+    state = state.copyWith(catalogQuantities: updated);
+  }
+
+  /// Order page: adds a garment to the order that is open and saves it.
   void incrementCatalogGarment(GarmentType garment) {
     final updatedCounts = Map<GarmentType, int>.from(state.catalogQuantities);
     updatedCounts[garment] = (updatedCounts[garment] ?? 0) + 1;
@@ -295,7 +355,7 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
           'Added ${garment.displayName} to ${updatedOrder.orderId}',
     );
 
-    ref.read(ordersRepositoryProvider).updateOrder(updatedOrder);
+    _saveItems(updatedOrder);
   }
 
   void decrementCatalogGarment(GarmentType garment) {
@@ -380,62 +440,81 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       actionFeedbackMessage: 'Updated ${garment.displayName} quantity',
     );
 
-    ref.read(ordersRepositoryProvider).updateOrder(updatedOrder);
+    _saveItems(updatedOrder);
   }
 
-  void recordPayment({required double amount, required String method}) {
+  /// Records a payment once the server accepts it. Returns null on success or
+  /// the reason it was rejected (over the balance, reused reference, no access).
+  Future<String?> recordPayment({
+    required double amount,
+    required String method,
+    String? reference,
+  }) async {
     final currentOrder = state.order;
-    if (currentOrder == null) return;
+    if (currentOrder == null) return 'Open an order first.';
+    if (_paymentInFlight) return 'A payment is already being saved.';
+    if (amount <= 0) return 'Enter an amount greater than zero.';
+    if (amount > currentOrder.balanceDue + 0.005) {
+      return 'KES ${amount.toStringAsFixed(2)} is more than the KES ${currentOrder.balanceDue.clamp(0, double.infinity).toStringAsFixed(2)} balance due.';
+    }
 
+    final trimmedReference = reference?.trim().toUpperCase();
     final newPayment = OrderPayment(
       amount: amount,
-      date: '05/11/2026',
+      date: _todayLabel(),
       method: '[$method]',
+      reference: (trimmedReference?.isEmpty ?? true) ? null : trimmedReference,
     );
-    final updatedPayments = [...currentOrder.payments, newPayment];
 
-    final updatedOrder = OrderDetail(
-      orderId: currentOrder.orderId,
-      storeName: currentOrder.storeName,
-      storeCode: currentOrder.storeCode,
-      storeEmail: currentOrder.storeEmail,
-      storeAddress: currentOrder.storeAddress,
-      taxIdentifier: currentOrder.taxIdentifier,
-      orderDate: currentOrder.orderDate,
-      deliveryDate: currentOrder.deliveryDate,
-      status: state.currentStatus,
-      customerName: currentOrder.customerName,
-      customerPhone: currentOrder.customerPhone,
-      assignedStaff: currentOrder.assignedStaff,
-      primaryService: currentOrder.primaryService,
-      vendorBranch: currentOrder.vendorBranch,
-      displayAmount: currentOrder.displayAmount,
-      paymentStatusLabel: 'Paid',
-      processingStageLabel: currentOrder.processingStageLabel,
-      deliveryStatusLabel: currentOrder.deliveryStatusLabel,
-      deliveryMethod: currentOrder.deliveryMethod,
-      assignedRider: currentOrder.assignedRider,
-      createdDateLabel: currentOrder.createdDateLabel,
-      items: currentOrder.items,
-      addons: currentOrder.addons,
+    _paymentInFlight = true;
+    try {
+      await ref
+          .read(ordersRepositoryProvider)
+          .recordPayment(
+            currentOrder.orderId,
+            newPayment,
+            clientRef: newClientRef(),
+          );
+    } on Object catch (error) {
+      final message = _failureMessage(error);
+      if (!_disposed) {
+        state = state.copyWith(
+          actionFeedbackMessage: 'Payment not recorded: $message',
+        );
+      }
+      return message;
+    } finally {
+      _paymentInFlight = false;
+    }
+    if (_disposed) return null;
+
+    final latest = state.order?.orderId == currentOrder.orderId
+        ? state.order!
+        : currentOrder;
+    final updatedPayments = [...latest.payments, newPayment];
+    final paid = updatedPayments.fold<double>(0, (sum, p) => sum + p.amount);
+    final updatedOrder = latest.copyWith(
       payments: updatedPayments,
+      paymentStatusLabel: paid + 0.005 >= latest.totalAmount
+          ? 'Paid'
+          : 'Partial',
     );
-
-    final updatedList = [
-      for (final item in state.orders)
-        if (item.orderId == updatedOrder.orderId) updatedOrder else item,
-    ];
 
     state = state.copyWith(
       order: updatedOrder,
-      orders: updatedList,
+      orders: [
+        for (final item in state.orders)
+          if (item.orderId == updatedOrder.orderId) updatedOrder else item,
+      ],
       actionFeedbackMessage:
           'Payment of KES ${amount.toStringAsFixed(2)} recorded.',
     );
+    return null;
+  }
 
-    ref
-        .read(ordersRepositoryProvider)
-        .recordPayment(currentOrder.orderId, newPayment);
+  static String _todayLabel([DateTime? date]) {
+    final now = date ?? DateTime.now();
+    return '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
   }
 
   void triggerPrintInvoice() {
@@ -449,10 +528,13 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
   }
 
   void clearCatalogQuantities() {
+    _pendingOrderClientRef = null;
     state = state.copyWith(catalogQuantities: const {});
   }
 
-  String createNewPosOrder({
+  /// Creates the POS order on the server and returns its order number, or
+  /// null if it was rejected (the reason is in actionFeedbackMessage).
+  Future<String?> createNewPosOrder({
     required String customerName,
     required String customerPhone,
     required String primaryService,
@@ -463,10 +545,19 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     required String paymentMethod,
     required bool includeStainRemoval,
     required bool includeExtraFragrance,
-  }) {
+  }) async {
+    if (_orderCreateInFlight) return null;
+
     final entries = state.catalogQuantities.entries
         .where((entry) => entry.value > 0)
         .toList();
+    if (entries.isEmpty) {
+      state = state.copyWith(
+        actionFeedbackMessage:
+            'Add at least one garment before creating an order.',
+      );
+      return null;
+    }
 
     final items = <OrderItem>[
       for (var i = 0; i < entries.length; i++)
@@ -495,73 +586,86 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     );
     final grandTotal = subTotal + addonTotal;
 
-    final nextSequence = 125 + state.orders.length;
-    final newOrderId = 'LG-2026-00$nextSequence';
-
-    final payments = <OrderPayment>[
-      if (paymentStatusLabel == 'Paid')
-        OrderPayment(
-          amount: grandTotal,
-          date: '05/11/2026',
-          method: '[$paymentMethod]',
-        )
-      else if (paymentStatusLabel == 'Partial')
-        OrderPayment(
-          amount: (grandTotal * 0.5).roundToDouble(),
-          date: '05/11/2026',
-          method: '[$paymentMethod]',
-        ),
-    ];
+    final now = DateTime.now();
+    final initialPayment = switch (paymentStatusLabel) {
+      'Paid' => OrderPayment(
+        amount: grandTotal,
+        date: _todayLabel(now),
+        method: '[$paymentMethod]',
+      ),
+      'Partial' => OrderPayment(
+        amount: (grandTotal * 0.5).roundToDouble(),
+        date: _todayLabel(now),
+        method: '[$paymentMethod]',
+      ),
+      _ => null,
+    };
 
     final operator = ref.read(authSessionNotifierProvider).currentWorker;
-    final now = DateTime.now();
-    final formattedDate =
-        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
-    final due = now.add(const Duration(days: 2));
-    final formattedDue =
-        '${due.day.toString().padLeft(2, '0')}/${due.month.toString().padLeft(2, '0')}/${due.year}';
-
-    final newOrder = OrderDetail(
-      orderId: newOrderId,
+    final draft = OrderDetail(
+      orderId: '',
       storeName: 'HARBORRIDGE LAUNDRY',
       storeCode: 'HR-2026',
       storeEmail: operator.email,
       storeAddress: vendorBranch,
       taxIdentifier: 'TAX: KRA-PIN-P05123984A',
-      orderDate: formattedDate,
-      deliveryDate: formattedDue,
+      orderDate: _todayLabel(now),
+      deliveryDate: _todayLabel(now.add(const Duration(days: 2))),
       status: OrderProcessStatus.processing,
       customerName: customerName.trim().isEmpty
           ? 'Walk-in Customer'
           : customerName.trim(),
-      customerPhone: customerPhone.trim().isEmpty ? '' : customerPhone.trim(),
+      customerPhone: customerPhone.trim(),
       assignedStaff: operator.fullName,
       primaryService: primaryService,
       vendorBranch: vendorBranch,
       displayAmount: 'KES ${grandTotal.toStringAsFixed(0)}',
-      paymentStatusLabel: paymentStatusLabel,
+      paymentStatusLabel: initialPayment == null
+          ? 'Unpaid'
+          : (paymentStatusLabel == 'Paid' ? 'Paid' : 'Partial'),
       processingStageLabel: 'Received',
       deliveryStatusLabel: deliveryMethod,
       deliveryMethod: deliveryMethod,
       assignedRider: assignedRider,
-      createdDateLabel: formattedDate,
+      createdDateLabel: _todayLabel(now),
       items: items,
       addons: addons,
-      payments: payments,
+      payments: [?initialPayment],
     );
 
-    final updatedOrders = [newOrder, ...state.orders];
+    _orderCreateInFlight = true;
+    final clientRef = _pendingOrderClientRef ??= newClientRef();
+    final String newOrderId;
+    try {
+      newOrderId = await ref
+          .read(ordersRepositoryProvider)
+          .createOrder(
+            draft,
+            clientRef: clientRef,
+            initialPayment: initialPayment,
+          );
+    } on Object catch (error) {
+      if (!_disposed) {
+        state = state.copyWith(
+          actionFeedbackMessage: 'Order not created: ${_failureMessage(error)}',
+        );
+      }
+      return null;
+    } finally {
+      _orderCreateInFlight = false;
+    }
+    _pendingOrderClientRef = null;
+    if (_disposed) return newOrderId;
+
+    final newOrder = draft.copyWith(orderId: newOrderId);
     state = state.copyWith(
-      orders: updatedOrders,
+      orders: [newOrder, ...state.orders],
       order: newOrder,
       currentStatus: newOrder.status,
       isShowingOrdersList: false,
       actionFeedbackMessage:
           'Created order $newOrderId for ${newOrder.customerName}',
     );
-
-    ref.read(ordersRepositoryProvider).createOrder(newOrder);
-
     return newOrderId;
   }
 

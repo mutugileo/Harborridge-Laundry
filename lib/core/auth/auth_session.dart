@@ -1,14 +1,39 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:laundry_ridge/core/auth/auth_backend.dart';
 import 'package:laundry_ridge/core/permissions/role_permission.dart';
 
 enum OperatorRole { admin, manager, productionLead, cashier, driver }
+
+OperatorRole operatorRoleFromName(String? name) {
+  return OperatorRole.values.firstWhere(
+    (role) => role.name == name,
+    orElse: () => OperatorRole.manager,
+  );
+}
+
+/// The role a role-template title maps to when an admin creates a worker.
+OperatorRole operatorRoleForTitle(String roleTitle) {
+  switch (roleTitle) {
+    case 'Super Admin':
+      return OperatorRole.admin;
+    case 'Production Lead':
+      return OperatorRole.productionLead;
+    case 'POS Counter Attendant':
+      return OperatorRole.cashier;
+    case 'Dispatch & Fleet Rider':
+      return OperatorRole.driver;
+    default:
+      return OperatorRole.manager;
+  }
+}
 
 class WorkerAccount {
   const WorkerAccount({
     required this.id,
     required this.fullName,
     required this.email,
-    required this.pin,
     required this.phone,
     required this.roleTitle,
     required this.role,
@@ -18,10 +43,44 @@ class WorkerAccount {
     required this.exceptedModules,
   });
 
+  factory WorkerAccount.fromRow(Map<String, dynamic> row) {
+    final excepted = <AppModuleKey>{};
+    for (final name in (row['excepted_modules'] as List?) ?? const []) {
+      for (final module in AppModuleKey.values) {
+        if (module.name == name) excepted.add(module);
+      }
+    }
+    return WorkerAccount(
+      id: row['id'] as String,
+      fullName: row['full_name'] as String? ?? '',
+      email: row['email'] as String? ?? '',
+      phone: row['phone'] as String? ?? '',
+      roleTitle: row['role_title'] as String? ?? 'Staff',
+      role: operatorRoleFromName(row['role'] as String?),
+      branch: row['branch'] as String? ?? '',
+      shiftLabel: row['shift_label'] as String? ?? '',
+      isActive: row['is_active'] as bool? ?? false,
+      exceptedModules: excepted,
+    );
+  }
+
+  /// Placeholder while nobody is signed in. Sees no modules.
+  static final WorkerAccount signedOut = WorkerAccount(
+    id: '',
+    fullName: '',
+    email: '',
+    phone: '',
+    roleTitle: '',
+    role: OperatorRole.driver,
+    branch: '',
+    shiftLabel: '',
+    isActive: false,
+    exceptedModules: AppModuleKey.values.toSet(),
+  );
+
   final String id;
   final String fullName;
   final String email;
-  final String pin;
   final String phone;
   final String roleTitle;
   final OperatorRole role;
@@ -30,6 +89,8 @@ class WorkerAccount {
   final bool isActive;
   final Set<AppModuleKey> exceptedModules;
 
+  bool get isAdmin => role == OperatorRole.admin;
+
   String get initials {
     final parts = fullName.trim().split(RegExp(r'\s+'));
     if (parts.isEmpty || parts.first.isEmpty) return 'HR';
@@ -37,35 +98,28 @@ class WorkerAccount {
     return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
-  bool canSeeModule(AppModuleKey module) => !exceptedModules.contains(module);
+  /// Matches public.staff_can() on the server: admins see every module.
+  bool canSeeModule(AppModuleKey module) =>
+      isAdmin || !exceptedModules.contains(module);
+
+  /// Menus hidden from this worker. Admins have none.
+  Set<AppModuleKey> get effectiveExceptedModules =>
+      isAdmin ? const {} : exceptedModules;
 
   int get allowedModulesCount =>
-      AppModuleKey.values.length - exceptedModules.length;
+      AppModuleKey.values.length - effectiveExceptedModules.length;
 
-  WorkerAccount copyWith({
-    String? id,
-    String? fullName,
-    String? email,
-    String? pin,
-    String? phone,
-    String? roleTitle,
-    OperatorRole? role,
-    String? branch,
-    String? shiftLabel,
-    bool? isActive,
-    Set<AppModuleKey>? exceptedModules,
-  }) {
+  WorkerAccount copyWith({Set<AppModuleKey>? exceptedModules}) {
     return WorkerAccount(
-      id: id ?? this.id,
-      fullName: fullName ?? this.fullName,
-      email: email ?? this.email,
-      pin: pin ?? this.pin,
-      phone: phone ?? this.phone,
-      roleTitle: roleTitle ?? this.roleTitle,
-      role: role ?? this.role,
-      branch: branch ?? this.branch,
-      shiftLabel: shiftLabel ?? this.shiftLabel,
-      isActive: isActive ?? this.isActive,
+      id: id,
+      fullName: fullName,
+      email: email,
+      phone: phone,
+      roleTitle: roleTitle,
+      role: role,
+      branch: branch,
+      shiftLabel: shiftLabel,
+      isActive: isActive,
       exceptedModules: exceptedModules ?? this.exceptedModules,
     );
   }
@@ -74,32 +128,31 @@ class WorkerAccount {
 class AuthPortalState {
   const AuthPortalState({
     required this.isAuthenticated,
-    required this.isRegisterMode,
+    required this.isBusy,
+    required this.isRestoring,
     required this.currentWorker,
-    required this.selectedPreviewWorkerId,
     required this.workers,
     this.statusMessage,
     this.errorMessage,
   });
 
   final bool isAuthenticated;
-  final bool isRegisterMode;
+
+  /// A sign-in or account change is in flight; disable submit buttons.
+  final bool isBusy;
+
+  /// Checking for a saved session at startup.
+  final bool isRestoring;
   final WorkerAccount currentWorker;
-  final String selectedPreviewWorkerId;
   final List<WorkerAccount> workers;
   final String? statusMessage;
   final String? errorMessage;
 
-  WorkerAccount get previewWorker => workers.firstWhere(
-    (w) => w.id == selectedPreviewWorkerId,
-    orElse: () => currentWorker,
-  );
-
   AuthPortalState copyWith({
     bool? isAuthenticated,
-    bool? isRegisterMode,
+    bool? isBusy,
+    bool? isRestoring,
     WorkerAccount? currentWorker,
-    String? selectedPreviewWorkerId,
     List<WorkerAccount>? workers,
     String? statusMessage,
     String? errorMessage,
@@ -108,10 +161,9 @@ class AuthPortalState {
   }) {
     return AuthPortalState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      isRegisterMode: isRegisterMode ?? this.isRegisterMode,
+      isBusy: isBusy ?? this.isBusy,
+      isRestoring: isRestoring ?? this.isRestoring,
       currentWorker: currentWorker ?? this.currentWorker,
-      selectedPreviewWorkerId:
-          selectedPreviewWorkerId ?? this.selectedPreviewWorkerId,
       workers: workers ?? this.workers,
       statusMessage: clearMessage
           ? null
@@ -122,282 +174,279 @@ class AuthPortalState {
 }
 
 class AuthSessionNotifier extends Notifier<AuthPortalState> {
-  static const List<WorkerAccount> initialWorkers = [
-    WorkerAccount(
-      id: 'WRK-001',
-      fullName: 'Codzure Admin',
-      email: 'codzuresolutions@gmail.com',
-      pin: '1234',
-      phone: '+254 700 000 001',
-      roleTitle: 'Super Admin',
-      role: OperatorRole.admin,
-      branch: 'Harborridge Main',
-      shiftLabel: 'All Day • Full Access',
-      isActive: true,
-      exceptedModules: {},
-    ),
-  ];
+  AuthBackend get _backend => ref.read(authBackendProvider);
 
   @override
   AuthPortalState build() {
+    final backend = ref.read(authBackendProvider);
+    final subscription = backend.onSessionEnded.listen((_) {
+      if (!state.isAuthenticated) return;
+      state = state.copyWith(
+        isAuthenticated: false,
+        isBusy: false,
+        currentWorker: WorkerAccount.signedOut,
+        workers: const [],
+        clearMessage: true,
+        errorMessage: 'Your session ended. Sign in again.',
+      );
+    });
+    ref.onDispose(subscription.cancel);
+
+    final restoredId = backend.restoredUserId;
+    if (restoredId != null) {
+      Future.microtask(() => _openSession(restoredId, restoring: true));
+    }
     return AuthPortalState(
       isAuthenticated: false,
-      isRegisterMode: false,
-      currentWorker: initialWorkers.first,
-      selectedPreviewWorkerId: initialWorkers.first.id,
-      workers: initialWorkers,
+      isBusy: false,
+      isRestoring: restoredId != null,
+      currentWorker: WorkerAccount.signedOut,
+      workers: const [],
     );
   }
 
-  void selectPreviewWorker(String workerId) {
-    state = state.copyWith(
-      selectedPreviewWorkerId: workerId,
-      clearMessage: true,
-      clearError: true,
-    );
+  /// Loads the staff profile for [userId]. Accounts without an active staff
+  /// profile are signed straight back out: a Supabase login alone grants
+  /// nothing, because every table policy checks public.staff.
+  Future<bool> _openSession(String userId, {bool restoring = false}) async {
+    try {
+      final worker = await _backend.fetchWorker(userId);
+      if (worker == null || !worker.isActive) {
+        await _backend.signOut();
+        state = state.copyWith(
+          isAuthenticated: false,
+          isBusy: false,
+          isRestoring: false,
+          currentWorker: WorkerAccount.signedOut,
+          workers: const [],
+          clearMessage: true,
+          errorMessage: worker == null
+              ? 'This login has no staff profile. Ask an admin to register you.'
+              : 'Your staff account is deactivated. Ask an admin to reactivate it.',
+        );
+        return false;
+      }
+      final workers = worker.canSeeModule(AppModuleKey.staff)
+          ? await _backend.fetchWorkers()
+          : [worker];
+      state = state.copyWith(
+        isAuthenticated: true,
+        isBusy: false,
+        isRestoring: false,
+        currentWorker: worker,
+        workers: workers,
+        clearError: true,
+        statusMessage: restoring
+            ? null
+            : 'Signed in as ${worker.fullName} (${worker.roleTitle})',
+        clearMessage: restoring,
+      );
+      return true;
+    } on Object catch (error) {
+      state = state.copyWith(
+        isAuthenticated: false,
+        isBusy: false,
+        isRestoring: false,
+        errorMessage: _messageFor(error),
+      );
+      return false;
+    }
   }
 
-  void toggleAuthMode(bool registerMode) {
-    state = state.copyWith(
-      isRegisterMode: registerMode,
-      clearMessage: true,
-      clearError: true,
-    );
-  }
-
-  bool signInWithEmailAndPin({required String email, required String pin}) {
+  Future<bool> signIn({required String email, required String password}) async {
+    if (state.isBusy) return false;
     final normalizedEmail = email.trim().toLowerCase();
-    final normalizedPin = pin.trim();
-
-    if (normalizedEmail.isEmpty || normalizedPin.isEmpty) {
+    if (normalizedEmail.isEmpty || password.isEmpty) {
       state = state.copyWith(
-        errorMessage: 'Enter both your work email and security PIN to sign in.',
+        errorMessage: 'Enter both your work email and password.',
       );
       return false;
     }
 
-    final matchedIndex = state.workers.indexWhere((w) {
-      final workerEmail = w.email.toLowerCase();
-      final workerUsername = workerEmail.split('@').first;
-      final workerName = w.fullName.toLowerCase();
-      return workerEmail == normalizedEmail ||
-          workerUsername == normalizedEmail ||
-          workerName == normalizedEmail;
-    });
-    if (matchedIndex == -1) {
-      state = state.copyWith(
-        errorMessage:
-            'No registered worker found for $email. Ask an Admin to register your account.',
+    state = state.copyWith(isBusy: true, clearError: true, clearMessage: true);
+    try {
+      final userId = await _backend.signIn(
+        email: normalizedEmail,
+        password: password,
       );
+      return await _openSession(userId);
+    } on Object catch (error) {
+      state = state.copyWith(isBusy: false, errorMessage: _messageFor(error));
       return false;
     }
+  }
 
-    final matchedWorker = state.workers[matchedIndex];
-    if (matchedWorker.pin != normalizedPin) {
+  Future<void> signOut() async {
+    try {
+      await _backend.signOut();
+    } finally {
       state = state.copyWith(
-        errorMessage:
-            'Incorrect PIN for ${matchedWorker.fullName}. Check your 4-digit PIN or ask an Admin to reset it.',
+        isAuthenticated: false,
+        isBusy: false,
+        currentWorker: WorkerAccount.signedOut,
+        workers: const [],
+        clearError: true,
+        statusMessage: 'Signed out.',
       );
-      return false;
     }
-
-    state = state.copyWith(
-      isAuthenticated: true,
-      currentWorker: matchedWorker,
-      selectedPreviewWorkerId: matchedWorker.id,
-      clearError: true,
-      statusMessage:
-          'Signed in as ${matchedWorker.fullName} (${matchedWorker.roleTitle})',
-    );
-    return true;
   }
 
-  void signInInstant([WorkerAccount? worker]) {
-    final chosen = worker ?? state.previewWorker;
-    state = state.copyWith(
-      isAuthenticated: true,
-      currentWorker: chosen,
-      selectedPreviewWorkerId: chosen.id,
-      clearError: true,
-      statusMessage: 'Signed in as ${chosen.fullName} (${chosen.roleTitle})',
-    );
+  /// Returns (ok, message) for the change-password dialog.
+  Future<(bool, String)> changeOwnPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    if (newPassword.length < kMinStaffPasswordLength) {
+      return (
+        false,
+        'New password must be at least $kMinStaffPasswordLength characters.',
+      );
+    }
+    if (newPassword == currentPassword) {
+      return (false, 'New password must be different from the current one.');
+    }
+    try {
+      await _backend.changePassword(
+        email: state.currentWorker.email,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      return (true, 'Password updated. Use it next time you sign in.');
+    } on Object catch (error) {
+      return (false, _messageFor(error));
+    }
   }
 
-  void registerWorkerAndSignIn({
-    required String fullName,
-    required String roleTitle,
-    required String branch,
-    String initialPin = '1234',
-    Set<AppModuleKey> exceptedModules = const {},
-  }) {
-    final trimmedName = fullName.trim().isEmpty
-        ? 'Grace Njeri'
-        : fullName.trim();
-    final sanitizedPin = initialPin.trim().isEmpty ? '1234' : initialPin.trim();
-    final newId = 'WRK-00${state.workers.length + 1}';
-    final emailSlug = trimmedName.toLowerCase().replaceAll(' ', '.');
-    final newWorker = WorkerAccount(
-      id: newId,
-      fullName: trimmedName,
-      email: '$emailSlug@harborridgelaundry.com',
-      pin: sanitizedPin,
-      phone: '+254 715 900 ${100 + state.workers.length}',
-      roleTitle: roleTitle,
-      role: OperatorRole.manager,
-      branch: branch,
-      shiftLabel: 'Full Day • 08:00–17:00',
-      isActive: true,
-      exceptedModules: exceptedModules,
-    );
-    final updated = [newWorker, ...state.workers];
-    state = state.copyWith(
-      workers: updated,
-      currentWorker: newWorker,
-      selectedPreviewWorkerId: newWorker.id,
-      isAuthenticated: true,
-      isRegisterMode: false,
-      clearError: true,
-      statusMessage: 'Registered and signed in as ${newWorker.fullName}',
-    );
-  }
-
-  WorkerAccount addWorkerFromAdmin({
+  /// Admin only (enforced by the staff-admin Edge Function).
+  Future<WorkerAccount?> addWorker({
     required String fullName,
     required String email,
     required String phone,
     required String roleTitle,
     required String branch,
     required Set<AppModuleKey> exceptedModules,
-    String initialPin = '1234',
-  }) {
-    final trimmedName = fullName.trim().isEmpty
-        ? 'New Staff Member'
-        : fullName.trim();
-    final sanitizedPin = initialPin.trim().isEmpty ? '1234' : initialPin.trim();
-    final newId = 'WRK-00${state.workers.length + 1}';
-    final emailSlug = trimmedName.toLowerCase().replaceAll(' ', '.');
-    final newWorker = WorkerAccount(
-      id: newId,
-      fullName: trimmedName,
-      email: email.trim().isEmpty
-          ? '$emailSlug@staff.harborridge.co.ke'
-          : email.trim(),
-      pin: sanitizedPin,
-      phone: phone.trim(),
-      roleTitle: roleTitle,
-      role: OperatorRole.manager,
-      branch: branch,
-      shiftLabel: 'Assigned Shift • 08:00–17:00',
-      isActive: true,
-      exceptedModules: exceptedModules,
-    );
-    final updated = [newWorker, ...state.workers];
-    state = state.copyWith(
-      workers: updated,
-      clearError: true,
-      statusMessage:
-          'Added worker ${newWorker.fullName} with initial PIN ${newWorker.pin} (${newWorker.allowedModulesCount}/${AppModuleKey.values.length} menus enabled)',
-    );
-    return newWorker;
-  }
-
-  (bool, String) changeCurrentWorkerPin({
-    required String currentPin,
-    required String newPin,
-  }) {
-    final trimmedCurrent = currentPin.trim();
-    final trimmedNew = newPin.trim();
-
-    if (trimmedCurrent != state.currentWorker.pin) {
-      return (false, 'Current PIN does not match your active security PIN.');
+    required String initialPassword,
+  }) async {
+    if (initialPassword.length < kMinStaffPasswordLength) {
+      state = state.copyWith(
+        clearMessage: true,
+        errorMessage:
+            'Initial password must be at least $kMinStaffPasswordLength characters.',
+      );
+      return null;
     }
-    if (trimmedNew.length < 4) {
-      return (false, 'New security PIN must be at least 4 digits.');
+    state = state.copyWith(isBusy: true, clearError: true, clearMessage: true);
+    try {
+      final created = await _backend.createWorker(
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        roleTitle: roleTitle,
+        role: operatorRoleForTitle(roleTitle),
+        branch: branch,
+        exceptedModules: exceptedModules,
+        initialPassword: initialPassword,
+      );
+      final workers = await _backend.fetchWorkers();
+      state = state.copyWith(
+        isBusy: false,
+        workers: workers,
+        statusMessage:
+            'Added ${created.fullName}. Share the initial password with them privately; they can change it after signing in.',
+      );
+      return created;
+    } on Object catch (error) {
+      state = state.copyWith(isBusy: false, errorMessage: _messageFor(error));
+      return null;
     }
-
-    final updatedWorker = state.currentWorker.copyWith(pin: trimmedNew);
-    final updatedWorkers = state.workers
-        .map((w) => w.id == updatedWorker.id ? updatedWorker : w)
-        .toList();
-
-    state = state.copyWith(
-      workers: updatedWorkers,
-      currentWorker: updatedWorker,
-      clearError: true,
-      statusMessage:
-          'Security PIN updated for ${updatedWorker.fullName}. Use your new PIN on next login.',
-    );
-    return (
-      true,
-      'Your security PIN has been updated. Use it next time you sign in.',
-    );
   }
 
-  void adminSetWorkerPin({required String workerId, required String newPin}) {
-    final trimmedNew = newPin.trim();
-    if (trimmedNew.length < 4) return;
-
-    final updatedWorkers = state.workers.map((worker) {
-      if (worker.id != workerId) return worker;
-      return worker.copyWith(pin: trimmedNew);
-    }).toList();
-
-    final updatedCurrent = updatedWorkers.firstWhere(
-      (w) => w.id == state.currentWorker.id,
-      orElse: () => state.currentWorker,
-    );
-
-    state = state.copyWith(
-      workers: updatedWorkers,
-      currentWorker: updatedCurrent,
-      clearError: true,
-      statusMessage: 'Updated security PIN for worker $workerId',
-    );
+  /// Admin only (enforced by the staff-admin Edge Function).
+  Future<bool> adminSetWorkerPassword({
+    required String workerId,
+    required String newPassword,
+  }) async {
+    if (newPassword.length < kMinStaffPasswordLength) {
+      state = state.copyWith(
+        clearMessage: true,
+        errorMessage:
+            'Password must be at least $kMinStaffPasswordLength characters.',
+      );
+      return false;
+    }
+    try {
+      await _backend.setWorkerPassword(
+        workerId: workerId,
+        password: newPassword,
+      );
+      state = state.copyWith(
+        clearError: true,
+        statusMessage: 'Password reset. Share it with the worker privately.',
+      );
+      return true;
+    } on Object catch (error) {
+      state = state.copyWith(
+        clearMessage: true,
+        errorMessage: _messageFor(error),
+      );
+      return false;
+    }
   }
 
-  void toggleWorkerModuleException(String workerId, AppModuleKey module) {
-    if (module == AppModuleKey.dashboard) {
+  /// Admin only (enforced by the staff UPDATE policy). The roster updates only
+  /// after the server confirms the change.
+  Future<void> toggleWorkerModuleException(
+    String workerId,
+    AppModuleKey module,
+  ) async {
+    if (module == AppModuleKey.dashboard) return;
+    final worker = state.workers.firstWhere(
+      (w) => w.id == workerId,
+      orElse: () => WorkerAccount.signedOut,
+    );
+    if (worker.id.isEmpty) return;
+
+    final updatedExcepted = Set<AppModuleKey>.from(worker.exceptedModules);
+    if (!updatedExcepted.remove(module)) updatedExcepted.add(module);
+
+    try {
+      await _backend.updateWorkerModules(
+        workerId: workerId,
+        exceptedModules: updatedExcepted,
+      );
+    } on Object catch (error) {
+      state = state.copyWith(
+        clearMessage: true,
+        errorMessage: _messageFor(error),
+      );
       return;
     }
-    final updatedWorkers = state.workers.map((worker) {
-      if (worker.id != workerId) return worker;
-      final updatedExcepted = Set<AppModuleKey>.from(worker.exceptedModules);
-      if (updatedExcepted.contains(module)) {
-        updatedExcepted.remove(module);
-      } else {
-        updatedExcepted.add(module);
-      }
-      return worker.copyWith(exceptedModules: updatedExcepted);
-    }).toList();
 
-    final updatedCurrent = updatedWorkers.firstWhere(
-      (w) => w.id == state.currentWorker.id,
-      orElse: () => state.currentWorker,
-    );
-
+    final updatedWorker = worker.copyWith(exceptedModules: updatedExcepted);
     state = state.copyWith(
-      workers: updatedWorkers,
-      currentWorker: updatedCurrent,
-      statusMessage: 'Updated menu permissions for worker $workerId',
+      workers: [
+        for (final w in state.workers) w.id == workerId ? updatedWorker : w,
+      ],
+      currentWorker: state.currentWorker.id == workerId
+          ? updatedWorker
+          : state.currentWorker,
+      clearError: true,
+      statusMessage: 'Updated menu rights for ${worker.fullName}',
     );
   }
 
-  void switchActiveWorker(WorkerAccount worker) {
-    state = state.copyWith(
-      currentWorker: worker,
-      selectedPreviewWorkerId: worker.id,
-      isAuthenticated: true,
-      statusMessage:
-          'Switched active session to ${worker.fullName} (${worker.roleTitle})',
-    );
+  void clearMessages() {
+    state = state.copyWith(clearError: true, clearMessage: true);
   }
 
-  void signOutToPortal() {
-    state = state.copyWith(
-      isAuthenticated: false,
-      statusMessage:
-          'Select any worker profile or click Sign in for instant access',
-    );
+  static String _messageFor(Object error) {
+    if (error is AuthFailure) return error.message;
+    final text = error.toString();
+    if (text.contains('SocketException') ||
+        text.contains('Failed host lookup')) {
+      return 'Cannot reach the server. Check your connection.';
+    }
+    return 'Something went wrong: $text';
   }
 }
 

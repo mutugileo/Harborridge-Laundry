@@ -18,6 +18,11 @@ class AuthPortalScreen extends ConsumerWidget {
     final colors = context.colors;
     final motion = context.motion;
 
+    Future<void> signIn(String email, String password) async {
+      final ok = await authNotifier.signIn(email: email, password: password);
+      if (ok) onSignedInNavigate?.call();
+    }
+
     return Scaffold(
       backgroundColor: colors.harborNavy,
       body: Stack(
@@ -47,16 +52,7 @@ class AuthPortalScreen extends ConsumerWidget {
                           child: _RightLoginFormCard(
                             authState: authState,
                             motion: motion,
-                            onSelectWorker: authNotifier.selectPreviewWorker,
-                            onSignInWithCredentials: (email, pin) {
-                              final ok = authNotifier.signInWithEmailAndPin(
-                                email: email,
-                                pin: pin,
-                              );
-                              if (ok) {
-                                onSignedInNavigate?.call();
-                              }
-                            },
+                            onSignInWithCredentials: signIn,
                           ),
                         ),
                       ],
@@ -73,16 +69,7 @@ class AuthPortalScreen extends ConsumerWidget {
                       _RightLoginFormCard(
                         authState: authState,
                         motion: motion,
-                        onSelectWorker: authNotifier.selectPreviewWorker,
-                        onSignInWithCredentials: (email, pin) {
-                          final ok = authNotifier.signInWithEmailAndPin(
-                            email: email,
-                            pin: pin,
-                          );
-                          if (ok) {
-                            onSignedInNavigate?.call();
-                          }
-                        },
+                        onSignInWithCredentials: signIn,
                       ),
                     ],
                   ),
@@ -128,48 +115,37 @@ class _RightLoginFormCard extends StatefulWidget {
   const _RightLoginFormCard({
     required this.authState,
     required this.motion,
-    required this.onSelectWorker,
     required this.onSignInWithCredentials,
   });
 
   final AuthPortalState authState;
   final AppMotion motion;
-  final ValueChanged<String> onSelectWorker;
-  final void Function(String email, String pin) onSignInWithCredentials;
+  final Future<void> Function(String email, String password)
+  onSignInWithCredentials;
 
   @override
   State<_RightLoginFormCard> createState() => _RightLoginFormCardState();
 }
 
 class _RightLoginFormCardState extends State<_RightLoginFormCard> {
-  late final TextEditingController _emailController;
-  late final TextEditingController _pinController;
-  bool _obscurePin = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final preview = widget.authState.previewWorker;
-    _emailController = TextEditingController(text: preview.email);
-    _pinController = TextEditingController(text: preview.pin);
-  }
-
-  @override
-  void didUpdateWidget(covariant _RightLoginFormCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final newPreview = widget.authState.previewWorker;
-    final oldPreview = oldWidget.authState.previewWorker;
-    if (newPreview.id != oldPreview.id || newPreview.pin != oldPreview.pin) {
-      _emailController.text = newPreview.email;
-      _pinController.text = newPreview.pin;
-    }
-  }
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
+  bool _obscurePin = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _pinController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (widget.authState.isBusy || widget.authState.isRestoring) return;
+    await widget.onSignInWithCredentials(
+      _emailController.text,
+      _pinController.text,
+    );
+    if (mounted) _pinController.clear();
   }
 
   @override
@@ -211,7 +187,7 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
                   borderRadius: BorderRadius.circular(99.0),
                 ),
                 child: Text(
-                  'EMAIL & PIN SIGN IN',
+                  'STAFF SIGN IN',
                   style: textTheme.labelSmall?.copyWith(
                     color: colors.harborNavy,
                     fontSize: 10.0,
@@ -224,13 +200,13 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.pin_outlined,
+                    Icons.verified_user_outlined,
                     size: 16.0,
                     color: colors.accentGreen,
                   ),
                   const SizedBox(width: 4.0),
                   Text(
-                    '4-Digit Security PIN',
+                    'Staff accounts only',
                     style: textTheme.labelSmall?.copyWith(
                       color: colors.accentGreen,
                       fontSize: 11.0,
@@ -252,7 +228,7 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
           ),
           const SizedBox(height: 6.0),
           Text(
-            'Enter your username or work email and 4-digit security PIN to sign in.',
+            'Enter your work email and password to sign in.',
             style: textTheme.bodySmall?.copyWith(
               fontSize: 12.0,
               color: colors.textSecondary,
@@ -261,7 +237,7 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
           ),
           const SizedBox(height: 18.0),
           Text(
-            'Username or Work Email',
+            'Work Email',
             style: textTheme.labelSmall?.copyWith(
               fontSize: 11.0,
               fontWeight: FontWeight.w700,
@@ -275,13 +251,18 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
               key: const ValueKey('login_email_input'),
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              autofillHints: const [
+                AutofillHints.username,
+                AutofillHints.email,
+              ],
               style: textTheme.bodySmall?.copyWith(
                 fontSize: 13.0,
                 fontWeight: FontWeight.w600,
                 color: colors.textPrimary,
               ),
               decoration: InputDecoration(
-                hintText: 'Enter your staff username or work email',
+                hintText: 'you@harborridge.co.ke',
                 hintStyle: textTheme.bodySmall?.copyWith(
                   fontSize: 12.0,
                   color: colors.textTertiary,
@@ -317,7 +298,7 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
           ),
           const SizedBox(height: 14.0),
           Text(
-            'Security PIN',
+            'Password',
             style: textTheme.labelSmall?.copyWith(
               fontSize: 11.0,
               fontWeight: FontWeight.w700,
@@ -328,18 +309,22 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
           SizedBox(
             height: 42.0,
             child: TextField(
-              key: const ValueKey('login_pin_input'),
+              key: const ValueKey('login_password_input'),
               controller: _pinController,
               obscureText: _obscurePin,
-              keyboardType: TextInputType.number,
+              keyboardType: TextInputType.visiblePassword,
+              autocorrect: false,
+              enableSuggestions: false,
+              autofillHints: const [AutofillHints.password],
+              onSubmitted: (_) => _submit(),
               style: textTheme.bodySmall?.copyWith(
                 fontSize: 14.0,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 3.0,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.0,
                 color: colors.textPrimary,
               ),
               decoration: InputDecoration(
-                hintText: 'Enter your 4-digit security PIN',
+                hintText: 'Enter your password',
                 hintStyle: textTheme.bodySmall?.copyWith(
                   fontSize: 12.0,
                   letterSpacing: 0.0,
@@ -416,10 +401,7 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
           SizedBox(
             width: double.infinity,
             child: InteractivePressScale(
-              onTap: () => widget.onSignInWithCredentials(
-                _emailController.text,
-                _pinController.text,
-              ),
+              onTap: _submit,
               child: Container(
                 key: const ValueKey('login_submit_button'),
                 padding: const EdgeInsets.symmetric(vertical: 13.0),
@@ -439,7 +421,9 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
                     const SizedBox(width: 8.0),
                     Flexible(
                       child: Text(
-                        'Sign in with Email & PIN',
+                        authState.isBusy || authState.isRestoring
+                            ? 'Signing in…'
+                            : 'Sign in',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.labelMedium?.copyWith(

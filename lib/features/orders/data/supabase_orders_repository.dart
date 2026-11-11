@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:laundry_ridge/core/errors/app_failure.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/features/orders/data/orders_repository.dart';
 import 'package:laundry_ridge/features/orders/domain/order_addon.dart';
@@ -12,38 +13,36 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
   final SupabaseClient _client;
 
+  static const String _orderSelect =
+      '*, order_items(*), order_addons(*), order_payments(*)';
+
   @override
   Future<List<OrderDetail>> fetchOrders() async {
-    try {
-      final response = await _client
+    final response = await _guard(
+      () => _client
           .from('orders')
-          .select('*, order_items(*), order_addons(*), order_payments(*)')
-          .order('created_at', ascending: false);
-
-      final list = (response as List)
-          .map((row) => _mapToOrderDetail(row as Map<String, dynamic>))
-          .toList();
-      return list;
-    } catch (_) {
-      return const [];
-    }
+          .select(_orderSelect)
+          .order('created_at', ascending: false),
+    );
+    return [
+      for (final row in response as List)
+        _mapToOrderDetail(row as Map<String, dynamic>),
+    ];
   }
 
   @override
   Future<OrderDetail> fetchOrderDetail(String orderId) async {
-    try {
-      final response = await _client
+    final response = await _guard(
+      () => _client
           .from('orders')
-          .select('*, order_items(*), order_addons(*), order_payments(*)')
+          .select(_orderSelect)
           .eq('order_id', orderId)
-          .maybeSingle();
-
-      if (response != null) {
-        return _mapToOrderDetail(response);
-      }
-    } catch (_) {}
-
-    throw StateError('Order not found in database: $orderId');
+          .maybeSingle(),
+    );
+    if (response == null) {
+      throw AppFailure(message: 'Order $orderId was not found.');
+    }
+    return _mapToOrderDetail(response);
   }
 
   @override
@@ -51,211 +50,122 @@ class SupabaseOrdersRepository implements OrdersRepository {
     String orderId,
     OrderProcessStatus status,
   ) async {
-    try {
-      await _client
+    final updated = await _guard(
+      () => _client
           .from('orders')
           .update({
             'status': status.name,
             'processing_stage_label': status.displayLabel,
-            'updated_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
           })
-          .eq('order_id', orderId);
-    } catch (_) {}
+          .eq('order_id', orderId)
+          .select('order_id'),
+    );
+    if ((updated as List).isEmpty) {
+      throw const AppFailure(
+        message: 'Your account cannot change order status.',
+        code: 'forbidden',
+      );
+    }
   }
 
   @override
-  Future<void> createOrder(OrderDetail order) async {
-    try {
-      await _client.from('orders').insert({
-        'order_id': order.orderId,
-        'store_name': order.storeName,
-        'store_code': order.storeCode,
-        'store_email': order.storeEmail,
-        'store_address': order.storeAddress,
-        'tax_identifier': order.taxIdentifier,
-        'order_date': order.orderDate,
-        'delivery_date': order.deliveryDate,
-        'status': order.status.name,
-        'customer_name': order.customerName,
-        'customer_phone': order.customerPhone,
-        'assigned_staff': order.assignedStaff,
-        'primary_service': order.primaryService,
-        'vendor_branch': order.vendorBranch,
-        'display_amount': order.displayAmount,
-        'payment_status_label': order.paymentStatusLabel,
-        'processing_stage_label': order.processingStageLabel,
-        'delivery_status_label': order.deliveryStatusLabel,
-        'delivery_method': order.deliveryMethod,
-        'assigned_rider': order.assignedRider,
-        'created_date_label': order.createdDateLabel,
-      });
-
-      if (order.items.isNotEmpty) {
-        await _client
-            .from('order_items')
-            .insert(
-              order.items
-                  .map(
-                    (item) => {
-                      'order_id': order.orderId,
-                      'item_index': item.index,
-                      'service_name': item.serviceName,
-                      'service_type': item.serviceType,
-                      'rate': item.rate,
-                      'quantity': item.quantity,
-                      'garment_type': item.garmentType.name,
-                    },
-                  )
-                  .toList(),
-            );
-      }
-
-      if (order.addons.isNotEmpty) {
-        await _client
-            .from('order_addons')
-            .insert(
-              order.addons
-                  .map(
-                    (addon) => {
-                      'order_id': order.orderId,
-                      'name': addon.name,
-                      'amount': addon.amount,
-                    },
-                  )
-                  .toList(),
-            );
-      }
-
-      if (order.payments.isNotEmpty) {
-        await _client
-            .from('order_payments')
-            .insert(
-              order.payments
-                  .map(
-                    (payment) => {
-                      'order_id': order.orderId,
-                      'amount': payment.amount,
-                      'payment_date': payment.date,
-                      'method': payment.method,
-                    },
-                  )
-                  .toList(),
-            );
-
-        for (final p in order.payments) {
-          final txId = 'TXN-${DateTime.now().millisecondsSinceEpoch % 100000}';
-          final channelClean = p.method.replaceAll('[', '').replaceAll(']', '');
-          final billed = order.totalAmount.toInt();
-          final paid = p.amount.toInt();
-          await _client.from('payment_transactions').insert({
-            'tx_id': txId,
-            'order_id': order.orderId,
-            'customer_name': order.customerName,
-            'customer_phone': order.customerPhone,
-            'channel': channelClean.isEmpty ? 'M-Pesa Express' : channelClean,
-            'reference_code':
-                'MP-${DateTime.now().millisecondsSinceEpoch % 10000}',
-            'total_billed_kes': billed > 0 ? billed : paid,
-            'amount_paid_kes': paid,
-            'balance_due_kes': (billed - paid).clamp(0, 999999),
-            'status': order.paymentStatusLabel,
-          });
-        }
-      }
-
-      if (order.assignedRider.isNotEmpty &&
-          order.assignedRider != 'Unassigned') {
-        final runId = 'DSP-${DateTime.now().millisecondsSinceEpoch % 10000}';
-        await _client.from('dispatch_runs').insert({
-          'run_id': runId,
-          'order_id': order.orderId,
-          'customer_name': order.customerName,
-          'zone': order.vendorBranch,
-          'bag_count': '${order.items.length} Items • Intake',
-          'branch': order.vendorBranch,
-          'rider_name': order.assignedRider,
-          'eta_window': '16:00 – 17:30',
-          'stage': order.deliveryStatusLabel,
-        });
-      }
-    } catch (_) {}
+  Future<String> createOrder(
+    OrderDetail draft, {
+    required String clientRef,
+    OrderPayment? initialPayment,
+  }) async {
+    final result = await _guard(
+      () => _client.rpc(
+        'create_order',
+        params: {
+          'p_client_ref': clientRef,
+          'p_order': {
+            'customer_name': draft.customerName,
+            'customer_phone': draft.customerPhone,
+            'primary_service': draft.primaryService,
+            'vendor_branch': draft.vendorBranch,
+            'delivery_method': draft.deliveryMethod,
+            'assigned_rider': draft.assignedRider,
+            'delivery_date': draft.deliveryDate,
+          },
+          'p_items': [for (final item in draft.items) _itemJson(item)],
+          'p_addons': [
+            for (final addon in draft.addons)
+              {'name': addon.name, 'amount': addon.amount},
+          ],
+          'p_payment': initialPayment == null
+              ? null
+              : {
+                  'amount': initialPayment.amount,
+                  'method': _cleanMethod(initialPayment.method),
+                  'reference': initialPayment.reference,
+                },
+        },
+      ),
+    );
+    return (result as Map<String, dynamic>)['order_id'] as String;
   }
 
   @override
-  Future<void> recordPayment(String orderId, OrderPayment payment) async {
-    try {
-      await _client.from('order_payments').insert({
-        'order_id': orderId,
-        'amount': payment.amount,
-        'payment_date': payment.date,
-        'method': payment.method,
-      });
-
-      await _client
-          .from('orders')
-          .update({
-            'payment_status_label': 'Paid',
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('order_id', orderId);
-
-      final txId = 'TXN-${DateTime.now().millisecondsSinceEpoch % 100000}';
-      final channelClean = payment.method
-          .replaceAll('[', '')
-          .replaceAll(']', '');
-      await _client.from('payment_transactions').insert({
-        'tx_id': txId,
-        'order_id': orderId,
-        'customer_name': 'Walk-in Customer',
-        'customer_phone': '',
-        'channel': channelClean.isEmpty ? 'M-Pesa Express' : channelClean,
-        'reference_code': 'MP-${DateTime.now().millisecondsSinceEpoch % 10000}',
-        'total_billed_kes': payment.amount.toInt(),
-        'amount_paid_kes': payment.amount.toInt(),
-        'balance_due_kes': 0,
-        'status': 'Paid',
-      });
-    } catch (_) {}
+  Future<void> recordPayment(
+    String orderId,
+    OrderPayment payment, {
+    required String clientRef,
+  }) async {
+    await _guard(
+      () => _client.rpc(
+        'record_order_payment',
+        params: {
+          'p_client_ref': clientRef,
+          'p_order_id': orderId,
+          'p_amount': payment.amount,
+          'p_method': _cleanMethod(payment.method),
+          'p_reference': payment.reference,
+        },
+      ),
+    );
   }
 
   @override
-  Future<void> updateOrder(OrderDetail order) async {
-    try {
-      await _client
-          .from('orders')
-          .update({
-            'display_amount': order.displayAmount,
-            'payment_status_label': order.paymentStatusLabel,
-            'processing_stage_label': order.processingStageLabel,
-            'status': order.status.name,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('order_id', order.orderId);
+  Future<void> replaceOrderItems(String orderId, List<OrderItem> items) async {
+    await _guard(
+      () => _client.rpc(
+        'replace_order_items',
+        params: {
+          'p_order_id': orderId,
+          'p_items': [for (final item in items) _itemJson(item)],
+        },
+      ),
+    );
+  }
 
-      if (order.items.isNotEmpty) {
-        await _client
-            .from('order_items')
-            .delete()
-            .eq('order_id', order.orderId);
-        await _client
-            .from('order_items')
-            .insert(
-              order.items
-                  .map(
-                    (item) => {
-                      'order_id': order.orderId,
-                      'item_index': item.index,
-                      'service_name': item.serviceName,
-                      'service_type': item.serviceType,
-                      'rate': item.rate,
-                      'quantity': item.quantity,
-                      'garment_type': item.garmentType.name,
-                    },
-                  )
-                  .toList(),
-            );
+  static Map<String, dynamic> _itemJson(OrderItem item) => {
+    'service_name': item.serviceName,
+    'service_type': item.serviceType,
+    'rate': item.rate,
+    'quantity': item.quantity,
+    'garment_type': item.garmentType.name,
+  };
+
+  static String _cleanMethod(String method) =>
+      method.replaceAll('[', '').replaceAll(']', '').trim();
+
+  /// Runs a query and turns database errors into messages staff can act on.
+  static Future<T> _guard<T>(Future<T> Function() run) async {
+    try {
+      return await run();
+    } on PostgrestException catch (error) {
+      if (error.code == '42501') {
+        throw AppFailure(
+          message: error.message.contains('permission denied')
+              ? 'Your account does not have access to do that.'
+              : error.message,
+          code: 'forbidden',
+        );
       }
-    } catch (_) {}
+      throw AppFailure(message: error.message, code: error.code);
+    }
   }
 
   OrderDetail _mapToOrderDetail(Map<String, dynamic> row) {
@@ -282,7 +192,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
         icon: _iconForGarment(garmentType),
         garmentType: garmentType,
       );
-    }).toList();
+    }).toList()..sort((a, b) => a.index.compareTo(b.index));
 
     final rawAddons = row['order_addons'] as List<dynamic>? ?? const [];
     final addons = rawAddons.map((raw) {
@@ -294,14 +204,18 @@ class SupabaseOrdersRepository implements OrdersRepository {
     }).toList();
 
     final rawPayments = row['order_payments'] as List<dynamic>? ?? const [];
-    final payments = rawPayments.map((raw) {
-      final paymentMap = raw as Map<String, dynamic>;
-      return OrderPayment(
-        amount: (paymentMap['amount'] as num?)?.toDouble() ?? 0.0,
-        date: paymentMap['payment_date'] as String? ?? '',
-        method: paymentMap['method'] as String? ?? '[M-PESA]',
-      );
-    }).toList();
+    final payments = rawPayments
+        .cast<Map<String, dynamic>>()
+        .where((paymentMap) => paymentMap['voided_at'] == null)
+        .map(
+          (paymentMap) => OrderPayment(
+            amount: (paymentMap['amount'] as num?)?.toDouble() ?? 0.0,
+            date: paymentMap['payment_date'] as String? ?? '',
+            method: paymentMap['method'] as String? ?? '[M-PESA]',
+            reference: paymentMap['reference_code'] as String?,
+          ),
+        )
+        .toList();
 
     return OrderDetail(
       orderId: row['order_id'] as String? ?? '',

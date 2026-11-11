@@ -11,6 +11,7 @@ class OrderTrackingState {
     required this.searchQuery,
     this.draggedOrderNumber,
     this.errorMessage,
+    this.actionMessage,
   });
 
   final OrderTrackingStatus status;
@@ -20,6 +21,9 @@ class OrderTrackingState {
   final String searchQuery;
   final String? draggedOrderNumber;
   final String? errorMessage;
+
+  /// A rejected board change, shown once as a snackbar.
+  final String? actionMessage;
 
   factory OrderTrackingState.initial() {
     return const OrderTrackingState(
@@ -67,6 +71,8 @@ class OrderTrackingState {
     String? draggedOrderNumber,
     bool clearDraggedOrder = false,
     String? errorMessage,
+    String? actionMessage,
+    bool clearActionMessage = false,
   }) {
     return OrderTrackingState(
       status: status ?? this.status,
@@ -80,6 +86,9 @@ class OrderTrackingState {
           ? null
           : (draggedOrderNumber ?? this.draggedOrderNumber),
       errorMessage: errorMessage ?? this.errorMessage,
+      actionMessage: clearActionMessage
+          ? null
+          : (actionMessage ?? this.actionMessage),
     );
   }
 }

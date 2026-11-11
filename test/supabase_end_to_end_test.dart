@@ -24,17 +24,19 @@ void main() {
         expect(initialOrder, isNotNull);
 
         // Record a payment of KES 500
-        notifier.recordPayment(amount: 500.0, method: 'M-PESA');
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        // KES 500 against a KES 540 balance is a part payment.
+        expect(
+          await notifier.recordPayment(amount: 500.0, method: 'M-PESA'),
+          isNull,
+        );
 
         final updatedOrder = container.read(orderDetailsNotifierProvider).order;
         expect(updatedOrder, isNotNull);
         expect(updatedOrder!.payments.any((p) => p.amount == 500.0), isTrue);
-        expect(updatedOrder.paymentStatusLabel, 'Paid');
+        expect(updatedOrder.paymentStatusLabel, 'Partial');
 
         // Update Order Status
-        notifier.updateOrderStatus(OrderProcessStatus.ironing);
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await notifier.updateOrderStatus(OrderProcessStatus.ironing);
 
         final afterStatusChange = container
             .read(orderDetailsNotifierProvider)

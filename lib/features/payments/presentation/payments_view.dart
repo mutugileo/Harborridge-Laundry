@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:laundry_ridge/core/errors/app_failure.dart';
+import 'package:laundry_ridge/core/utilities/client_ref.dart';
+import 'package:laundry_ridge/features/orders/data/orders_repository.dart';
+import 'package:laundry_ridge/features/orders/domain/order_payment.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
@@ -146,6 +150,7 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
       final response = await client
           .from('payment_transactions')
           .select('*')
+          .isFilter('voided_at', null)
           .order('created_at', ascending: false);
       if (!mounted) return;
       final loaded = (response as List).map((row) {
@@ -173,7 +178,12 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
       setState(() {
         _rows = loaded;
       });
-    } catch (_) {}
+    } catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _statusBanner = 'Could not load payments from the server.',
+      );
+    }
   }
 
   @override
@@ -186,86 +196,100 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
     super.dispose();
   }
 
-  void _recordNewReceipt() {
-    final orderId = _orderIdController.text.trim().isEmpty
-        ? 'LG-2026-00132'
-        : _orderIdController.text.trim();
-    final customer = _customerController.text.trim().isEmpty
-        ? 'Walk-in Client'
-        : _customerController.text.trim();
-    final parsedAmount = int.tryParse(_amountKesController.text.trim()) ?? 2200;
-    final reference = _referenceController.text.trim().isEmpty
-        ? 'MP-NEW-${DateTime.now().millisecondsSinceEpoch % 10000}'
-        : _referenceController.text.trim();
-    final nextTxId = 'TXN-${9041 + _rows.length}';
+  bool _isSavingPayment = false;
 
-    final newRow = _PaymentLedgerRow(
-      txId: nextTxId,
-      orderId: orderId,
-      customerName: customer,
-      channel: _newPaymentChannel,
-      referenceCode: reference,
-      amountKes: parsedAmount,
-      balanceDueKes: 0,
-      status: 'Paid',
-      timestamp: 'Just now • Live Ledger Entry',
-      periodScope: PaymentPeriodFilter.today,
-      customerPhone: '+254 700 000 000',
+  /// Records a receipt against an existing order through the same
+  /// server-side check the order screen uses (balance, duplicate reference).
+  Future<void> _recordNewReceipt() async {
+    if (_isSavingPayment) return;
+    final orderId = _orderIdController.text.trim().toUpperCase();
+    final parsedAmount = double.tryParse(
+      _amountKesController.text.trim().replaceAll(',', ''),
     );
-
-    setState(() {
-      _rows = [newRow, ..._rows];
-      _showAddPaymentPanel = false;
-      _statusBanner =
-          'Recorded $nextTxId (KES ${_PaymentLedgerRow._formatAmount(parsedAmount)} via $_newPaymentChannel • $reference) for $orderId ($customer)';
-    });
-
-    final client = ref.read(supabaseClientProvider);
-    if (client != null) {
-      client
-          .from('payment_transactions')
-          .insert({
-            'tx_id': newRow.txId,
-            'order_id': newRow.orderId,
-            'customer_name': newRow.customerName,
-            'customer_phone': newRow.customerPhone,
-            'channel': newRow.channel,
-            'reference_code': newRow.referenceCode,
-            'total_billed_kes': newRow.amountKes,
-            'amount_paid_kes': newRow.amountKes,
-            'balance_due_kes': 0,
-            'status': newRow.status,
-          })
-          .catchError((_) {});
+    final reference = _referenceController.text.trim();
+    if (orderId.isEmpty) {
+      setState(
+        () => _statusBanner = 'Enter the order number the payment is for.',
+      );
+      return;
     }
+    if (parsedAmount == null || parsedAmount <= 0) {
+      setState(() => _statusBanner = 'Enter the amount received.');
+      return;
+    }
+    if (_newPaymentChannel == 'M-Pesa' && reference.isEmpty) {
+      setState(() => _statusBanner = 'Enter the M-Pesa confirmation code.');
+      return;
+    }
+    final failure = await _submitPayment(
+      orderId: orderId,
+      amount: parsedAmount,
+      channel: _newPaymentChannel,
+      reference: reference,
+    );
+    if (!mounted) return;
+    setState(() {
+      if (failure == null) {
+        _showAddPaymentPanel = false;
+        _orderIdController.clear();
+        _customerController.clear();
+        _amountKesController.clear();
+        _referenceController.clear();
+        _statusBanner =
+            'Recorded KES ${_PaymentLedgerRow._formatAmount(parsedAmount.round())} via $_newPaymentChannel for $orderId.';
+      } else {
+        _statusBanner = 'Payment not recorded: $failure';
+      }
+    });
   }
 
-  void _settleRow(int index) {
+  /// Collects the outstanding balance on a ledger row's order.
+  Future<void> _settleRow(int index) async {
     final row = _rows[index];
+    if (row.balanceDueKes <= 0) return;
+    final failure = await _submitPayment(
+      orderId: row.orderId,
+      amount: row.balanceDueKes.toDouble(),
+      channel: row.channel,
+      reference: null,
+    );
+    if (!mounted) return;
     setState(() {
-      _rows = [
-        for (var i = 0; i < _rows.length; i++)
-          if (i == index)
-            row.copyWith(
-              status: 'Paid',
-              balanceDueKes: 0,
-              timestamp: 'Reconciled just now',
-            )
-          else
-            _rows[i],
-      ];
-      _statusBanner =
-          'Collected full KES balance for ${row.orderId} (${row.customerName}) via ${row.channel} • Ledger updated.';
+      _statusBanner = failure == null
+          ? 'Collected KES ${_PaymentLedgerRow._formatAmount(row.balanceDueKes)} balance for ${row.orderId}.'
+          : 'Balance not collected: $failure';
     });
+  }
 
-    final client = ref.read(supabaseClientProvider);
-    if (client != null) {
-      client
-          .from('payment_transactions')
-          .update({'status': 'Paid', 'balance_due_kes': 0})
-          .eq('tx_id', row.txId)
-          .catchError((_) {});
+  Future<String?> _submitPayment({
+    required String orderId,
+    required double amount,
+    required String channel,
+    required String? reference,
+  }) async {
+    setState(() => _isSavingPayment = true);
+    try {
+      await ref
+          .read(ordersRepositoryProvider)
+          .recordPayment(
+            orderId,
+            OrderPayment(
+              amount: amount,
+              date: '',
+              method: channel,
+              reference: (reference?.isEmpty ?? true) ? null : reference,
+            ),
+            clientRef: newClientRef(),
+          );
+    } on AppFailure catch (error) {
+      return error.message;
+    } on Object catch (error) {
+      return error.toString();
+    } finally {
+      if (mounted) setState(() => _isSavingPayment = false);
     }
+    await _loadSupabasePayments();
+    return null;
   }
 
   void _exportStatement() {

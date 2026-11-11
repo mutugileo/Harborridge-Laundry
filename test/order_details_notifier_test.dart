@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/features/orders/domain/order_detail.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_state.dart';
@@ -107,22 +108,96 @@ void main() {
           .read(orderDetailsNotifierProvider.notifier)
           .loadOrderDetails('#ORD-0006');
 
-      container
-          .read(orderDetailsNotifierProvider.notifier)
-          .updateOrderStatus(OrderProcessStatus.cleaning);
+      final notifier = container.read(orderDetailsNotifierProvider.notifier);
+      await notifier.updateOrderStatus(OrderProcessStatus.cleaning);
 
       expect(
         container.read(orderDetailsNotifierProvider).currentStatus,
         OrderProcessStatus.cleaning,
       );
 
-      container
-          .read(orderDetailsNotifierProvider.notifier)
-          .recordPayment(amount: 200.0, method: 'CARD');
+      // #ORD-0006: KES 890 total, KES 350 already paid, KES 540 due.
+      final failure = await notifier.recordPayment(
+        amount: 200.0,
+        method: 'CARD',
+      );
+      expect(failure, isNull);
 
       final updatedState = container.read(orderDetailsNotifierProvider);
       expect(updatedState.order!.payments.length, 2);
       expect(updatedState.order!.paidAmount, 550.0);
+      expect(updatedState.order!.paymentStatusLabel, 'Partial');
     },
   );
+
+  test('rejects a payment larger than the balance due', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(orderDetailsNotifierProvider.notifier);
+    await notifier.loadOrderDetails('#ORD-0006');
+
+    final failure = await notifier.recordPayment(
+      amount: 350.0 * 5,
+      method: 'M-Pesa',
+    );
+
+    expect(failure, contains('more than'));
+    expect(
+      container.read(orderDetailsNotifierProvider).order!.payments.length,
+      1,
+    );
+  });
+
+  test('ignores a second tap while a payment is being saved', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(orderDetailsNotifierProvider.notifier);
+    await notifier.loadOrderDetails('#ORD-0006');
+
+    final first = notifier.recordPayment(amount: 100.0, method: 'Cash');
+    final second = await notifier.recordPayment(amount: 100.0, method: 'Cash');
+    expect(second, contains('already being saved'));
+    expect(await first, isNull);
+
+    expect(
+      container.read(orderDetailsNotifierProvider).order!.payments.length,
+      2,
+    );
+  });
+
+  test('paying the full balance marks the order Paid', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(orderDetailsNotifierProvider.notifier);
+    await notifier.loadOrderDetails('#ORD-0006');
+    final due = container.read(orderDetailsNotifierProvider).order!.balanceDue;
+
+    expect(await notifier.recordPayment(amount: due, method: 'M-Pesa'), isNull);
+    expect(
+      container.read(orderDetailsNotifierProvider).order!.paymentStatusLabel,
+      'Paid',
+    );
+  });
+
+  test('POS garment taps change only the draft, not the open order', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(orderDetailsNotifierProvider.notifier);
+    await notifier.loadOrderDetails('#ORD-0006');
+    final before = container.read(orderDetailsNotifierProvider).order!;
+    final draftShirts =
+        container
+            .read(orderDetailsNotifierProvider)
+            .catalogQuantities[GarmentType.shirt] ??
+        0;
+
+    notifier.incrementPosGarment(GarmentType.shirt);
+    notifier.incrementPosGarment(GarmentType.shirt);
+    notifier.decrementPosGarment(GarmentType.shirt);
+
+    final state = container.read(orderDetailsNotifierProvider);
+    expect(state.catalogQuantities[GarmentType.shirt], draftShirts + 1);
+    expect(state.order!.items.length, before.items.length);
+    expect(state.order!.totalAmount, before.totalAmount);
+  });
 }

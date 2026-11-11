@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:laundry_ridge/app/app.dart';
+
+import 'support/fake_auth_backend.dart';
 
 void main() {
   testWidgets(
@@ -11,15 +11,13 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(const ProviderScope(child: LaundryRidgeApp()));
+      await pumpTestApp(tester);
 
       expect(find.text('HARBORRIDGE'), findsWidgets);
       expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
-      expect(find.text('Sign in with Email & PIN'), findsOneWidget);
+      expect(find.text('Sign in'), findsOneWidget);
 
-      await tester.tap(find.text('Sign in with Email & PIN'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await signInThroughForm(tester);
 
       expect(find.text('Operations Overview'), findsOneWidget);
       expect(find.text('Total Revenue'), findsOneWidget);

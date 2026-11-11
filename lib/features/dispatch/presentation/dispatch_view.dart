@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
+import 'package:laundry_ridge/core/supabase/remote_write.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
@@ -104,6 +105,14 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
     _loadSupabaseDispatch();
   }
 
+  /// A write the screen already showed as done was rejected or failed:
+  /// say so, then reload what the server actually has.
+  void _handleWriteResult(String? failure) {
+    if (failure == null || !mounted) return;
+    setState(() => _feedbackBanner = 'Not saved: $failure');
+    _loadSupabaseDispatch();
+  }
+
   Future<void> _loadSupabaseDispatch() async {
     final client = ref.read(supabaseClientProvider);
     if (client == null) return;
@@ -130,7 +139,12 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
       setState(() {
         _runs = loaded;
       });
-    } catch (_) {}
+    } catch (error) {
+      if (!mounted) return;
+      setState(
+        () => _feedbackBanner = 'Could not load dispatch runs from the server.',
+      );
+    }
   }
 
   @override
@@ -175,20 +189,19 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('dispatch_runs')
-          .insert({
-            'run_id': newRun.runId,
-            'order_id': newRun.orderId,
-            'customer_name': newRun.customerName,
-            'zone': newRun.zone,
-            'bag_count': newRun.bagCount,
-            'branch': newRun.branch,
-            'rider_name': newRun.riderName,
-            'eta_window': newRun.etaWindow,
-            'stage': newRun.stage,
-          })
-          .catchError((_) {});
+      runRemoteWrite(
+        client.from('dispatch_runs').insert({
+          'run_id': newRun.runId,
+          'order_id': newRun.orderId,
+          'customer_name': newRun.customerName,
+          'zone': newRun.zone,
+          'bag_count': newRun.bagCount,
+          'branch': newRun.branch,
+          'rider_name': newRun.riderName,
+          'eta_window': newRun.etaWindow,
+          'stage': newRun.stage,
+        }).select(),
+      ).then(_handleWriteResult);
     }
   }
 
@@ -208,11 +221,13 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('dispatch_runs')
-          .update({'stage': newStage})
-          .eq('run_id', current.runId)
-          .catchError((_) {});
+      runRemoteWrite(
+        client
+            .from('dispatch_runs')
+            .update({'stage': newStage})
+            .eq('run_id', current.runId)
+            .select(),
+      ).then(_handleWriteResult);
     }
   }
 
@@ -231,11 +246,13 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
 
     final client = ref.read(supabaseClientProvider);
     if (client != null) {
-      client
-          .from('dispatch_runs')
-          .update({'rider_name': newRider})
-          .eq('run_id', current.runId)
-          .catchError((_) {});
+      runRemoteWrite(
+        client
+            .from('dispatch_runs')
+            .update({'rider_name': newRider})
+            .eq('run_id', current.runId)
+            .select(),
+      ).then(_handleWriteResult);
     }
   }
 

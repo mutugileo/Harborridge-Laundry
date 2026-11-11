@@ -93,7 +93,7 @@ class OrderHeaderBar extends StatelessWidget {
                             ),
                             const SizedBox(width: 4.0),
                             Text(
-                              isVeryCompact ? 'PIN' : 'Change PIN',
+                              isVeryCompact ? 'Password' : 'Change Password',
                               style: textTheme.labelSmall?.copyWith(
                                 color: Colors.white,
                                 fontSize: 10.0,

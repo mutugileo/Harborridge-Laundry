@@ -28,106 +28,30 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   void _showAddPaymentSheet() {
-    final notifier = ref.read(orderDetailsNotifierProvider.notifier);
-    final spacing = context.spacing;
+    final order = ref.read(orderDetailsNotifierProvider).order;
+    if (order == null) return;
     final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
 
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (bottomSheetContext) {
-        return Material(
+      builder: (bottomSheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(bottomSheetContext).bottom,
+        ),
+        child: Material(
           color: colors.cardBackground,
           borderRadius: BorderRadius.vertical(
-            top: Radius.circular(spacing.cardRadius),
+            top: Radius.circular(context.spacing.cardRadius),
           ),
           clipBehavior: Clip.antiAlias,
-          child: Padding(
-            padding: EdgeInsets.all(spacing.lg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Record Payment',
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: spacing.sm),
-                Text(
-                  'Add a confirmed payment transaction to Order #ORD-0006',
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-                SizedBox(height: spacing.lg),
-                Row(
-                  children: [
-                    Expanded(
-                      child: InteractivePressScale(
-                        onTap: () {
-                          Navigator.pop(bottomSheetContext);
-                          notifier.recordPayment(
-                            amount: 150.00,
-                            method: 'CASH',
-                          );
-                        },
-                        child: Container(
-                          height: 44.0,
-                          decoration: BoxDecoration(
-                            color: colors.brandPrimary,
-                            borderRadius: BorderRadius.circular(
-                              spacing.buttonRadius,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Pay KES 150.00 (Cash)',
-                            style: textTheme.labelLarge?.copyWith(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: spacing.md),
-                    Expanded(
-                      child: InteractivePressScale(
-                        onTap: () {
-                          Navigator.pop(bottomSheetContext);
-                          notifier.recordPayment(
-                            amount: 350.00,
-                            method: 'M-PESA',
-                          );
-                        },
-                        child: Container(
-                          height: 44.0,
-                          decoration: BoxDecoration(
-                            color: colors.accentGreen,
-                            borderRadius: BorderRadius.circular(
-                              spacing.buttonRadius,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Pay KES 350.00 (M-Pesa)',
-                            style: textTheme.labelLarge?.copyWith(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: spacing.md),
-              ],
-            ),
+          child: _RecordPaymentForm(
+            orderId: order.orderId,
+            balanceDue: order.balanceDue,
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -426,5 +350,173 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           ),
         );
     }
+  }
+}
+
+class _RecordPaymentForm extends ConsumerStatefulWidget {
+  const _RecordPaymentForm({required this.orderId, required this.balanceDue});
+
+  final String orderId;
+  final double balanceDue;
+
+  @override
+  ConsumerState<_RecordPaymentForm> createState() => _RecordPaymentFormState();
+}
+
+class _RecordPaymentFormState extends ConsumerState<_RecordPaymentForm> {
+  static const List<String> _methods = [
+    'M-Pesa',
+    'Cash',
+    'Card',
+    'Bank Transfer',
+  ];
+
+  late final TextEditingController _amountController = TextEditingController(
+    text: widget.balanceDue > 0 ? widget.balanceDue.toStringAsFixed(2) : '',
+  );
+  final TextEditingController _referenceController = TextEditingController();
+  String _method = _methods.first;
+  bool _isSubmitting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _referenceController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    final amount = double.tryParse(
+      _amountController.text.trim().replaceAll(',', ''),
+    );
+    if (amount == null || amount <= 0) {
+      setState(() => _error = 'Enter the amount received.');
+      return;
+    }
+    if (_method == 'M-Pesa' && _referenceController.text.trim().isEmpty) {
+      setState(() => _error = 'Enter the M-Pesa confirmation code.');
+      return;
+    }
+    setState(() {
+      _isSubmitting = true;
+      _error = null;
+    });
+    final failure = await ref
+        .read(orderDetailsNotifierProvider.notifier)
+        .recordPayment(
+          amount: amount,
+          method: _method,
+          reference: _referenceController.text,
+        );
+    if (!mounted) return;
+    if (failure == null) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() {
+        _isSubmitting = false;
+        _error = failure;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final spacing = context.spacing;
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+    final settled = widget.balanceDue <= 0.005;
+
+    return Padding(
+      padding: EdgeInsets.all(spacing.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Record Payment',
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          SizedBox(height: spacing.sm),
+          Text(
+            settled
+                ? '${widget.orderId} is fully paid.'
+                : 'Balance due on ${widget.orderId}: KES ${widget.balanceDue.toStringAsFixed(2)}',
+            style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+          ),
+          SizedBox(height: spacing.md),
+          Wrap(
+            spacing: 6.0,
+            runSpacing: 6.0,
+            children: [
+              for (final method in _methods)
+                ChoiceChip(
+                  label: Text(method),
+                  selected: _method == method,
+                  onSelected: settled || _isSubmitting
+                      ? null
+                      : (_) => setState(() => _method = method),
+                ),
+            ],
+          ),
+          SizedBox(height: spacing.md),
+          TextField(
+            key: const ValueKey('payment_amount_input'),
+            controller: _amountController,
+            enabled: !settled && !_isSubmitting,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Amount received (KES)',
+            ),
+          ),
+          SizedBox(height: spacing.sm),
+          TextField(
+            key: const ValueKey('payment_reference_input'),
+            controller: _referenceController,
+            enabled: !settled && !_isSubmitting,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              labelText: _method == 'M-Pesa'
+                  ? 'M-Pesa confirmation code'
+                  : 'Reference (optional)',
+            ),
+          ),
+          if (_error != null) ...[
+            SizedBox(height: spacing.sm),
+            Text(
+              _error!,
+              style: textTheme.bodySmall?.copyWith(
+                color: const Color(0xFFB91C1C),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          SizedBox(height: spacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: InteractivePressScale(
+              onTap: settled || _isSubmitting ? null : _submit,
+              child: Container(
+                key: const ValueKey('payment_submit_button'),
+                height: 44.0,
+                decoration: BoxDecoration(
+                  color: settled || _isSubmitting
+                      ? colors.textTertiary
+                      : colors.accentGreen,
+                  borderRadius: BorderRadius.circular(spacing.buttonRadius),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _isSubmitting ? 'Saving…' : 'Record Payment',
+                  style: textTheme.labelLarge?.copyWith(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: spacing.md),
+        ],
+      ),
+    );
   }
 }

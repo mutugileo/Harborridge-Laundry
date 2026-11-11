@@ -98,4 +98,37 @@ class OrderDetail {
       payments.fold(0.0, (previous, payment) => previous + payment.amount);
 
   double get balanceDue => totalAmount - paidAmount;
+
+  OrderDetail copyWith({
+    String? orderId,
+    String? paymentStatusLabel,
+    List<OrderPayment>? payments,
+  }) {
+    return OrderDetail(
+      orderId: orderId ?? this.orderId,
+      storeName: storeName,
+      storeCode: storeCode,
+      storeEmail: storeEmail,
+      storeAddress: storeAddress,
+      taxIdentifier: taxIdentifier,
+      orderDate: orderDate,
+      deliveryDate: deliveryDate,
+      status: status,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      assignedStaff: assignedStaff,
+      primaryService: primaryService,
+      vendorBranch: vendorBranch,
+      displayAmount: displayAmount,
+      paymentStatusLabel: paymentStatusLabel ?? this.paymentStatusLabel,
+      processingStageLabel: processingStageLabel,
+      deliveryStatusLabel: deliveryStatusLabel,
+      deliveryMethod: deliveryMethod,
+      assignedRider: assignedRider,
+      createdDateLabel: createdDateLabel,
+      items: items,
+      addons: addons,
+      payments: payments ?? this.payments,
+    );
+  }
 }

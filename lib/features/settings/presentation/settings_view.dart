@@ -672,7 +672,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     ),
                     const SizedBox(width: 5.0),
                     Text(
-                      'PIN: ${worker.pin}',
+                      'Password sign-in',
                       style: textTheme.labelSmall?.copyWith(
                         fontSize: 11.0,
                         fontWeight: FontWeight.w800,
@@ -698,13 +698,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
-                        Icons.pin_outlined,
+                        Icons.lock_reset_rounded,
                         size: 13.0,
                         color: Colors.white,
                       ),
                       const SizedBox(width: 5.0),
                       Text(
-                        'Change My PIN',
+                        'Change My Password',
                         style: textTheme.labelSmall?.copyWith(
                           fontSize: 11.0,
                           fontWeight: FontWeight.w700,

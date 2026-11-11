@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:laundry_ridge/app/app.dart';
 import 'package:laundry_ridge/app/router/admin_nav_tab.dart';
 import 'package:laundry_ridge/app/router/admin_shell_notifier.dart';
+
+import 'support/fake_auth_backend.dart';
 
 void main() {
   testWidgets(
@@ -13,15 +13,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const LaundryRidgeApp(),
-        ),
-      );
+      final container = await pumpTestApp(tester);
 
       String currentTab = 'initial';
       final errors = <String>[];
@@ -35,9 +27,7 @@ void main() {
       // Verify Auth Portal on 390px
       expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
 
-      await tester.tap(find.text('Sign in with Email & PIN'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await signInThroughForm(tester);
 
       // Verify each module via shell notifier
       for (final tab in AdminNavTab.values) {
@@ -57,15 +47,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const LaundryRidgeApp(),
-        ),
-      );
+      final container = await pumpTestApp(tester);
 
       String currentTab = 'initial';
       final errors = <String>[];
@@ -76,9 +58,7 @@ void main() {
         debugPrint('FLUTTER_OVERFLOW_360: $msg');
       };
 
-      await tester.tap(find.text('Sign in with Email & PIN'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await signInThroughForm(tester);
 
       for (final tab in AdminNavTab.values) {
         currentTab = tab.name;

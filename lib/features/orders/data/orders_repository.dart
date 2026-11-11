@@ -12,9 +12,26 @@ abstract class OrdersRepository {
   Future<List<OrderDetail>> fetchOrders();
   Future<OrderDetail> fetchOrderDetail(String orderId);
   Future<void> updateOrderStatus(String orderId, OrderProcessStatus status);
-  Future<void> createOrder(OrderDetail order);
-  Future<void> recordPayment(String orderId, OrderPayment payment);
-  Future<void> updateOrder(OrderDetail order);
+
+  /// Creates the order and returns the server-assigned order number.
+  /// [clientRef] makes retries and double-taps safe: the same ref always
+  /// returns the same order instead of creating another one.
+  Future<String> createOrder(
+    OrderDetail draft, {
+    required String clientRef,
+    OrderPayment? initialPayment,
+  });
+
+  /// Records a payment. The server rejects amounts above the balance due and
+  /// reuses of a reference code. [clientRef] makes retries safe.
+  Future<void> recordPayment(
+    String orderId,
+    OrderPayment payment, {
+    required String clientRef,
+  });
+
+  /// Replaces the order's item lines in one transaction.
+  Future<void> replaceOrderItems(String orderId, List<OrderItem> items);
 }
 
 class MockOrdersRepository implements OrdersRepository {
@@ -408,18 +425,35 @@ class MockOrdersRepository implements OrdersRepository {
     await Future<void>.delayed(const Duration(milliseconds: 50));
   }
 
+  final Map<String, String> _createdByClientRef = {};
+  final Set<String> _recordedPaymentRefs = {};
+  int _nextSequence = 131;
+
   @override
-  Future<void> createOrder(OrderDetail order) async {
+  Future<String> createOrder(
+    OrderDetail draft, {
+    required String clientRef,
+    OrderPayment? initialPayment,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 50));
+    return _createdByClientRef.putIfAbsent(
+      clientRef,
+      () => 'LG-2026-${(_nextSequence++).toString().padLeft(5, '0')}',
+    );
   }
 
   @override
-  Future<void> recordPayment(String orderId, OrderPayment payment) async {
+  Future<void> recordPayment(
+    String orderId,
+    OrderPayment payment, {
+    required String clientRef,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 50));
+    _recordedPaymentRefs.add(clientRef);
   }
 
   @override
-  Future<void> updateOrder(OrderDetail order) async {
+  Future<void> replaceOrderItems(String orderId, List<OrderItem> items) async {
     await Future<void>.delayed(const Duration(milliseconds: 50));
   }
 }

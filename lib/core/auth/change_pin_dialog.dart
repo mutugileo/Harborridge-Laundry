@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
+import 'package:laundry_ridge/core/auth/auth_backend.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
@@ -27,6 +28,7 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
 
   String? _feedbackMessage;
   bool _isSuccess = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -44,25 +46,29 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
     super.dispose();
   }
 
-  void _submitPinChange() {
-    final currentPin = _currentPinController.text.trim();
-    final newPin = _newPinController.text.trim();
-    final confirmPin = _confirmPinController.text.trim();
+  Future<void> _submitPinChange() async {
+    if (_isSubmitting) return;
+    final currentPin = _currentPinController.text;
+    final newPin = _newPinController.text;
+    final confirmPin = _confirmPinController.text;
 
     if (newPin != confirmPin) {
       setState(() {
         _isSuccess = false;
         _feedbackMessage =
-            'New PIN and confirmation PIN do not match. Re-enter both fields.';
+            'New password and confirmation do not match. Re-enter both fields.';
       });
       return;
     }
 
-    final (ok, message) = ref
+    setState(() => _isSubmitting = true);
+    final (ok, message) = await ref
         .read(authSessionNotifierProvider.notifier)
-        .changeCurrentWorkerPin(currentPin: currentPin, newPin: newPin);
+        .changeOwnPassword(currentPassword: currentPin, newPassword: newPin);
+    if (!mounted) return;
 
     setState(() {
+      _isSubmitting = false;
       _isSuccess = ok;
       _feedbackMessage = message;
     });
@@ -103,7 +109,7 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.pin_outlined,
+                      Icons.lock_reset_rounded,
                       color: colors.harborNavy,
                       size: 20.0,
                     ),
@@ -114,7 +120,7 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Change My Security PIN',
+                          'Change My Password',
                           style: textTheme.titleMedium?.copyWith(
                             fontSize: 16.0,
                             fontWeight: FontWeight.w800,
@@ -146,22 +152,22 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
               const SizedBox(height: 16.0),
               _PinDialogField(
                 key: const ValueKey('change_pin_current_input'),
-                label: 'Current Security PIN',
-                hintText: 'Enter your current 4-digit PIN',
+                label: 'Current Password',
+                hintText: 'Enter your current password',
                 controller: _currentPinController,
               ),
               const SizedBox(height: 12.0),
               _PinDialogField(
                 key: const ValueKey('change_pin_new_input'),
-                label: 'New Security PIN',
-                hintText: 'At least 4 digits for your new PIN',
+                label: 'New Password',
+                hintText: 'At least $kMinStaffPasswordLength characters',
                 controller: _newPinController,
               ),
               const SizedBox(height: 12.0),
               _PinDialogField(
                 key: const ValueKey('change_pin_confirm_input'),
-                label: 'Confirm New Security PIN',
-                hintText: 'Re-enter your new security PIN',
+                label: 'Confirm New Password',
+                hintText: 'Re-enter your new password',
                 controller: _confirmPinController,
               ),
               AnimatedSwitcher(
@@ -234,7 +240,7 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'Update Security PIN',
+                          _isSubmitting ? 'Updating…' : 'Update Password',
                           style: textTheme.labelMedium?.copyWith(
                             fontSize: 12.0,
                             fontWeight: FontWeight.w700,
@@ -287,11 +293,14 @@ class _PinDialogField extends StatelessWidget {
           height: 40.0,
           child: TextField(
             controller: controller,
-            keyboardType: TextInputType.number,
+            obscureText: true,
+            autocorrect: false,
+            enableSuggestions: false,
+            keyboardType: TextInputType.visiblePassword,
             style: textTheme.bodySmall?.copyWith(
               fontSize: 13.0,
               fontWeight: FontWeight.w700,
-              letterSpacing: 2.0,
+              letterSpacing: 1.0,
               color: colors.textPrimary,
             ),
             decoration: InputDecoration(

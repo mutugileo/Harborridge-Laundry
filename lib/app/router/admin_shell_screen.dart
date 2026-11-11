@@ -88,13 +88,14 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
                           backgroundColor: colors.cardBackground,
                           child: OrderSidebar(
                             selectedIndex: shellState.currentTab.index,
-                            exceptedModules:
-                                authState.currentWorker.exceptedModules,
+                            exceptedModules: authState
+                                .currentWorker
+                                .effectiveExceptedModules,
                             onChangePinTap: () {
                               Navigator.of(context).pop();
                               showChangeWorkerPinDialog(context);
                             },
-                            onLogoutTap: authNotifier.signOutToPortal,
+                            onLogoutTap: authNotifier.signOut,
                             isFloating: false,
                             onItemSelected: (index) {
                               final selectedTab = AdminNavTab.values[index];
@@ -145,11 +146,12 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
                                 padding: const EdgeInsets.only(top: 38.0),
                                 child: OrderSidebar(
                                   selectedIndex: shellState.currentTab.index,
-                                  exceptedModules:
-                                      authState.currentWorker.exceptedModules,
+                                  exceptedModules: authState
+                                      .currentWorker
+                                      .effectiveExceptedModules,
                                   onChangePinTap: () =>
                                       showChangeWorkerPinDialog(context),
-                                  onLogoutTap: authNotifier.signOutToPortal,
+                                  onLogoutTap: authNotifier.signOut,
                                   onItemSelected: (index) {
                                     final selectedTab =
                                         AdminNavTab.values[index];
@@ -175,8 +177,7 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
                                         '${authState.currentWorker.fullName} • ${authState.currentWorker.roleTitle}',
                                     onChangePinTap: () =>
                                         showChangeWorkerPinDialog(context),
-                                    onSwitchWorkerTap:
-                                        authNotifier.signOutToPortal,
+                                    onSwitchWorkerTap: authNotifier.signOut,
                                     onToggleDrawer: () {
                                       if (!isDesktop) {
                                         _scaffoldKey.currentState?.openDrawer();
@@ -302,8 +303,8 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
         return AdminServicesCatalogView(
           key: const ValueKey('admin_services_view'),
           quantities: ordersState.catalogQuantities,
-          onIncrementGarment: ordersNotifier.incrementCatalogGarment,
-          onDecrementGarment: ordersNotifier.decrementCatalogGarment,
+          onIncrementGarment: ordersNotifier.incrementPosGarment,
+          onDecrementGarment: ordersNotifier.decrementPosGarment,
           onClearGarments: ordersNotifier.clearCatalogQuantities,
           onAddCustomItem: () => ordersNotifier.notifyCatalogAction(
             'Custom garment entry ready for #ORD-0006',
@@ -311,12 +312,12 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
           onScanBarcode: () => ordersNotifier.notifyCatalogAction(
             'Barcode scanner ready for garment tag',
           ),
-          onSubmitNewOrder: (submission) {
+          onSubmitNewOrder: (submission) async {
             final totalItems = ordersState.catalogQuantities.values.fold<int>(
               0,
               (sum, qty) => sum + qty,
             );
-            final newOrderId = ordersNotifier.createNewPosOrder(
+            final newOrderId = await ordersNotifier.createNewPosOrder(
               customerName: submission.customerName,
               customerPhone: submission.customerPhone,
               primaryService: submission.primaryService,
@@ -328,6 +329,16 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
               includeStainRemoval: submission.includeStainRemoval,
               includeExtraFragrance: submission.includeExtraFragrance,
             );
+            if (newOrderId == null) {
+              final reason = ref
+                  .read(orderDetailsNotifierProvider)
+                  .actionFeedbackMessage;
+              if (reason != null && mounted) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text(reason)));
+              }
+              return;
+            }
             ref
                 .read(orderTrackingNotifierProvider.notifier)
                 .addProductionOrderFromPos(
@@ -370,12 +381,7 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
           },
         );
       case AdminNavTab.staff:
-        return StaffView(
-          key: const ValueKey('admin_staff_view'),
-          onOpenLoginPortal: () {
-            ref.read(authSessionNotifierProvider.notifier).signOutToPortal();
-          },
-        );
+        return const StaffView(key: ValueKey('admin_staff_view'));
       case AdminNavTab.reports:
         return ReportsView(
           key: const ValueKey('admin_reports_view'),
@@ -390,7 +396,7 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
         return SettingsView(
           key: const ValueKey('admin_settings_view'),
           onSignOutRequested: () {
-            ref.read(authSessionNotifierProvider.notifier).signOutToPortal();
+            ref.read(authSessionNotifierProvider.notifier).signOut();
           },
         );
     }
