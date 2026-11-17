@@ -7,7 +7,7 @@
 CREATE TABLE IF NOT EXISTS public.orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id TEXT UNIQUE NOT NULL,
-    store_name TEXT NOT NULL DEFAULT 'HARBOR RIDGE',
+    store_name TEXT NOT NULL DEFAULT 'HARBOR RIDGE LAUNDRY',
     store_code TEXT NOT NULL DEFAULT '+254 142 188767',
     store_email TEXT NOT NULL DEFAULT 'operations@harborridge.co.ke',
     store_address TEXT NOT NULL DEFAULT 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',

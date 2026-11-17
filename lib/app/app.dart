@@ -8,7 +8,7 @@ class LaundryRidgeApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Harborridge Laundry',
+      title: 'HARBOR RIDGE LAUNDRY',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.createLightTheme(),
       darkTheme: AppTheme.createDarkTheme(),

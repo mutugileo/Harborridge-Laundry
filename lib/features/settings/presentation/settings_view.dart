@@ -293,7 +293,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       ),
                       const SizedBox(height: 2.0),
                       Text(
-                        'Configure Harborridge Laundry Service tax rules, SMS pickup alerts, and thermal tag printing.',
+                        'Configure HARBOR RIDGE LAUNDRY tax rules, SMS pickup alerts, and thermal tag printing.',
                         maxLines: isMobile ? 2 : 1,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.bodySmall?.copyWith(
@@ -828,7 +828,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final isMobile = screenWidth < 768.0;
 
     final specs = [
-      ('Store Business Name', 'HARBOR RIDGE (Harborridge Laundry Service)'),
+      ('Store Business Name', 'HARBOR RIDGE LAUNDRY'),
       ('Business Tagline', 'Fresh. Folded. Delivered.'),
       ('Contact Phone', '+254 142 188767'),
       ('Location & Street', 'Getathuru Road'),

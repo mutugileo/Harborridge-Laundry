@@ -1,11 +1,11 @@
 {
-    "name": "Harborridge Laundry",
-    "short_name": "Harborridge",
+    "name": "HARBOR RIDGE LAUNDRY",
+    "short_name": "Harbor Ridge",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#1B2548",
     "theme_color": "#1B2548",
-    "description": "Harborridge Laundry Service - Fresh, Folded, Delivered",
+    "description": "HARBOR RIDGE LAUNDRY - Fresh, Folded, Delivered",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

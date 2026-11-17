@@ -38,7 +38,7 @@ class MockOrdersRepository implements OrdersRepository {
   static const List<OrderDetail> _orders = [
     OrderDetail(
       orderId: 'LG-2026-00125',
-      storeName: 'HARBORRIDGE LAUNDRY',
+      storeName: 'HARBOR RIDGE LAUNDRY',
       storeCode: '+254 142 188767',
       storeEmail: 'operations@harborridge.co.ke',
       storeAddress: 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
@@ -94,7 +94,7 @@ class MockOrdersRepository implements OrdersRepository {
     ),
     OrderDetail(
       orderId: '#ORD-0006',
-      storeName: 'HARBORRIDGE LAUNDRY',
+      storeName: 'HARBOR RIDGE LAUNDRY',
       storeCode: '+254 142 188767',
       storeEmail: 'operations@harborridge.co.ke',
       storeAddress: 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
@@ -180,7 +180,7 @@ class MockOrdersRepository implements OrdersRepository {
     ),
     OrderDetail(
       orderId: 'LG-2026-00126',
-      storeName: 'HARBORRIDGE LAUNDRY',
+      storeName: 'HARBOR RIDGE LAUNDRY',
       storeCode: '+254 142 188767',
       storeEmail: 'operations@harborridge.co.ke',
       storeAddress: 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
@@ -236,7 +236,7 @@ class MockOrdersRepository implements OrdersRepository {
     ),
     OrderDetail(
       orderId: 'LG-2026-00127',
-      storeName: 'HARBORRIDGE LAUNDRY',
+      storeName: 'HARBOR RIDGE LAUNDRY',
       storeCode: '+254 142 188767',
       storeEmail: 'operations@harborridge.co.ke',
       storeAddress: 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
@@ -290,7 +290,7 @@ class MockOrdersRepository implements OrdersRepository {
     ),
     OrderDetail(
       orderId: 'LG-2026-00128',
-      storeName: 'HARBORRIDGE LAUNDRY',
+      storeName: 'HARBOR RIDGE LAUNDRY',
       storeCode: '+254 142 188767',
       storeEmail: 'operations@harborridge.co.ke',
       storeAddress: 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
@@ -346,7 +346,7 @@ class MockOrdersRepository implements OrdersRepository {
     ),
     OrderDetail(
       orderId: 'LG-2026-00129',
-      storeName: 'HARBORRIDGE LAUNDRY',
+      storeName: 'HARBOR RIDGE LAUNDRY',
       storeCode: '+254 142 188767',
       storeEmail: 'operations@harborridge.co.ke',
       storeAddress: 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',

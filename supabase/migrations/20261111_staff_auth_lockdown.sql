@@ -363,7 +363,7 @@ BEGIN
         display_amount, payment_status_label, processing_stage_label, delivery_status_label,
         delivery_method, assigned_rider, created_date_label, client_ref, created_by
     ) VALUES (
-        v_order_id, 'HARBOR RIDGE', '+254 142 188767', s.email,
+        v_order_id, 'HARBOR RIDGE LAUNDRY', '+254 142 188767', s.email,
         'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
         v_now_label,
         COALESCE(NULLIF(p_order->>'delivery_date', ''), to_char((now() + interval '2 days') AT TIME ZONE 'Africa/Nairobi', 'DD/MM/YYYY')),

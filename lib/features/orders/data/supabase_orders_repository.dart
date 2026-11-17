@@ -219,7 +219,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
     return OrderDetail(
       orderId: row['order_id'] as String? ?? '',
-      storeName: row['store_name'] as String? ?? 'HARBOR RIDGE',
+      storeName: row['store_name'] as String? ?? 'HARBOR RIDGE LAUNDRY',
       storeCode: row['store_code'] as String? ?? '+254 142 188767',
       storeEmail:
           row['store_email'] as String? ?? 'operations@harborridge.co.ke',

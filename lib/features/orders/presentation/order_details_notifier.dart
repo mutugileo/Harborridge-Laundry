@@ -610,7 +610,7 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     final operator = ref.read(authSessionNotifierProvider).currentWorker;
     final draft = OrderDetail(
       orderId: '',
-      storeName: 'HARBOR RIDGE',
+      storeName: 'HARBOR RIDGE LAUNDRY',
       storeCode: '+254 142 188767',
       storeEmail: operator.email,
       storeAddress: 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
