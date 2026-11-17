@@ -328,7 +328,7 @@ DECLARE
     v_order_id TEXT;
     v_existing TEXT;
     v_rider TEXT := COALESCE(NULLIF(btrim(p_order->>'assigned_rider'), ''), 'Unassigned');
-    v_branch TEXT := COALESCE(NULLIF(btrim(p_order->>'vendor_branch'), ''), 'Harborridge Central Plant');
+    v_branch TEXT := COALESCE(NULLIF(btrim(p_order->>'vendor_branch'), ''), 'Harbor Ridge • Getathuru Road');
     v_now_label TEXT := to_char(now() AT TIME ZONE 'Africa/Nairobi', 'DD/MM/YYYY');
     v_payment JSONB;
 BEGIN
@@ -358,12 +358,13 @@ BEGIN
                   || lpad(nextval('order_number_seq')::TEXT, 5, '0');
 
     INSERT INTO orders (
-        order_id, store_email, store_address, order_date, delivery_date, status,
+        order_id, store_name, store_code, store_email, store_address, order_date, delivery_date, status,
         customer_name, customer_phone, assigned_staff, primary_service, vendor_branch,
         display_amount, payment_status_label, processing_stage_label, delivery_status_label,
         delivery_method, assigned_rider, created_date_label, client_ref, created_by
     ) VALUES (
-        v_order_id, s.email, v_branch,
+        v_order_id, 'HARBOR RIDGE', '+254 142 188767', s.email,
+        'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
         v_now_label,
         COALESCE(NULLIF(p_order->>'delivery_date', ''), to_char((now() + interval '2 days') AT TIME ZONE 'Africa/Nairobi', 'DD/MM/YYYY')),
         'processing',

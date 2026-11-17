@@ -828,12 +828,24 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final isMobile = screenWidth < 768.0;
 
     final specs = [
-      ('Store Business Name', 'Harborridge Laundry Services'),
-      ('Primary Facility Branch', 'Harborridge Main Facility'),
+      ('Store Business Name', 'HARBOR RIDGE (Harborridge Laundry Service)'),
+      ('Business Tagline', 'Fresh. Folded. Delivered.'),
+      ('Contact Phone', '+254 142 188767'),
+      ('Location & Street', 'Getathuru Road'),
+      ('Facility Landmark', 'Directly opposite NG-CDF Kabete Plaza'),
+      ('Primary Facility Branch', 'Harbor Ridge • Getathuru Road'),
       ('Contact & Dispatch Email', 'codzuresolutions@gmail.com'),
       (
-        'Store Currency & Symbol',
-        'KES (Kenyan Shilling • Official Central Bank Standard)',
+        'Store Currency & Pricing Basis',
+        'KES (KSh) • Per kg or per item, depending on service',
+      ),
+      (
+        'Weight Service Minimums',
+        'General Laundry: KES 500 min • Curtains: KES 600 min • Tablecloths / Bulk Towels: KES 700 min',
+      ),
+      (
+        'Catalog Pricing Notes',
+        "Kids' Clothes: KES 250/item • Traditional Attire: KES 1,500–2,500 • Comfort & Velvet: KES 900 • Converse Shoes / Pillows: KES 200",
       ),
       (
         'Taxation Compliance',

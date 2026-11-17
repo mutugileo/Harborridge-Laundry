@@ -610,10 +610,10 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     final operator = ref.read(authSessionNotifierProvider).currentWorker;
     final draft = OrderDetail(
       orderId: '',
-      storeName: 'HARBORRIDGE LAUNDRY',
-      storeCode: 'HR-2026',
+      storeName: 'HARBOR RIDGE',
+      storeCode: '+254 142 188767',
       storeEmail: operator.email,
-      storeAddress: vendorBranch,
+      storeAddress: 'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
       taxIdentifier: 'TAX: KRA-PIN-P05123984A',
       orderDate: _todayLabel(now),
       deliveryDate: _todayLabel(now.add(const Duration(days: 2))),

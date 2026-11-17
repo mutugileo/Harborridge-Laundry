@@ -62,14 +62,18 @@ class _AdminServicesCatalogViewState extends State<AdminServicesCatalogView> {
   static const List<String> _serviceTypes = [
     'Wash & Iron',
     'Wash & Fold',
+    'Laundry by Weight',
     'Dry Cleaning',
+    'Apparel & Special',
+    'Ironing Only',
     'Wet Wash',
     'Express Iron',
   ];
 
   static const List<String> _branches = [
-    'LaundryGo Nairobi',
+    'Harbor Ridge • Getathuru Road',
     'Harborridge Main',
+    'LaundryGo Nairobi',
     'LaundryGo Westlands',
     'LaundryGo Kilimani',
   ];

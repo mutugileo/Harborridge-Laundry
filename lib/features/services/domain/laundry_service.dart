@@ -12,6 +12,7 @@ class LaundryService {
     required this.unitPrice,
     required this.unitLabel,
     required this.icon,
+    this.minimumChargeKes,
   });
 
   final String id;
@@ -22,4 +23,5 @@ class LaundryService {
   final double unitPrice;
   final String unitLabel;
   final IconData icon;
+  final double? minimumChargeKes;
 }

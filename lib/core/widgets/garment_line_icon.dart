@@ -25,55 +25,121 @@ enum GarmentType {
   denimJacket,
   wrapSkirt,
   underGarments,
+  generalLaundryLoad,
+  curtains,
+  tableclothsTowels,
+  threePieceSuit,
+  kaundaSuit,
+  kitengeSuit,
+  skirtSuit,
+  duvetKingQueen,
+  duvetStandard,
+  woollenBlanket,
+  comfortAndVelvet,
+  babyBlanketSheers,
+  largeBedCover,
+  smallBedCover,
+  bedsheets,
+  pillowcase,
+  dustTrenchBathrobe,
+  religiousClothes,
+  graduationGown,
+  traditionalAttire,
+  weddingGown,
+  bulkIroning,
 }
 
 extension GarmentTypeMetadata on GarmentType {
   String get displayName {
     switch (this) {
       case GarmentType.halterTop:
-        return 'Pleated Halter Top';
+        return 'Pleated Dress';
       case GarmentType.tanBlazer:
-        return 'Tailored Blazer';
+        return 'Coat / Jacket';
       case GarmentType.womensTop:
-        return 'Womens Top';
+        return 'Light Jacket';
       case GarmentType.denimShorts:
-        return 'Denim Shorts';
+        return 'Dust Coat';
       case GarmentType.babyClothes:
-        return 'Baby Cloths';
+        return "Kids' Clothes";
       case GarmentType.womensDress:
-        return 'Womens Dress';
+        return 'Special Dress';
       case GarmentType.trousers:
-        return 'Tailored Trousers';
+        return 'Trousers';
       case GarmentType.winterGloves:
-        return 'Winter Gloves';
+        return 'Converse Shoes / Pillows';
       case GarmentType.bowTie:
-        return 'Silk Bow Tie';
+        return 'Ties';
       case GarmentType.scarfOnHanger:
-        return 'Cashmere Scarf';
+        return 'Bed Sheet (Ironing)';
       case GarmentType.leatherJacket:
-        return 'Biker Jacket';
+        return 'Leather Jacket';
       case GarmentType.shirtDress:
-        return 'Pocket Shirt Dress';
+        return 'Normal Dress';
       case GarmentType.camisoleDress:
-        return 'Summer Sundress';
+        return 'Skirt (Ironing)';
       case GarmentType.stripedTee:
-        return 'Striped T-Shirt';
+        return 'T-Shirts';
       case GarmentType.jeans:
-        return 'Jeans';
+        return 'Trousers (Ironing)';
       case GarmentType.fedoraHat:
-        return 'Fedora Hat';
+        return 'Sneakers / Caps';
       case GarmentType.hoodie:
-        return 'Pullover Hoodie';
+        return 'Heavy Jacket / Cardigan';
       case GarmentType.blueSuitJacket:
-        return 'Suit Jacket';
+        return '2-Piece Suit';
       case GarmentType.shirt:
-        return 'Shirt';
+        return 'Normal Shirts';
       case GarmentType.denimJacket:
-        return 'Denim Jacket';
+        return 'Shirts (Ironing)';
       case GarmentType.wrapSkirt:
-        return 'Wrap Skirt';
+        return 'Skirts';
       case GarmentType.underGarments:
-        return 'Under Garments';
+        return 'Suit (Ironing)';
+      case GarmentType.generalLaundryLoad:
+        return 'General Laundry (Load)';
+      case GarmentType.curtains:
+        return 'Curtains';
+      case GarmentType.tableclothsTowels:
+        return 'Tablecloths / Bulk Towels';
+      case GarmentType.threePieceSuit:
+        return '3-Piece Suit';
+      case GarmentType.kaundaSuit:
+        return 'Kaunda Suit';
+      case GarmentType.kitengeSuit:
+        return 'Kitenge Suit';
+      case GarmentType.skirtSuit:
+        return 'Skirt Suit';
+      case GarmentType.duvetKingQueen:
+        return 'Duvet 6×6 / 5×6 / Fluffy Blankets';
+      case GarmentType.duvetStandard:
+        return 'Duvet 4×6';
+      case GarmentType.woollenBlanket:
+        return 'Woollen Blanket / Duvet Covers';
+      case GarmentType.comfortAndVelvet:
+        return 'Comfort and Velvet';
+      case GarmentType.babyBlanketSheers:
+        return 'Baby Blanket / Sheers';
+      case GarmentType.largeBedCover:
+        return 'Large Bed Cover';
+      case GarmentType.smallBedCover:
+        return 'Small Bed Cover';
+      case GarmentType.bedsheets:
+        return 'Bedsheets';
+      case GarmentType.pillowcase:
+        return 'Pillowcases';
+      case GarmentType.dustTrenchBathrobe:
+        return 'Dust / Trench Coat / Bathrobe';
+      case GarmentType.religiousClothes:
+        return 'Religious Clothes';
+      case GarmentType.graduationGown:
+        return 'Graduation Gown';
+      case GarmentType.traditionalAttire:
+        return 'Traditional Attire';
+      case GarmentType.weddingGown:
+        return 'Wedding Gown';
+      case GarmentType.bulkIroning:
+        return 'Bulk Ironing';
     }
   }
 
@@ -81,79 +147,176 @@ extension GarmentTypeMetadata on GarmentType {
     switch (this) {
       case GarmentType.tanBlazer:
       case GarmentType.womensDress:
-      case GarmentType.scarfOnHanger:
       case GarmentType.leatherJacket:
-      case GarmentType.fedoraHat:
       case GarmentType.blueSuitJacket:
-      case GarmentType.wrapSkirt:
+      case GarmentType.threePieceSuit:
+      case GarmentType.kaundaSuit:
+      case GarmentType.kitengeSuit:
+      case GarmentType.skirtSuit:
+      case GarmentType.religiousClothes:
+      case GarmentType.graduationGown:
+      case GarmentType.traditionalAttire:
+      case GarmentType.weddingGown:
         return '[Dry Cleaning]';
       case GarmentType.babyClothes:
       case GarmentType.winterGloves:
+      case GarmentType.fedoraHat:
+      case GarmentType.duvetKingQueen:
+      case GarmentType.duvetStandard:
+      case GarmentType.woollenBlanket:
+      case GarmentType.comfortAndVelvet:
+      case GarmentType.babyBlanketSheers:
+      case GarmentType.largeBedCover:
+      case GarmentType.smallBedCover:
+      case GarmentType.bedsheets:
+      case GarmentType.pillowcase:
+        return '[Apparel & Special]';
+      case GarmentType.generalLaundryLoad:
+      case GarmentType.curtains:
+      case GarmentType.tableclothsTowels:
+        return '[Laundry by Weight]';
       case GarmentType.bowTie:
-        return '[Wet Wash]';
-      case GarmentType.denimShorts:
-      case GarmentType.stripedTee:
-      case GarmentType.hoodie:
-      case GarmentType.underGarments:
-        return '[Wash & Fold]';
-      case GarmentType.halterTop:
-      case GarmentType.womensTop:
-      case GarmentType.trousers:
-      case GarmentType.shirtDress:
+      case GarmentType.scarfOnHanger:
       case GarmentType.camisoleDress:
       case GarmentType.jeans:
-      case GarmentType.shirt:
       case GarmentType.denimJacket:
+      case GarmentType.underGarments:
+      case GarmentType.bulkIroning:
+        return '[Ironing Only]';
+      case GarmentType.halterTop:
+      case GarmentType.womensTop:
+      case GarmentType.denimShorts:
+      case GarmentType.trousers:
+      case GarmentType.shirtDress:
+      case GarmentType.stripedTee:
+      case GarmentType.hoodie:
+      case GarmentType.shirt:
+      case GarmentType.wrapSkirt:
+      case GarmentType.dustTrenchBathrobe:
         return '[Wash & Iron]';
+    }
+  }
+
+  String get unitBasisLabel {
+    switch (this) {
+      case GarmentType.generalLaundryLoad:
+        return '/ kg (Min KES 500)';
+      case GarmentType.curtains:
+        return '/ kg (Min KES 600)';
+      case GarmentType.tableclothsTowels:
+        return '/ kg (Min KES 700)';
+      case GarmentType.bulkIroning:
+        return '/ piece';
+      case GarmentType.traditionalAttire:
+        return '/ item (KES 1,500–2,500)';
+      default:
+        return '/ item';
+    }
+  }
+
+  double get minimumChargeKes {
+    switch (this) {
+      case GarmentType.generalLaundryLoad:
+        return 500.0;
+      case GarmentType.curtains:
+        return 600.0;
+      case GarmentType.tableclothsTowels:
+        return 700.0;
+      default:
+        return 0.0;
     }
   }
 
   double get defaultRate {
     switch (this) {
       case GarmentType.halterTop:
-        return 22.00;
+        return 300.00;
       case GarmentType.tanBlazer:
-        return 85.00;
+        return 350.00;
       case GarmentType.womensTop:
-        return 25.00;
+        return 300.00;
       case GarmentType.denimShorts:
-        return 18.00;
+        return 300.00;
       case GarmentType.babyClothes:
-        return 10.00;
+        return 250.00;
       case GarmentType.womensDress:
-        return 100.00;
+        return 800.00;
       case GarmentType.trousers:
-        return 40.00;
+        return 200.00;
       case GarmentType.winterGloves:
-        return 15.00;
+        return 200.00;
       case GarmentType.bowTie:
-        return 12.00;
-      case GarmentType.scarfOnHanger:
-        return 28.00;
-      case GarmentType.leatherJacket:
-        return 110.00;
-      case GarmentType.shirtDress:
-        return 65.00;
-      case GarmentType.camisoleDress:
-        return 55.00;
-      case GarmentType.stripedTee:
-        return 20.00;
-      case GarmentType.jeans:
-        return 60.00;
-      case GarmentType.fedoraHat:
-        return 30.00;
-      case GarmentType.hoodie:
-        return 38.00;
-      case GarmentType.blueSuitJacket:
-        return 80.00;
-      case GarmentType.shirt:
-        return 45.00;
-      case GarmentType.denimJacket:
         return 50.00;
+      case GarmentType.scarfOnHanger:
+        return 80.00;
+      case GarmentType.leatherJacket:
+        return 800.00;
+      case GarmentType.shirtDress:
+        return 400.00;
+      case GarmentType.camisoleDress:
+        return 100.00;
+      case GarmentType.stripedTee:
+        return 150.00;
+      case GarmentType.jeans:
+        return 200.00;
+      case GarmentType.fedoraHat:
+        return 200.00;
+      case GarmentType.hoodie:
+        return 400.00;
+      case GarmentType.blueSuitJacket:
+        return 650.00;
+      case GarmentType.shirt:
+        return 250.00;
+      case GarmentType.denimJacket:
+        return 150.00;
       case GarmentType.wrapSkirt:
-        return 42.00;
+        return 100.00;
       case GarmentType.underGarments:
-        return 20.00;
+        return 400.00;
+      case GarmentType.generalLaundryLoad:
+        return 120.00;
+      case GarmentType.curtains:
+        return 120.00;
+      case GarmentType.tableclothsTowels:
+        return 150.00;
+      case GarmentType.threePieceSuit:
+        return 700.00;
+      case GarmentType.kaundaSuit:
+        return 600.00;
+      case GarmentType.kitengeSuit:
+        return 500.00;
+      case GarmentType.skirtSuit:
+        return 600.00;
+      case GarmentType.duvetKingQueen:
+        return 800.00;
+      case GarmentType.duvetStandard:
+        return 700.00;
+      case GarmentType.woollenBlanket:
+        return 500.00;
+      case GarmentType.comfortAndVelvet:
+        return 900.00;
+      case GarmentType.babyBlanketSheers:
+        return 300.00;
+      case GarmentType.largeBedCover:
+        return 500.00;
+      case GarmentType.smallBedCover:
+        return 400.00;
+      case GarmentType.bedsheets:
+        return 150.00;
+      case GarmentType.pillowcase:
+        return 100.00;
+      case GarmentType.dustTrenchBathrobe:
+        return 250.00;
+      case GarmentType.religiousClothes:
+        return 500.00;
+      case GarmentType.graduationGown:
+        return 750.00;
+      case GarmentType.traditionalAttire:
+        return 1500.00;
+      case GarmentType.weddingGown:
+        return 3800.00;
+      case GarmentType.bulkIroning:
+        return 50.00;
     }
   }
 }
@@ -235,14 +398,21 @@ class _GarmentIllustrationPainter extends CustomPainter {
       case GarmentType.halterTop:
         _drawHalterTop(canvas, w, h, stroke);
       case GarmentType.tanBlazer:
+      case GarmentType.dustTrenchBathrobe:
         _drawTanBlazer(canvas, w, h, stroke);
       case GarmentType.womensTop:
+      case GarmentType.kaundaSuit:
+      case GarmentType.kitengeSuit:
         _drawPatternedBlouse(canvas, w, h, stroke);
       case GarmentType.denimShorts:
+      case GarmentType.pillowcase:
         _drawDenimShorts(canvas, w, h, stroke);
       case GarmentType.babyClothes:
+      case GarmentType.generalLaundryLoad:
         _drawGraphicTee(canvas, w, h, stroke);
       case GarmentType.womensDress:
+      case GarmentType.traditionalAttire:
+      case GarmentType.weddingGown:
         _drawSheathDress(canvas, w, h, stroke);
       case GarmentType.trousers:
         _drawTrousers(canvas, w, h, stroke);
@@ -251,10 +421,16 @@ class _GarmentIllustrationPainter extends CustomPainter {
       case GarmentType.bowTie:
         _drawBowTie(canvas, w, h, stroke);
       case GarmentType.scarfOnHanger:
+      case GarmentType.curtains:
+      case GarmentType.tableclothsTowels:
+      case GarmentType.bedsheets:
+      case GarmentType.babyBlanketSheers:
         _drawScarfOnHanger(canvas, w, h, stroke);
       case GarmentType.leatherJacket:
         _drawLeatherJacket(canvas, w, h, stroke);
       case GarmentType.shirtDress:
+      case GarmentType.religiousClothes:
+      case GarmentType.graduationGown:
         _drawShirtDress(canvas, w, h, stroke);
       case GarmentType.camisoleDress:
         _drawCamisoleDress(canvas, w, h, stroke);
@@ -265,10 +441,19 @@ class _GarmentIllustrationPainter extends CustomPainter {
       case GarmentType.fedoraHat:
         _drawFedoraHat(canvas, w, h, stroke);
       case GarmentType.hoodie:
+      case GarmentType.duvetKingQueen:
+      case GarmentType.duvetStandard:
+      case GarmentType.woollenBlanket:
+      case GarmentType.comfortAndVelvet:
+      case GarmentType.largeBedCover:
+      case GarmentType.smallBedCover:
         _drawHoodie(canvas, w, h, stroke);
       case GarmentType.blueSuitJacket:
+      case GarmentType.threePieceSuit:
+      case GarmentType.skirtSuit:
         _drawBlueSuitJacket(canvas, w, h, stroke);
       case GarmentType.shirt:
+      case GarmentType.bulkIroning:
         _drawDressShirt(canvas, w, h, stroke);
       case GarmentType.denimJacket:
         _drawDenimJacket(canvas, w, h, stroke);

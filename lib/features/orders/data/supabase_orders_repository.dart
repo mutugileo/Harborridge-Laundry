@@ -219,19 +219,24 @@ class SupabaseOrdersRepository implements OrdersRepository {
 
     return OrderDetail(
       orderId: row['order_id'] as String? ?? '',
-      storeName: row['store_name'] as String? ?? 'HARBORRIDGE LAUNDRY',
-      storeCode: row['store_code'] as String? ?? '123456',
-      storeEmail: row['store_email'] as String? ?? 'store@store.com',
-      storeAddress: row['store_address'] as String? ?? 'Nairobi, Kenya',
-      taxIdentifier: row['tax_identifier'] as String? ?? 'TAX: KRA-PIN',
+      storeName: row['store_name'] as String? ?? 'HARBOR RIDGE',
+      storeCode: row['store_code'] as String? ?? '+254 142 188767',
+      storeEmail:
+          row['store_email'] as String? ?? 'operations@harborridge.co.ke',
+      storeAddress:
+          row['store_address'] as String? ??
+          'Getathuru Road • Directly opposite NG-CDF Kabete Plaza',
+      taxIdentifier:
+          row['tax_identifier'] as String? ?? 'TAX: KRA-PIN-P05123984A',
       orderDate: row['order_date'] as String? ?? '',
       deliveryDate: row['delivery_date'] as String? ?? '',
       status: status,
       customerName: row['customer_name'] as String? ?? 'Walk-in Customer',
-      customerPhone: row['customer_phone'] as String? ?? '',
+      customerPhone: row['customer_phone'] as String? ?? '+254 142 188767',
       assignedStaff: row['assigned_staff'] as String? ?? 'Attendant',
       primaryService: row['primary_service'] as String? ?? 'Wash & Fold',
-      vendorBranch: row['vendor_branch'] as String? ?? 'LaundryGo Nairobi',
+      vendorBranch:
+          row['vendor_branch'] as String? ?? 'Harbor Ridge • Getathuru Road',
       displayAmount: row['display_amount'] as String? ?? 'KES 0',
       paymentStatusLabel: row['payment_status_label'] as String? ?? 'Unpaid',
       processingStageLabel:
@@ -262,18 +267,40 @@ class SupabaseOrdersRepository implements OrdersRepository {
       case GarmentType.wrapSkirt:
       case GarmentType.fedoraHat:
       case GarmentType.bowTie:
+      case GarmentType.dustTrenchBathrobe:
+      case GarmentType.bulkIroning:
         return Icons.checkroom_rounded;
       case GarmentType.denimShorts:
       case GarmentType.jeans:
         return Icons.accessibility_new_rounded;
       case GarmentType.babyClothes:
+      case GarmentType.babyBlanketSheers:
         return Icons.child_care_rounded;
       case GarmentType.winterGloves:
       case GarmentType.underGarments:
       case GarmentType.hoodie:
+      case GarmentType.generalLaundryLoad:
+      case GarmentType.curtains:
+      case GarmentType.tableclothsTowels:
+      case GarmentType.duvetKingQueen:
+      case GarmentType.duvetStandard:
+      case GarmentType.woollenBlanket:
+      case GarmentType.comfortAndVelvet:
+      case GarmentType.largeBedCover:
+      case GarmentType.smallBedCover:
+      case GarmentType.bedsheets:
+      case GarmentType.pillowcase:
         return Icons.wash_rounded;
       case GarmentType.leatherJacket:
       case GarmentType.blueSuitJacket:
+      case GarmentType.threePieceSuit:
+      case GarmentType.kaundaSuit:
+      case GarmentType.kitengeSuit:
+      case GarmentType.skirtSuit:
+      case GarmentType.religiousClothes:
+      case GarmentType.graduationGown:
+      case GarmentType.traditionalAttire:
+      case GarmentType.weddingGown:
         return Icons.dry_cleaning_rounded;
     }
   }

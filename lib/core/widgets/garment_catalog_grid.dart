@@ -105,7 +105,7 @@ class _GarmentTile extends StatelessWidget {
 
     return Tooltip(
       message:
-          '${garment.displayName} (${garment.defaultServiceType}) · KES ${garment.defaultRate.toStringAsFixed(0)}',
+          '${garment.displayName} (${garment.defaultServiceType}) · KES ${garment.defaultRate.toStringAsFixed(0)} ${garment.unitBasisLabel}',
       child: InteractivePressScale(
         onTap: onTap,
         child: Container(
