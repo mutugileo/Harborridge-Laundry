@@ -49,7 +49,7 @@ class AdminDashboardView extends ConsumerWidget {
               _DashboardTopUtilityRow(
                 activeOrdersCount: state.activeOrdersCount,
                 onUpgradeTap: () => notifier.triggerDashboardAction(
-                  'Harborridge Enterprise plan details opened',
+                  'Harbor Ridge Enterprise plan details opened',
                 ),
                 onAddWorkerTap: () {
                   if (onRegisterWorkerRequested != null) {
@@ -66,7 +66,7 @@ class AdminDashboardView extends ConsumerWidget {
                 selectedDateFilter: state.selectedDateFilter,
                 onDateFilterChanged: notifier.selectDateFilter,
                 onExportTap: () => notifier.triggerDashboardAction(
-                  'Exported ${state.selectedDateFilter} Harborridge analytics report',
+                  'Exported ${state.selectedDateFilter} Harbor Ridge analytics report',
                 ),
                 onNewOrderTap: () {
                   if (onNewOrderRequested != null) {

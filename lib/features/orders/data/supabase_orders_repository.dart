@@ -152,6 +152,17 @@ class SupabaseOrdersRepository implements OrdersRepository {
   static String _cleanMethod(String method) =>
       method.replaceAll('[', '').replaceAll(']', '').trim();
 
+  static String _sanitizeBranch(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return 'Harbor Ridge Main';
+    final trimmed = raw.trim();
+    if (trimmed.toLowerCase().contains('laundrygo')) {
+      return 'Harbor Ridge Main';
+    }
+    return trimmed
+        .replaceAll('Harborridge', 'Harbor Ridge')
+        .replaceAll('Harbor Ridge • Getathuru Road', 'Harbor Ridge Main');
+  }
+
   /// Runs a query and turns database errors into messages staff can act on.
   static Future<T> _guard<T>(Future<T> Function() run) async {
     try {
@@ -237,8 +248,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
       customerPhone: row['customer_phone'] as String? ?? '+254 142 188767',
       assignedStaff: row['assigned_staff'] as String? ?? 'Attendant',
       primaryService: row['primary_service'] as String? ?? 'Wash & Fold',
-      vendorBranch:
-          row['vendor_branch'] as String? ?? 'Harbor Ridge • Getathuru Road',
+      vendorBranch: _sanitizeBranch(row['vendor_branch'] as String?),
       displayAmount: row['display_amount'] as String? ?? 'KES 0',
       paymentStatusLabel: row['payment_status_label'] as String? ?? 'Unpaid',
       processingStageLabel:

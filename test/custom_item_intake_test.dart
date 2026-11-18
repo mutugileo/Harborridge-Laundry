@@ -86,16 +86,14 @@ void main() {
         expect(find.text('Take Photo'), findsOneWidget);
 
         // 4. Enter item details
-        final nameInputFinder = find.widgetWithText(
-          TextField,
-          'Enter garment or laundry item name',
+        final nameInputFinder = find.byKey(
+          const ValueKey('custom_item_name_input'),
         );
         expect(nameInputFinder, findsOneWidget);
         await tester.enterText(nameInputFinder, 'Velvet Kaftan');
 
-        final rateInputFinder = find.widgetWithText(
-          TextField,
-          'Enter price per item or load',
+        final rateInputFinder = find.byKey(
+          const ValueKey('custom_item_rate_input'),
         );
         expect(rateInputFinder, findsOneWidget);
         await tester.enterText(rateInputFinder, '1250');

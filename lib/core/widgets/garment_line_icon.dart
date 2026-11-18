@@ -66,14 +66,18 @@ extension GarmentTypeMetadata on GarmentType {
       this == GarmentType.tableclothsTowels;
 
   GarmentServiceSection get serviceSection {
-    switch (defaultServiceType) {
-      case '[Laundry by Weight]':
+    final clean = defaultServiceType
+        .replaceAll('[', '')
+        .replaceAll(']', '')
+        .trim();
+    switch (clean) {
+      case 'Laundry by Weight':
         return GarmentServiceSection.byWeight;
-      case '[Dry Cleaning]':
+      case 'Dry Cleaning':
         return GarmentServiceSection.dryCleaning;
-      case '[Apparel & Special]':
+      case 'Apparel & Special':
         return GarmentServiceSection.apparelSpecial;
-      case '[Ironing Only]':
+      case 'Ironing Only':
         return GarmentServiceSection.ironing;
       default:
         return GarmentServiceSection.washAndIron;
@@ -187,7 +191,7 @@ extension GarmentTypeMetadata on GarmentType {
       case GarmentType.graduationGown:
       case GarmentType.traditionalAttire:
       case GarmentType.weddingGown:
-        return '[Dry Cleaning]';
+        return 'Dry Cleaning';
       case GarmentType.babyClothes:
       case GarmentType.winterGloves:
       case GarmentType.fedoraHat:
@@ -200,11 +204,11 @@ extension GarmentTypeMetadata on GarmentType {
       case GarmentType.smallBedCover:
       case GarmentType.bedsheets:
       case GarmentType.pillowcase:
-        return '[Apparel & Special]';
+        return 'Apparel & Special';
       case GarmentType.generalLaundryLoad:
       case GarmentType.curtains:
       case GarmentType.tableclothsTowels:
-        return '[Laundry by Weight]';
+        return 'Laundry by Weight';
       case GarmentType.bowTie:
       case GarmentType.scarfOnHanger:
       case GarmentType.camisoleDress:
@@ -212,7 +216,7 @@ extension GarmentTypeMetadata on GarmentType {
       case GarmentType.denimJacket:
       case GarmentType.underGarments:
       case GarmentType.bulkIroning:
-        return '[Ironing Only]';
+        return 'Ironing Only';
       case GarmentType.halterTop:
       case GarmentType.womensTop:
       case GarmentType.denimShorts:
@@ -223,7 +227,7 @@ extension GarmentTypeMetadata on GarmentType {
       case GarmentType.shirt:
       case GarmentType.wrapSkirt:
       case GarmentType.dustTrenchBathrobe:
-        return '[Wash & Iron]';
+        return 'Wash & Iron';
     }
   }
 

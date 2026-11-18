@@ -1238,7 +1238,7 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
                       const SizedBox(width: 6.0),
                       Flexible(
                         child: Text(
-                          'HARBORRIDGE STATEMENT OF ACCOUNT • BILLING LEDGER',
+                          'HARBOR RIDGE STATEMENT OF ACCOUNT • BILLING LEDGER',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: textTheme.labelSmall?.copyWith(

@@ -53,9 +53,7 @@ class OrderHeaderBar extends StatelessWidget {
                   const SizedBox(width: 8.0),
                   Expanded(
                     child: Text(
-                      isVeryCompact
-                          ? 'HARBORRIDGE'
-                          : 'HARBORRIDGE — LAUNDRY SERVICE —',
+                      isVeryCompact ? 'HARBOR RIDGE' : 'HARBOR RIDGE LAUNDRY',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.labelMedium?.copyWith(

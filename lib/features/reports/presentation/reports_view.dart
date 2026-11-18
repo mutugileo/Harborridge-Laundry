@@ -32,10 +32,20 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
 
   static const List<String> _branches = [
     'All Branches',
-    'Harborridge Main',
-    'Harborridge Westlands',
-    'Harborridge Kilimani',
+    'Harbor Ridge Main',
+    'Harbor Ridge Westlands',
+    'Harbor Ridge Kilimani',
   ];
+
+  static String _cleanBranchName(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty || trimmed.toLowerCase().contains('laundrygo')) {
+      return 'Harbor Ridge Main';
+    }
+    return trimmed
+        .replaceAll('Harborridge', 'Harbor Ridge')
+        .replaceAll('Harbor Ridge • Getathuru Road', 'Harbor Ridge Main');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +87,8 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
 
     final branchMap = <String, List<dynamic>>{};
     for (final order in ordersState.orders) {
-      branchMap.putIfAbsent(order.vendorBranch, () => []).add(order);
+      final branch = _cleanBranchName(order.vendorBranch);
+      branchMap.putIfAbsent(branch, () => []).add(order);
     }
 
     final branchPerformance =

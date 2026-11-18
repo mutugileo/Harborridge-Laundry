@@ -234,7 +234,7 @@ class UnavailableAuthBackend implements AuthBackend {
   const UnavailableAuthBackend();
 
   static const _failure = AuthFailure(
-    'Cannot reach the Harborridge server. Check your connection and reload.',
+    'Cannot reach the Harbor Ridge server. Check your connection and reload.',
   );
 
   @override

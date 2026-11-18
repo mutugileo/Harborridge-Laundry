@@ -26,12 +26,12 @@ void main() {
       expect(state.orders, isNotEmpty);
       expect(state.orders.first.orderId, 'LG-2026-00125');
       expect(state.orders.first.customerName, 'John Kamau');
-      expect(state.orders.first.vendorBranch, 'Harborridge Main');
+      expect(state.orders.first.vendorBranch, 'Harbor Ridge Main');
       expect(state.orders.first.displayAmount, 'KES 1,500');
       expect(state.orders, isNotEmpty);
       expect(state.orders.first.orderId, 'LG-2026-00125');
       expect(state.orders.first.customerName, 'John Kamau');
-      expect(state.orders.first.vendorBranch, 'Harborridge Main');
+      expect(state.orders.first.vendorBranch, 'Harbor Ridge Main');
       expect(state.orders.first.displayAmount, 'KES 1,500');
       expect(state.order, isNotNull);
       expect(state.order!.orderId, '#ORD-0006');
@@ -49,7 +49,7 @@ void main() {
     final notifier = container.read(orderDetailsNotifierProvider.notifier);
     await notifier.loadOrderDetails('#ORD-0006');
 
-    notifier.updateVendorFilter('Harborridge Main');
+    notifier.updateVendorFilter('Harbor Ridge Main');
     notifier.updatePaymentStatusFilter('Paid');
     notifier.updateServiceTypeFilter('Wash & Fold');
     notifier.updateCustomerFilter('John Kamau');
@@ -77,7 +77,7 @@ void main() {
     final notifier = container.read(orderDetailsNotifierProvider.notifier);
     await notifier.loadOrderDetails('#ORD-0006');
 
-    notifier.updateVendorFilter('Harborridge Main');
+    notifier.updateVendorFilter('Harbor Ridge Main');
     notifier.updatePaymentStatusFilter('Paid');
     notifier.updateServiceTypeFilter('Wash & Fold');
     notifier.updateCustomerFilter('John Kamau');

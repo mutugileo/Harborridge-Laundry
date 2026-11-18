@@ -76,7 +76,7 @@ class QuickPinService {
       fullName: name,
       email: email,
       roleTitle: role ?? 'Staff',
-      branch: branch ?? 'Harborridge Main',
+      branch: branch ?? 'Harbor Ridge Main',
     );
   }
 

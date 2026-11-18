@@ -113,7 +113,7 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
   String? _statusMessage;
   bool _showCreateBatchPanel = false;
 
-  String _newBatchBranch = 'Harborridge Main';
+  String _newBatchBranch = 'Harbor Ridge Main';
   int _newBatchCommissionRate = 15;
   String _newBatchDisbursal = 'M-Pesa B2B';
 
@@ -124,10 +124,10 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
 
   static const List<String> _branchOptions = [
     'All Branches',
-    'Harborridge Main',
-    'Harborridge Westlands',
-    'Harborridge Kilimani',
-    'Harborridge Central Hub',
+    'Harbor Ridge Main',
+    'Harbor Ridge Westlands',
+    'Harbor Ridge Kilimani',
+    'Harbor Ridge Central Hub',
   ];
 
   late List<_SettlementBatchRecord> _batches = const [];
@@ -781,9 +781,9 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   for (final branch in [
-                    'Harborridge Main',
-                    'Harborridge Westlands',
-                    'Harborridge Kilimani',
+                    'Harbor Ridge Main',
+                    'Harbor Ridge Westlands',
+                    'Harbor Ridge Kilimani',
                   ]) ...[
                     InteractivePressScale(
                       onTap: () => setState(() => _newBatchBranch = branch),
@@ -1327,7 +1327,7 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
                       const SizedBox(width: 6.0),
                       Flexible(
                         child: Text(
-                          'HARBORRIDGE SETTLEMENT STATEMENT & VENDOR REMITTANCE LEDGER',
+                          'HARBOR RIDGE SETTLEMENT STATEMENT & VENDOR REMITTANCE LEDGER',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: textTheme.labelSmall?.copyWith(

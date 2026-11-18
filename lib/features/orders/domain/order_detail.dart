@@ -48,7 +48,7 @@ class OrderDetail {
     this.customerPhone = '+254 712 345 678',
     this.assignedStaff = 'Clara M.',
     this.primaryService = 'Wash & Fold',
-    this.vendorBranch = 'Harborridge Main',
+    this.vendorBranch = 'Harbor Ridge Main',
     this.displayAmount = 'KES 1,500',
     this.paymentStatusLabel = 'Paid',
     this.processingStageLabel = 'Washing',
@@ -103,6 +103,7 @@ class OrderDetail {
     String? orderId,
     String? paymentStatusLabel,
     List<OrderPayment>? payments,
+    List<OrderItem>? items,
   }) {
     return OrderDetail(
       orderId: orderId ?? this.orderId,
@@ -126,7 +127,7 @@ class OrderDetail {
       deliveryMethod: deliveryMethod,
       assignedRider: assignedRider,
       createdDateLabel: createdDateLabel,
-      items: items,
+      items: items ?? this.items,
       addons: addons,
       payments: payments ?? this.payments,
     );

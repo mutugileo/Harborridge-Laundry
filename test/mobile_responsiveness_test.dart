@@ -26,7 +26,7 @@ void main() {
       addTearDown(() => FlutterError.onError = originalOnError);
 
       // Verify Auth Portal on 390px
-      expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
+      expect(find.text('Welcome to Harbor Ridge Portal'), findsOneWidget);
 
       await signInThroughForm(tester);
 

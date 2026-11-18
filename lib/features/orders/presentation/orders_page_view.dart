@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_spacing.dart';
+import 'package:laundry_ridge/core/widgets/add_custom_item_dialog.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/garment_catalog_grid.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/orders/domain/order_detail.dart';
+import 'package:laundry_ridge/features/orders/domain/order_item.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_state.dart';
 
@@ -20,6 +22,26 @@ class OrdersPageView extends StatelessWidget {
   final OrderDetailsUiState state;
   final OrderDetailsNotifier notifier;
   final VoidCallback? onStartNewOrder;
+
+  Future<void> _handleAddNewItem(BuildContext context) async {
+    final item = await showDialog<OrderItem>(
+      context: context,
+      builder: (context) => const AddCustomItemDialog(
+        serviceType: 'Wash & Fold',
+        serviceTypes: [
+          'Wash & Fold',
+          'Wash & Iron',
+          'Dry Cleaning',
+          'Ironing Only',
+          'Apparel & Special',
+          'Laundry by Weight',
+        ],
+      ),
+    );
+    if (item != null) {
+      notifier.addCustomItemToOrder(item);
+    }
+  }
 
   void _showAddItemsCatalogModal(BuildContext context) {
     final colors = context.colors;
@@ -102,9 +124,7 @@ class OrdersPageView extends StatelessWidget {
                         quantities: state.catalogQuantities,
                         onIncrementGarment: notifier.incrementCatalogGarment,
                         onDecrementGarment: notifier.decrementCatalogGarment,
-                        onAddCustomItem: () => notifier.notifyCatalogAction(
-                          'Custom garment entry ready',
-                        ),
+                        onAddCustomItem: () => _handleAddNewItem(context),
                       ),
                     ),
                   ),
@@ -360,9 +380,9 @@ class OrdersPageView extends StatelessWidget {
               items: [
                 const DropdownMenuItem(value: null, child: Text('Vendor: All')),
                 for (final v in {
-                  'Harborridge Main',
-                  'Harborridge Westlands',
-                  'Harborridge Kilimani',
+                  'Harbor Ridge Main',
+                  'Harbor Ridge Westlands',
+                  'Harbor Ridge Kilimani',
                   'Ridge Eco-Cleaners',
                   if (state.vendorFilter != null) state.vendorFilter!,
                 })

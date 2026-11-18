@@ -13,8 +13,8 @@ void main() {
 
       await pumpTestApp(tester);
 
-      expect(find.text('HARBORRIDGE'), findsWidgets);
-      expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
+      expect(find.text('HARBOR RIDGE'), findsWidgets);
+      expect(find.text('Welcome to Harbor Ridge Portal'), findsOneWidget);
       expect(find.text('Sign in'), findsOneWidget);
 
       await signInThroughForm(tester);
@@ -36,7 +36,7 @@ void main() {
       expect(find.text('LG-2026-00125'), findsOneWidget);
       expect(find.text('John Kamau'), findsOneWidget);
       expect(find.text('Wash & Fold'), findsWidgets);
-      expect(find.text('Harborridge Main'), findsWidgets);
+      expect(find.text('Harbor Ridge Main'), findsWidgets);
       expect(find.text('KES 1,500'), findsOneWidget);
       expect(find.text('Paid'), findsWidgets);
       expect(find.text('Washing'), findsWidgets);

@@ -676,7 +676,7 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
                   style: const TextStyle(fontSize: 12.0),
                   decoration: InputDecoration(
                     labelText: 'Branch Name',
-                    hintText: 'Harborridge Karen',
+                    hintText: 'Harbor Ridge Karen',
                     labelStyle: TextStyle(
                       fontSize: 11.0,
                       color: colors.textSecondary,

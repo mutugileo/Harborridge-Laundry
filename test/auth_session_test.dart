@@ -102,7 +102,7 @@ void main() {
         email: 'cashier@harborridge.test',
         phone: '',
         roleTitle: 'POS Counter Attendant',
-        branch: 'Harborridge Main',
+        branch: 'Harbor Ridge Main',
         exceptedModules: {AppModuleKey.staff, AppModuleKey.settlements},
         initialPassword: 'cashier-pass-1',
       );
@@ -139,7 +139,7 @@ void main() {
         email: 'sneaky@harborridge.test',
         phone: '',
         roleTitle: 'Super Admin',
-        branch: 'Harborridge Main',
+        branch: 'Harbor Ridge Main',
         exceptedModules: {},
         initialPassword: 'sneaky-pass-1',
       );
@@ -162,7 +162,7 @@ void main() {
         email: 'short@harborridge.test',
         phone: '',
         roleTitle: 'Production Lead',
-        branch: 'Harborridge Main',
+        branch: 'Harbor Ridge Main',
         exceptedModules: {},
         initialPassword: '1234',
       );

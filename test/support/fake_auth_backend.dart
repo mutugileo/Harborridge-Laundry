@@ -28,7 +28,7 @@ class FakeAuthBackend implements AuthBackend {
         phone: '',
         roleTitle: 'Super Admin',
         role: OperatorRole.admin,
-        branch: 'Harborridge Main',
+        branch: 'Harbor Ridge Main',
         shiftLabel: '',
         isActive: true,
         exceptedModules: {},

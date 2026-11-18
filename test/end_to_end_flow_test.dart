@@ -17,7 +17,7 @@ void main() {
 
       final container = await pumpTestApp(tester);
 
-      expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
+      expect(find.text('Welcome to Harbor Ridge Portal'), findsOneWidget);
       expect(find.text('STAFF SIGN IN'), findsOneWidget);
       expect(find.text('Register Worker'), findsNothing);
 
@@ -98,7 +98,7 @@ void main() {
         email: 'kelvin.mutua@harborridge.test',
         phone: '+254 710 555 900',
         roleTitle: 'POS Counter Attendant',
-        branch: 'Harborridge Main',
+        branch: 'Harbor Ridge Main',
         initialPassword: 'first-pass-123',
         exceptedModules: {
           AppModuleKey.settlements,
@@ -113,7 +113,7 @@ void main() {
       await tester.tap(find.text('Logout'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
+      expect(find.text('Welcome to Harbor Ridge Portal'), findsOneWidget);
 
       await signInThroughForm(
         tester,
@@ -238,7 +238,7 @@ void main() {
       await pumpTestApp(tester);
 
       // 1. Initial Login Screen: nothing pre-filled
-      expect(find.text('HARBORRIDGE'), findsWidgets);
+      expect(find.text('HARBOR RIDGE'), findsWidgets);
       expect(find.text('Sign in'), findsOneWidget);
       expect(find.text(kTestAdminEmail), findsNothing);
 

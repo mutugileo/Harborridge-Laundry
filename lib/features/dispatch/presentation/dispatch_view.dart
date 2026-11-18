@@ -75,9 +75,9 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
 
   static const List<String> _branches = [
     'All Branches',
-    'Harborridge Main',
-    'Harborridge Westlands',
-    'Harborridge Kilimani',
+    'Harbor Ridge Main',
+    'Harbor Ridge Westlands',
+    'Harbor Ridge Kilimani',
   ];
 
   String _selectedStageFilter = 'All Runs';
@@ -86,7 +86,7 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
   String? _feedbackBanner;
   bool _showSchedulePanel = false;
   String _newRunRider = 'Unassigned';
-  String _newRunBranch = 'Harborridge Main';
+  String _newRunBranch = 'Harbor Ridge Main';
 
   late final TextEditingController _orderIdController;
   late final TextEditingController _customerController;
@@ -129,7 +129,7 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
           orderId: map['order_id'] as String? ?? '',
           customerName: map['customer_name'] as String? ?? 'Customer',
           zone: map['zone'] as String? ?? '',
-          branch: map['branch'] as String? ?? 'Harborridge Main',
+          branch: map['branch'] as String? ?? 'Harbor Ridge Main',
           riderName: map['rider_name'] as String? ?? 'Rider',
           etaWindow: map['eta_window'] as String? ?? '',
           stage: map['stage'] as String? ?? 'Pickup assigned',
@@ -758,9 +758,9 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
                     ),
                     items:
                         const [
-                              'Harborridge Main',
-                              'Harborridge Westlands',
-                              'Harborridge Kilimani',
+                              'Harbor Ridge Main',
+                              'Harbor Ridge Westlands',
+                              'Harbor Ridge Kilimani',
                             ]
                             .map(
                               (b) => DropdownMenuItem(value: b, child: Text(b)),

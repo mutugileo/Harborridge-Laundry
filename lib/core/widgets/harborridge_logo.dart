@@ -38,7 +38,7 @@ class HarborridgeLogo extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              'HARBORRIDGE',
+              'HARBOR RIDGE',
               style: GoogleFonts.lexend(
                 fontSize: 16.0,
                 fontWeight: FontWeight.w900,
@@ -107,7 +107,7 @@ class HarborridgeLogo extends StatelessWidget {
         ),
         const SizedBox(height: 6.0),
         Text(
-          'HARBORRIDGE',
+          'HARBOR RIDGE',
           style: GoogleFonts.lexend(
             fontSize: 22.0,
             fontWeight: FontWeight.w900,

@@ -358,6 +358,43 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     _saveItems(updatedOrder);
   }
 
+  /// Adds a custom garment intake item to the open order or the intake session.
+  void addCustomItemToOrder(OrderItem item) {
+    final currentOrder = state.order;
+    if (currentOrder == null) {
+      final updatedCounts = Map<GarmentType, int>.from(state.catalogQuantities);
+      updatedCounts[item.garmentType] =
+          (updatedCounts[item.garmentType] ?? 0) + item.quantity;
+      state = state.copyWith(
+        catalogQuantities: updatedCounts,
+        actionFeedbackMessage:
+            'Added "${item.serviceName}" (KES ${item.rate.toStringAsFixed(0)}) to order intake draft.',
+      );
+      return;
+    }
+
+    final newItem = item.copyWith(index: currentOrder.items.length + 1);
+    final updatedItems = [...currentOrder.items, newItem];
+    final updatedOrder = currentOrder.copyWith(items: updatedItems);
+
+    final updatedList = [
+      for (final existing in state.orders)
+        if (existing.orderId == updatedOrder.orderId)
+          updatedOrder
+        else
+          existing,
+    ];
+
+    state = state.copyWith(
+      order: updatedOrder,
+      orders: updatedList,
+      actionFeedbackMessage:
+          'Added "${item.serviceName}" (KES ${item.rate.toStringAsFixed(0)}) to ${updatedOrder.orderId}',
+    );
+
+    _saveItems(updatedOrder);
+  }
+
   void decrementCatalogGarment(GarmentType garment) {
     final currentCount = state.catalogQuantities[garment] ?? 0;
     if (currentCount <= 0) return;

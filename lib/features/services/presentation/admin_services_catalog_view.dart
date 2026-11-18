@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
+import 'package:laundry_ridge/core/widgets/add_custom_item_dialog.dart';
 import 'package:laundry_ridge/core/widgets/garment_catalog_grid.dart';
+import 'package:laundry_ridge/core/widgets/garment_item_image.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/orders/domain/order_item.dart';
@@ -82,9 +84,9 @@ class _AdminServicesCatalogViewState
 
   static const List<String> _branches = [
     'Harbor Ridge • Getathuru Road',
-    'Harborridge Main',
-    'Harborridge Westlands',
-    'Harborridge Kilimani',
+    'Harbor Ridge Main',
+    'Harbor Ridge Westlands',
+    'Harbor Ridge Kilimani',
   ];
 
   static const List<String> _deliveryMethods = [
@@ -360,7 +362,7 @@ class _AdminServicesCatalogViewState
   Future<void> _showAddCustomItemDialog(BuildContext context) async {
     final newItem = await showDialog<OrderItem>(
       context: context,
-      builder: (dialogContext) => _AddCustomItemDialog(
+      builder: (dialogContext) => AddCustomItemDialog(
         serviceType: _selectedServiceType,
         serviceTypes: _serviceTypes,
       ),
@@ -1191,38 +1193,13 @@ class _AdminServicesCatalogViewState
                           ),
                           child: Row(
                             children: [
-                              if (item.imageBytes != null)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(6.0),
-                                  child: Image.memory(
-                                    item.imageBytes!,
-                                    width: 28.0,
-                                    height: 28.0,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              else if (item.imageUrl != null &&
-                                  item.imageUrl!.startsWith('http'))
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(6.0),
-                                  child: Image.network(
-                                    item.imageUrl!,
-                                    width: 28.0,
-                                    height: 28.0,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            GarmentLineIcon(
-                                              type: item.garmentType,
-                                              size: 26.0,
-                                            ),
-                                  ),
-                                )
-                              else
-                                GarmentLineIcon(
-                                  type: item.garmentType,
-                                  size: 26.0,
-                                ),
+                              GarmentItemImage(
+                                garmentType: item.garmentType,
+                                size: 28.0,
+                                imageUrl: item.imageUrl,
+                                imageBytes: item.imageBytes,
+                                borderRadius: 6.0,
+                              ),
                               const SizedBox(width: 8.0),
                               Expanded(
                                 child: Column(

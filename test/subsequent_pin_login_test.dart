@@ -85,8 +85,8 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-        await pumpTestApp(tester);
-        await signInThroughForm(tester);
+      await pumpTestApp(tester);
+      await signInThroughForm(tester);
 
       await tester.tap(find.text('Logout'));
       await tester.pump();

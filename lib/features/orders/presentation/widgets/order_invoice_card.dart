@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
-import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
+import 'package:laundry_ridge/core/widgets/garment_item_image.dart';
 import 'package:laundry_ridge/features/orders/domain/order_detail.dart';
 
 class OrderInvoiceCard extends StatelessWidget {
@@ -364,34 +364,12 @@ class OrderInvoiceCard extends StatelessWidget {
                   flex: 5,
                   child: Row(
                     children: [
-                      if (item.imageBytes != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
-                          child: Image.memory(
-                            item.imageBytes!,
-                            width: 38.0,
-                            height: 38.0,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      else if (item.imageUrl != null &&
-                          item.imageUrl!.startsWith('http'))
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
-                          child: Image.network(
-                            item.imageUrl!,
-                            width: 38.0,
-                            height: 38.0,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                GarmentLineIcon(
-                                  type: item.garmentType,
-                                  size: 38.0,
-                                ),
-                          ),
-                        )
-                      else
-                        GarmentLineIcon(type: item.garmentType, size: 38.0),
+                      GarmentItemImage(
+                        garmentType: item.garmentType,
+                        size: 38.0,
+                        imageUrl: item.imageUrl,
+                        imageBytes: item.imageBytes,
+                      ),
                       const SizedBox(width: 14.0),
                       Expanded(
                         child: Column(

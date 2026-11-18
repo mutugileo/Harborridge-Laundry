@@ -729,7 +729,7 @@ class _RightLoginFormCardState extends State<_RightLoginFormCard> {
         ),
         const SizedBox(height: 14.0),
         Text(
-          'Welcome to Harborridge Portal',
+          'Welcome to Harbor Ridge Portal',
           style: textTheme.titleMedium?.copyWith(
             fontSize: 18.0,
             fontWeight: FontWeight.w800,
