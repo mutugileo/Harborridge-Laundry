@@ -3,6 +3,7 @@ import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_spacing.dart';
 import 'package:laundry_ridge/core/widgets/add_custom_item_dialog.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
+import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/garment_catalog_grid.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
@@ -11,7 +12,7 @@ import 'package:laundry_ridge/features/orders/domain/order_item.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_state.dart';
 
-class OrdersPageView extends StatelessWidget {
+class OrdersPageView extends StatefulWidget {
   const OrdersPageView({
     super.key,
     required this.state,
@@ -22,6 +23,17 @@ class OrdersPageView extends StatelessWidget {
   final OrderDetailsUiState state;
   final OrderDetailsNotifier notifier;
   final VoidCallback? onStartNewOrder;
+
+  @override
+  State<OrdersPageView> createState() => _OrdersPageViewState();
+}
+
+class _OrdersPageViewState extends State<OrdersPageView> {
+  int _currentPage = 0;
+
+  OrderDetailsUiState get state => widget.state;
+  OrderDetailsNotifier get notifier => widget.notifier;
+  VoidCallback? get onStartNewOrder => widget.onStartNewOrder;
 
   Future<void> _handleAddNewItem(BuildContext context) async {
     final item = await showDialog<OrderItem>(
@@ -141,6 +153,11 @@ class OrdersPageView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final filteredOrders = state.filteredOrders;
+    final pagedOrders = AppPaginationBar.paginate(
+      filteredOrders,
+      _currentPage,
+      pageSize: 6,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -161,9 +178,19 @@ class OrdersPageView extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(26.0, 24.0, 26.0, 18.0),
             child: _buildToolbarAndFilters(context),
           ),
-          _buildOrdersTable(context, filteredOrders),
+          _buildOrdersTable(context, pagedOrders),
+          if (filteredOrders.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(26.0, 16.0, 26.0, 0.0),
+              child: AppPaginationBar(
+                currentPage: _currentPage,
+                totalItems: filteredOrders.length,
+                pageSize: 6,
+                onPageChanged: (page) => setState(() => _currentPage = page),
+              ),
+            ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(26.0, 16.0, 26.0, 22.0),
+            padding: const EdgeInsets.fromLTRB(26.0, 14.0, 26.0, 22.0),
             child: _buildTableFooter(context, filteredOrders.length),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/core/supabase/remote_write.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
+import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_state.dart';
@@ -90,6 +91,7 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
   String? _statusBanner;
   bool _showAddSkuPanel = false;
   String _newSkuCategory = 'Detergents';
+  int _currentPage = 0;
 
   late final TextEditingController _searchController;
   late final TextEditingController _newSkuNameController;
@@ -983,11 +985,22 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
               actionIcon: Icons.add_box_rounded,
               onAction: () => setState(() => _showAddSkuPanel = true),
             )
-          else
-            for (var i = 0; i < filtered.length; i++) ...[
-              if (i > 0) const SizedBox(height: 12.0),
-              _buildStockItemTile(colors, textTheme, filtered[i]),
+          else ...[
+            for (final item in AppPaginationBar.paginate(
+              filtered,
+              _currentPage,
+              pageSize: 6,
+            )) ...[
+              _buildStockItemTile(colors, textTheme, item),
+              const SizedBox(height: 12.0),
             ],
+            AppPaginationBar(
+              currentPage: _currentPage,
+              totalItems: filtered.length,
+              pageSize: 6,
+              onPageChanged: (page) => setState(() => _currentPage = page),
+            ),
+          ],
         ],
       ),
     );

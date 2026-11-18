@@ -6,6 +6,7 @@ import 'package:laundry_ridge/app/theme/app_typography.dart';
 import 'package:laundry_ridge/core/supabase/remote_write.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
+import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 class _DispatchRunItem {
@@ -77,6 +78,7 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
 
   String _selectedStageFilter = 'All Runs';
   String _selectedBranchFilter = 'Harbor Ridge Main';
+  int _currentPage = 0;
   String _searchQuery = '';
   String? _feedbackBanner;
   bool _showSchedulePanel = false;
@@ -296,6 +298,11 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
     final textTheme = Theme.of(context).textTheme;
 
     final filteredRuns = _filteredRuns;
+    final pagedRuns = AppPaginationBar.paginate(
+      filteredRuns,
+      _currentPage,
+      pageSize: 6,
+    );
     final totalRuns = _runs.length;
     final activeRuns = _runs.where((r) => r.stage != 'Delivered').length;
     final inTransitCount = _runs.where((r) => r.stage == 'In Transit').length;
@@ -472,20 +479,29 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
                           context,
                           textTheme,
                           colors,
-                          filteredRuns,
+                          pagedRuns,
                         );
                       }
                       return _buildMobileManifestList(
                         context,
                         textTheme,
                         colors,
-                        filteredRuns,
+                        pagedRuns,
                       );
                     },
                   ),
               ],
             ),
           ),
+          if (filteredRuns.isNotEmpty) ...[
+            const SizedBox(height: 12.0),
+            AppPaginationBar(
+              currentPage: _currentPage,
+              totalItems: filteredRuns.length,
+              pageSize: 6,
+              onPageChanged: (page) => setState(() => _currentPage = page),
+            ),
+          ],
         ],
       ),
     );

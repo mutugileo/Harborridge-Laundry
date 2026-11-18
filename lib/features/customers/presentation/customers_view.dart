@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
+import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 
@@ -49,6 +50,7 @@ class CustomersView extends ConsumerStatefulWidget {
 class _CustomersViewState extends ConsumerState<CustomersView> {
   String _selectedTier = 'All';
   int _selectedIndex = 0;
+  int _currentPage = 0;
 
   late final TextEditingController _newNameController;
   late final TextEditingController _newPhoneController;
@@ -169,6 +171,11 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
     final filtered = _selectedTier == 'All'
         ? allCustomers
         : allCustomers.where((c) => c.tier == _selectedTier).toList();
+    final pagedCustomers = AppPaginationBar.paginate(
+      filtered,
+      _currentPage,
+      pageSize: 6,
+    );
     final activeCustomer = filtered.isEmpty
         ? (allCustomers.isNotEmpty ? allCustomers.first : null)
         : filtered[_selectedIndex.clamp(0, filtered.length - 1)];
@@ -268,24 +275,31 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                     actionIcon: Icons.refresh_rounded,
                     onAction: () => setState(() => _selectedTier = 'All'),
                   )
-                else
-                  for (var i = 0; i < filtered.length; i++) ...[
+                else ...[
+                  for (var i = 0; i < pagedCustomers.length; i++) ...[
                     if (i > 0) const SizedBox(height: 10.0),
                     InteractivePressScale(
-                      onTap: () => setState(() => _selectedIndex = i),
+                      onTap: () {
+                        final targetIndex = filtered.indexOf(pagedCustomers[i]);
+                        setState(
+                          () => _selectedIndex = targetIndex >= 0
+                              ? targetIndex
+                              : 0,
+                        );
+                      },
                       child: AnimatedContainer(
                         duration: motion.shortDuration,
                         padding: const EdgeInsets.all(14.0),
                         decoration: BoxDecoration(
-                          color: filtered[i].id == activeCustomer?.id
+                          color: pagedCustomers[i].id == activeCustomer?.id
                               ? colors.freshSkyBlue.withValues(alpha: 0.08)
                               : colors.background.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(12.0),
                           border: Border.all(
-                            color: filtered[i].id == activeCustomer?.id
+                            color: pagedCustomers[i].id == activeCustomer?.id
                                 ? colors.freshSkyBlue
                                 : colors.borderSubtle,
-                            width: filtered[i].id == activeCustomer?.id
+                            width: pagedCustomers[i].id == activeCustomer?.id
                                 ? 1.5
                                 : 1.0,
                           ),
@@ -301,7 +315,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                filtered[i].name.substring(0, 1),
+                                pagedCustomers[i].name.substring(0, 1),
                                 style: textTheme.labelMedium?.copyWith(
                                   color: colors.harborGold,
                                   fontWeight: FontWeight.w800,
@@ -314,7 +328,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${filtered[i].name} • ${filtered[i].id}',
+                                    '${pagedCustomers[i].name} • ${pagedCustomers[i].id}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: textTheme.labelMedium?.copyWith(
@@ -324,7 +338,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                                     ),
                                   ),
                                   Text(
-                                    '${filtered[i].phone} • ${filtered[i].branch}',
+                                    '${pagedCustomers[i].phone} • ${pagedCustomers[i].branch}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: textTheme.bodySmall?.copyWith(
@@ -344,7 +358,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    filtered[i].totalSpend,
+                                    pagedCustomers[i].totalSpend,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: textTheme.labelMedium?.copyWith(
@@ -354,7 +368,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                                     ),
                                   ),
                                   Text(
-                                    '${filtered[i].ordersCount} Ords • ${filtered[i].tier}',
+                                    '${pagedCustomers[i].ordersCount} Ords • ${pagedCustomers[i].tier}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: textTheme.labelSmall?.copyWith(
@@ -371,6 +385,15 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 12.0),
+                  AppPaginationBar(
+                    currentPage: _currentPage,
+                    totalItems: filtered.length,
+                    pageSize: 6,
+                    onPageChanged: (page) =>
+                        setState(() => _currentPage = page),
+                  ),
+                ],
               ],
             ),
           );

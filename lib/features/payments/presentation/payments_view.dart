@@ -11,6 +11,7 @@ import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
+import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 enum PaymentStatusFilter {
@@ -117,6 +118,7 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
   String? _statusBanner;
   bool _showAddPaymentPanel = false;
   String _newPaymentChannel = 'M-Pesa';
+  int _currentPage = 0;
 
   late final TextEditingController _searchController;
   late final TextEditingController _orderIdController;
@@ -392,6 +394,11 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
     final motion = context.motion;
     final textTheme = Theme.of(context).textTheme;
     final filtered = _filteredRows;
+    final pagedRows = AppPaginationBar.paginate(
+      filtered,
+      _currentPage,
+      pageSize: 6,
+    );
 
     final totalInvoicedKes = _rows.fold<int>(
       0,
@@ -512,8 +519,17 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
             colors: colors,
             motion: motion,
             textTheme: textTheme,
-            rows: filtered,
+            rows: pagedRows,
           ),
+          if (filtered.isNotEmpty) ...[
+            const SizedBox(height: 12.0),
+            AppPaginationBar(
+              currentPage: _currentPage,
+              totalItems: filtered.length,
+              pageSize: 6,
+              onPageChanged: (page) => setState(() => _currentPage = page),
+            ),
+          ],
         ],
       ),
     );

@@ -7,6 +7,7 @@ import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/auth/change_pin_dialog.dart';
 import 'package:laundry_ridge/core/permissions/role_permission.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
+import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
 class StaffView extends ConsumerStatefulWidget {
@@ -36,6 +37,7 @@ class _StaffViewState extends ConsumerState<StaffView> {
   String _selectedRole = 'POS Counter Attendant';
   String _selectedBranch = 'Harbor Ridge Main';
   String _roleFilter = 'All';
+  int _currentPage = 0;
   final Set<AppModuleKey> _draftExceptedModules = {
     AppModuleKey.staff,
     AppModuleKey.settings,
@@ -362,25 +364,36 @@ class _StaffViewState extends ConsumerState<StaffView> {
               actionIcon: Icons.refresh_rounded,
               onAction: () => setState(() => _roleFilter = 'All'),
             )
-          else
-            for (var i = 0; i < workers.length; i++) ...[
-              if (i > 0) const SizedBox(height: 12.0),
+          else ...[
+            for (final worker in AppPaginationBar.paginate(
+              workers,
+              _currentPage,
+              pageSize: 6,
+            )) ...[
               _WorkerPermissionsCard(
-                worker: workers[i],
-                isCurrentSession: workers[i].id == authState.currentWorker.id,
+                worker: worker,
+                isCurrentSession: worker.id == authState.currentWorker.id,
                 onToggleModule: authState.currentWorker.isAdmin
                     ? (module) => authNotifier.toggleWorkerModuleException(
-                        workers[i].id,
+                        worker.id,
                         module,
                       )
                     : null,
                 onResetPassword:
                     authState.currentWorker.isAdmin &&
-                        workers[i].id != authState.currentWorker.id
-                    ? () => _showResetPasswordDialog(workers[i])
+                        worker.id != authState.currentWorker.id
+                    ? () => _showResetPasswordDialog(worker)
                     : null,
               ),
+              const SizedBox(height: 12.0),
             ],
+            AppPaginationBar(
+              currentPage: _currentPage,
+              totalItems: workers.length,
+              pageSize: 6,
+              onPageChanged: (page) => setState(() => _currentPage = page),
+            ),
+          ],
         ],
       ),
     );
