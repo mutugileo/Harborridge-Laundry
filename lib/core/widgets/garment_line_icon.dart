@@ -49,7 +49,39 @@ enum GarmentType {
   bulkIroning,
 }
 
+enum GarmentServiceSection {
+  all('All Services'),
+  byWeight('Laundry by Weight'),
+  dryCleaning('Dry Cleaning'),
+  apparelSpecial('Apparel & Special'),
+  ironing('Ironing Only'),
+  washAndIron('Wash & Iron');
+
+  const GarmentServiceSection(this.label);
+  final String label;
+}
+
 extension GarmentTypeMetadata on GarmentType {
+  bool get isWeightBased =>
+      this == GarmentType.generalLaundryLoad ||
+      this == GarmentType.curtains ||
+      this == GarmentType.tableclothsTowels;
+
+  GarmentServiceSection get serviceSection {
+    switch (defaultServiceType) {
+      case '[Laundry by Weight]':
+        return GarmentServiceSection.byWeight;
+      case '[Dry Cleaning]':
+        return GarmentServiceSection.dryCleaning;
+      case '[Apparel & Special]':
+        return GarmentServiceSection.apparelSpecial;
+      case '[Ironing Only]':
+        return GarmentServiceSection.ironing;
+      default:
+        return GarmentServiceSection.washAndIron;
+    }
+  }
+
   String get displayName {
     switch (this) {
       case GarmentType.halterTop:

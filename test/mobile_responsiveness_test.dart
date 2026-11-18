@@ -15,14 +15,15 @@ void main() {
 
       final container = await pumpTestApp(tester);
 
+      final originalOnError = FlutterError.onError;
       String currentTab = 'initial';
       final errors = <String>[];
       FlutterError.onError = (details) {
-        final msg =
-            '[$currentTab] ${details.summary}\n${details.informationCollector?.call().firstOrNull}\n';
+        final msg = '[$currentTab] ${details.toString()}';
         errors.add(msg);
-        debugPrint('FLUTTER_OVERFLOW: $msg');
+        debugPrint('FLUTTER_OVERFLOW_DETAILS:\n$msg\n');
       };
+      addTearDown(() => FlutterError.onError = originalOnError);
 
       // Verify Auth Portal on 390px
       expect(find.text('Welcome to Harborridge Portal'), findsOneWidget);
@@ -49,14 +50,15 @@ void main() {
 
       final container = await pumpTestApp(tester);
 
+      final originalOnError = FlutterError.onError;
       String currentTab = 'initial';
       final errors = <String>[];
       FlutterError.onError = (details) {
-        final msg =
-            '[$currentTab] ${details.summary}\n${details.informationCollector?.call().firstOrNull}\n';
+        final msg = '[$currentTab] ${details.toString()}';
         errors.add(msg);
-        debugPrint('FLUTTER_OVERFLOW_360: $msg');
+        debugPrint('FLUTTER_OVERFLOW_DETAILS_360:\n$msg\n');
       };
+      addTearDown(() => FlutterError.onError = originalOnError);
 
       await signInThroughForm(tester);
 

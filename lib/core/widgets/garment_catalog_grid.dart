@@ -11,6 +11,10 @@ class GarmentCatalogGrid extends StatelessWidget {
     required this.onDecrementGarment,
     this.onAddCustomItem,
     this.onScanBarcode,
+    this.selectedSection,
+    this.searchQuery,
+    this.weightQuantities,
+    this.onTapWeightGarment,
   });
 
   final Map<GarmentType, int> quantities;
@@ -18,6 +22,10 @@ class GarmentCatalogGrid extends StatelessWidget {
   final ValueChanged<GarmentType> onDecrementGarment;
   final VoidCallback? onAddCustomItem;
   final VoidCallback? onScanBarcode;
+  final GarmentServiceSection? selectedSection;
+  final String? searchQuery;
+  final Map<GarmentType, double>? weightQuantities;
+  final ValueChanged<GarmentType>? onTapWeightGarment;
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +42,23 @@ class GarmentCatalogGrid extends StatelessWidget {
           crossAxisCount = 2;
         }
 
-        const garments = GarmentType.values;
-        final totalTiles = garments.length + 2;
+        final cleanQuery = searchQuery?.trim().toLowerCase() ?? '';
+        final activeSection = selectedSection ?? GarmentServiceSection.all;
+
+        final garments = GarmentType.values.where((g) {
+          final matchesSection =
+              activeSection == GarmentServiceSection.all ||
+              g.serviceSection == activeSection;
+          final matchesQuery =
+              cleanQuery.isEmpty ||
+              g.displayName.toLowerCase().contains(cleanQuery) ||
+              g.defaultServiceType.toLowerCase().contains(cleanQuery);
+          return matchesSection && matchesQuery;
+        }).toList();
+
+        final showActionTiles =
+            cleanQuery.isEmpty && activeSection == GarmentServiceSection.all;
+        final totalTiles = garments.length + (showActionTiles ? 2 : 0);
 
         return Container(
           padding: const EdgeInsets.all(10.0),
@@ -57,10 +80,18 @@ class GarmentCatalogGrid extends StatelessWidget {
               if (index < garments.length) {
                 final garment = garments[index];
                 final count = quantities[garment] ?? 0;
+                final weight = weightQuantities?[garment];
                 return _GarmentTile(
                   garment: garment,
                   quantity: count,
-                  onTap: () => onIncrementGarment(garment),
+                  weightKg: weight,
+                  onTap: () {
+                    if (garment.isWeightBased && onTapWeightGarment != null) {
+                      onTapWeightGarment!(garment);
+                    } else {
+                      onIncrementGarment(garment);
+                    }
+                  },
                   onDecrement: () => onDecrementGarment(garment),
                 );
               }
@@ -90,18 +121,21 @@ class _GarmentTile extends StatelessWidget {
   const _GarmentTile({
     required this.garment,
     required this.quantity,
+    this.weightKg,
     required this.onTap,
     required this.onDecrement,
   });
 
   final GarmentType garment;
   final int quantity;
+  final double? weightKg;
   final VoidCallback onTap;
   final VoidCallback onDecrement;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final isSelected = quantity > 0 || (weightKg != null && weightKg! > 0);
 
     return Tooltip(
       message:
@@ -111,7 +145,10 @@ class _GarmentTile extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(4.0),
+            borderRadius: BorderRadius.circular(6.0),
+            border: isSelected
+                ? Border.all(color: const Color(0xFF159CE8), width: 1.5)
+                : null,
             boxShadow: const [
               BoxShadow(
                 color: Color(0x0A0F172A),
@@ -124,41 +161,45 @@ class _GarmentTile extends StatelessWidget {
             children: [
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: GarmentLineIcon(type: garment, size: 68.0),
+                  padding: const EdgeInsets.all(10.0),
+                  child: GarmentLineIcon(type: garment, size: 64.0),
                 ),
               ),
-              if (quantity > 0) ...[
+              if (isSelected) ...[
                 Positioned(
-                  left: 8.0,
-                  bottom: 8.0,
+                  left: 6.0,
+                  bottom: 6.0,
                   child: Container(
-                    width: 24.0,
-                    height: 24.0,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF159CE8),
-                      shape: BoxShape.circle,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5.0,
+                      vertical: 2.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF159CE8),
+                      borderRadius: BorderRadius.circular(99.0),
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      '$quantity',
+                      garment.isWeightBased && weightKg != null
+                          ? '${weightKg!.toStringAsFixed(1)}kg'
+                          : '$quantity',
                       style: textTheme.labelSmall?.copyWith(
                         color: Colors.white,
-                        fontSize: 12.0,
+                        fontSize: 10.0,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
                 Positioned(
-                  right: 8.0,
-                  bottom: 8.0,
+                  right: 6.0,
+                  bottom: 6.0,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: onDecrement,
                     child: Container(
-                      width: 24.0,
-                      height: 24.0,
+                      width: 22.0,
+                      height: 22.0,
                       decoration: const BoxDecoration(
                         color: Color(0xFFE9ECEF),
                         shape: BoxShape.circle,

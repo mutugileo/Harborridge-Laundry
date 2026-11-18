@@ -551,13 +551,17 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     required String paymentMethod,
     required bool includeStainRemoval,
     required bool includeExtraFragrance,
+    List<OrderItem>? customItems,
+    double? initialPaymentAmount,
+    String? paymentReference,
   }) async {
     if (_orderCreateInFlight) return null;
 
     final entries = state.catalogQuantities.entries
         .where((entry) => entry.value > 0)
         .toList();
-    if (entries.isEmpty) {
+    final bool hasCustom = customItems != null && customItems.isNotEmpty;
+    if (!hasCustom && entries.isEmpty) {
       state = state.copyWith(
         actionFeedbackMessage:
             'Add at least one garment before creating an order.',
@@ -565,18 +569,20 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       return null;
     }
 
-    final items = <OrderItem>[
-      for (var i = 0; i < entries.length; i++)
-        OrderItem(
-          index: i + 1,
-          serviceName: entries[i].key.displayName,
-          serviceType: '[$primaryService]',
-          rate: entries[i].key.defaultRate,
-          quantity: entries[i].value,
-          icon: Icons.checkroom_rounded,
-          garmentType: entries[i].key,
-        ),
-    ];
+    final items = hasCustom
+        ? customItems
+        : <OrderItem>[
+            for (var i = 0; i < entries.length; i++)
+              OrderItem(
+                index: i + 1,
+                serviceName: entries[i].key.displayName,
+                serviceType: '[$primaryService]',
+                rate: entries[i].key.defaultRate,
+                quantity: entries[i].value,
+                icon: Icons.checkroom_rounded,
+                garmentType: entries[i].key,
+              ),
+          ];
 
     final addons = <OrderAddon>[
       if (includeStainRemoval)
@@ -595,14 +601,16 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     final now = DateTime.now();
     final initialPayment = switch (paymentStatusLabel) {
       'Paid' => OrderPayment(
-        amount: grandTotal,
+        amount: initialPaymentAmount ?? grandTotal,
         date: _todayLabel(now),
         method: '[$paymentMethod]',
+        reference: paymentReference,
       ),
       'Partial' => OrderPayment(
-        amount: (grandTotal * 0.5).roundToDouble(),
+        amount: initialPaymentAmount ?? (grandTotal * 0.5).roundToDouble(),
         date: _todayLabel(now),
         method: '[$paymentMethod]',
+        reference: paymentReference,
       ),
       _ => null,
     };

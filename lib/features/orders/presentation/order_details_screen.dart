@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:laundry_ridge/app/router/admin_nav_tab.dart';
+import 'package:laundry_ridge/app/router/admin_shell_notifier.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_spacing.dart';
@@ -283,7 +285,18 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
             alignment: Alignment.topCenter,
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 24.0),
-              child: OrdersPageView(state: state, notifier: notifier),
+              child: OrdersPageView(
+                state: state,
+                notifier: notifier,
+                onStartNewOrder: () {
+                  ref
+                      .read(orderDetailsNotifierProvider.notifier)
+                      .clearCatalogQuantities();
+                  ref
+                      .read(adminShellNotifierProvider.notifier)
+                      .switchTab(AdminNavTab.services);
+                },
+              ),
             ),
           );
         }

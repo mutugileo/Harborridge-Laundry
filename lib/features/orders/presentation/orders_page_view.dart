@@ -14,10 +14,12 @@ class OrdersPageView extends StatelessWidget {
     super.key,
     required this.state,
     required this.notifier,
+    this.onStartNewOrder,
   });
 
   final OrderDetailsUiState state;
   final OrderDetailsNotifier notifier;
+  final VoidCallback? onStartNewOrder;
 
   void _showAddItemsCatalogModal(BuildContext context) {
     final colors = context.colors;
@@ -253,7 +255,13 @@ class OrdersPageView extends StatelessWidget {
                     ),
                   ),
                 InteractivePressScale(
-                  onTap: () => _showAddItemsCatalogModal(context),
+                  onTap: () {
+                    if (onStartNewOrder != null) {
+                      onStartNewOrder!();
+                    } else {
+                      _showAddItemsCatalogModal(context);
+                    }
+                  },
                   child: Container(
                     height: 36.0,
                     padding: const EdgeInsets.symmetric(horizontal: 14.0),
@@ -271,11 +279,11 @@ class OrdersPageView extends StatelessWidget {
                         ),
                         const SizedBox(width: 6.0),
                         Text(
-                          'Add Garments',
+                          '+ New Order',
                           style: textTheme.labelSmall?.copyWith(
                             color: Colors.white,
-                            fontSize: 11.0,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -472,7 +480,13 @@ class OrdersPageView extends StatelessWidget {
         description: 'No orders match your active filter criteria. Intake a new laundry batch or reset filters.',
         actionLabel: 'POS Order Intake',
         actionIcon: Icons.add_shopping_cart_rounded,
-        onAction: () => _showAddItemsCatalogModal(context),
+        onAction: () {
+          if (onStartNewOrder != null) {
+            onStartNewOrder!();
+          } else {
+            _showAddItemsCatalogModal(context);
+          }
+        },
       );
     }
 

@@ -328,6 +328,9 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
               paymentMethod: submission.paymentMethod,
               includeStainRemoval: submission.includeStainRemoval,
               includeExtraFragrance: submission.includeExtraFragrance,
+              customItems: submission.customItems,
+              initialPaymentAmount: submission.initialPaymentAmount,
+              paymentReference: submission.paymentReference,
             );
             if (newOrderId == null) {
               final reason = ref
