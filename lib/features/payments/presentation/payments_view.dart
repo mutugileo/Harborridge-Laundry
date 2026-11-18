@@ -1521,7 +1521,7 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
                 ),
               ),
               SizedBox(
-                width: 120.0,
+                width: 140.0,
                 child: Text(
                   'ACTIONS',
                   textAlign: TextAlign.right,
@@ -1733,11 +1733,24 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
 
           // Column 8: Actions
           SizedBox(
-            width: 120.0,
+            width: 140.0,
             child: Align(
               alignment: Alignment.centerRight,
-              child: row.status != 'Paid'
-                  ? InteractivePressScale(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (row.amountKes > 0)
+                    IconButton(
+                      icon: Icon(
+                        Icons.print_outlined,
+                        size: 16.0,
+                        color: colors.textSecondary,
+                      ),
+                      tooltip: 'Print Receipt',
+                      onPressed: () => _printReceipt(row),
+                    ),
+                  if (row.status != 'Paid')
+                    InteractivePressScale(
                       onTap: () {
                         final idx = _rows.indexWhere((r) => r.txId == row.txId);
                         if (idx >= 0) _settleRow(idx);
@@ -1760,16 +1773,9 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
                           ),
                         ),
                       ),
-                    )
-                  : IconButton(
-                      icon: Icon(
-                        Icons.print_outlined,
-                        size: 16.0,
-                        color: colors.textSecondary,
-                      ),
-                      tooltip: 'Print Receipt',
-                      onPressed: () => _printReceipt(row),
                     ),
+                ],
+              ),
             ),
           ),
         ],
@@ -1916,6 +1922,18 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
                         ],
                       ),
                     ),
+                    if (rows[i].amountKes > 0) ...[
+                      const SizedBox(width: 4.0),
+                      IconButton(
+                        icon: Icon(
+                          Icons.print_outlined,
+                          size: 16.0,
+                          color: colors.textSecondary,
+                        ),
+                        tooltip: 'Print Receipt',
+                        onPressed: () => _printReceipt(rows[i]),
+                      ),
+                    ],
                     if (rows[i].status != 'Paid') ...[
                       const SizedBox(width: 6.0),
                       InteractivePressScale(
@@ -1943,17 +1961,6 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
                             ),
                           ),
                         ),
-                      ),
-                    ] else ...[
-                      const SizedBox(width: 6.0),
-                      IconButton(
-                        icon: Icon(
-                          Icons.print_outlined,
-                          size: 16.0,
-                          color: colors.textSecondary,
-                        ),
-                        tooltip: 'Print Receipt',
-                        onPressed: () => _printReceipt(rows[i]),
                       ),
                     ],
                   ],

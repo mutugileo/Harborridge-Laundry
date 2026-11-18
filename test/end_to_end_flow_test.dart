@@ -81,6 +81,7 @@ void main() {
       expect(find.text('LG-2026-00131'), findsWidgets);
       expect(find.text('Amina Hassan'), findsWidgets);
       expect(find.text('ADD PAYMENT'), findsOneWidget);
+      expect(find.text('Print Receipt'), findsOneWidget);
       expect(find.text('Print Invoice'), findsOneWidget);
 
       await tester.tap(find.text('Back'));
@@ -103,7 +104,7 @@ void main() {
       final container = await pumpTestApp(tester);
       await signInThroughForm(tester);
 
-      expect(find.text('Settlements'), findsOneWidget);
+      expect(find.text('Reports'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Staff'), findsOneWidget);
 
@@ -129,10 +130,10 @@ void main() {
         branch: 'Harbor Ridge Main',
         initialPassword: 'first-pass-123',
         exceptedModules: {
-          AppModuleKey.settlements,
+          AppModuleKey.reports,
           AppModuleKey.staff,
           AppModuleKey.settings,
-          AppModuleKey.vendors,
+          AppModuleKey.inventory,
         },
       );
       expect(newWorker, isNotNull);
@@ -156,8 +157,8 @@ void main() {
       expect(find.text('Dashboard'), findsOneWidget);
       expect(find.text('Orders'), findsOneWidget);
       expect(find.text('Services'), findsOneWidget);
-      expect(find.text('Settlements'), findsNothing);
-      expect(find.text('Vendors'), findsNothing);
+      expect(find.text('Reports'), findsNothing);
+      expect(find.text('Inventory'), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey('header_change_pin_button')));
       await tester.pumpAndSettle();
@@ -239,9 +240,7 @@ void main() {
       final tabsToVerify = <(String, String)>[
         ('Dispatch', 'Pickup & Delivery Dispatch Command'),
         ('Customers', 'Customer Directory & Loyalty Accounts'),
-        ('Vendors', 'Vendor & Branch Processing Network'),
         ('Payments', 'Invoices & Payment Ledger'),
-        ('Settlements', 'Vendor Payouts & Commission Settlements'),
         ('Inventory', 'Consumables, Solvents & Packaging Inventory'),
         ('Reports', 'Executive Operations & Financial Reports'),
         ('Settings', 'System Configuration & Store Preferences'),

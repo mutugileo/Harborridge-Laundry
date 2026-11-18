@@ -20,7 +20,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   bool _smsOrderAlerts = true;
   bool _driverGeofencePings = true;
   bool _expressPrioritySurcharge = true;
-  bool _autoCommissionSplit = true;
   bool _autoAssignNearestRider = true;
   bool _autoPrintThermalTag = false;
   String? _savedMessage;
@@ -151,12 +150,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       setState(() => _driverGeofencePings = val),
                 ),
 
-                // Section 2: Pricing & Commissions
+                // Section 2: Pricing & Turnaround
                 _buildSectionSubHeader(
                   textTheme,
                   colors,
                   icon: Icons.payments_outlined,
-                  title: 'PRICING, COMMISSIONS & ESCROW SPLITS',
+                  title: 'PRICING & TURNAROUND',
                 ),
                 _buildSettingRow(
                   colors: colors,
@@ -167,21 +166,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   value: _expressPrioritySurcharge,
                   onChanged: (val) =>
                       setState(() => _expressPrioritySurcharge = val),
-                ),
-                Divider(
-                  height: 1.0,
-                  thickness: 1.0,
-                  color: colors.borderSubtle,
-                ),
-                _buildSettingRow(
-                  colors: colors,
-                  textTheme: textTheme,
-                  icon: Icons.account_balance_outlined,
-                  title: 'Automated M-Pesa B2B Platform Split Deductions (15%)',
-                  subtitle: 'Retain centralized platform split and allocate partner vendor balance to settlement escrow automatically.',
-                  value: _autoCommissionSplit,
-                  onChanged: (val) =>
-                      setState(() => _autoCommissionSplit = val),
                 ),
 
                 // Section 3: Hardware & Automation

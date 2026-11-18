@@ -103,7 +103,7 @@ void main() {
         phone: '',
         roleTitle: 'POS Counter Attendant',
         branch: 'Harbor Ridge Main',
-        exceptedModules: {AppModuleKey.staff, AppModuleKey.settlements},
+        exceptedModules: {AppModuleKey.staff, AppModuleKey.reports},
         initialPassword: 'cashier-pass-1',
       );
       expect(cashier, isNotNull);
@@ -118,18 +118,18 @@ void main() {
         container
             .read(authSessionNotifierProvider)
             .currentWorker
-            .canSeeModule(AppModuleKey.settlements),
+            .canSeeModule(AppModuleKey.reports),
         isFalse,
       );
 
       await notifier.toggleWorkerModuleException(
         cashier.id,
-        AppModuleKey.settlements,
+        AppModuleKey.reports,
       );
       var state = container.read(authSessionNotifierProvider);
       expect(state.errorMessage, contains('Only an active admin'));
       expect(
-        state.currentWorker.canSeeModule(AppModuleKey.settlements),
+        state.currentWorker.canSeeModule(AppModuleKey.reports),
         isFalse,
         reason: 'roster only changes after the server accepts it',
       );

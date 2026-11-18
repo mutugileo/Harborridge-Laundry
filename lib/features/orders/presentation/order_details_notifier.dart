@@ -560,6 +560,16 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
     );
   }
 
+  void triggerPrintReceipt() {
+    final order = state.order;
+    if (order == null) return;
+    final htmlContent = DocumentTemplates.generateOrderReceiptHtml(order);
+    printHtmlDocument('Receipt - ${order.orderId}', htmlContent);
+    state = state.copyWith(
+      actionFeedbackMessage: 'Printed customer receipt for ${order.orderId}',
+    );
+  }
+
   void notifyCatalogAction(String message) {
     state = state.copyWith(actionFeedbackMessage: message);
   }

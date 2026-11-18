@@ -37,7 +37,6 @@ class _StaffViewState extends ConsumerState<StaffView> {
   String _selectedBranch = 'Harbor Ridge Main';
   String _roleFilter = 'All';
   final Set<AppModuleKey> _draftExceptedModules = {
-    AppModuleKey.settlements,
     AppModuleKey.staff,
     AppModuleKey.settings,
   };
@@ -66,22 +65,18 @@ class _StaffViewState extends ConsumerState<StaffView> {
       _draftExceptedModules.clear();
       if (roleTitle == 'POS Counter Attendant') {
         _draftExceptedModules.addAll([
-          AppModuleKey.settlements,
           AppModuleKey.staff,
           AppModuleKey.settings,
         ]);
       } else if (roleTitle == 'Production Lead') {
         _draftExceptedModules.addAll([
           AppModuleKey.payments,
-          AppModuleKey.settlements,
           AppModuleKey.staff,
           AppModuleKey.settings,
         ]);
       } else if (roleTitle == 'Dispatch & Fleet Rider') {
         _draftExceptedModules.addAll([
-          AppModuleKey.vendors,
           AppModuleKey.payments,
-          AppModuleKey.settlements,
           AppModuleKey.inventory,
           AppModuleKey.staff,
           AppModuleKey.reports,

@@ -79,6 +79,123 @@ class DocumentTemplates {
 ''';
   }
 
+  static String generateOrderReceiptHtml(OrderDetail order) {
+    final isPaid = order.balanceDue <= 0;
+    final itemsHtml = order.items
+        .map((item) {
+          final qtyLabel = item.weightKg != null && item.weightKg! > 0
+              ? '${item.weightKg}kg'
+              : '${item.quantity}x';
+          return '''
+      <div class="row">
+        <span>$qtyLabel ${item.serviceName}</span>
+        <span class="bold">KES ${item.total.round()}</span>
+      </div>
+      ''';
+        })
+        .join('\n');
+
+    final addonsHtml = order.addons.isEmpty
+        ? ''
+        : order.addons
+              .map((addon) {
+                return '''
+            <div class="row">
+              <span>+ ${addon.name}</span>
+              <span>KES ${addon.amount.round()}</span>
+            </div>
+            ''';
+              })
+              .join('\n');
+
+    final paymentsHtml = order.payments.isEmpty
+        ? '<div class="row"><span>Payment:</span><span>Pending</span></div>'
+        : order.payments
+              .map((p) {
+                final ref = p.reference != null && p.reference!.isNotEmpty
+                    ? ' (${p.reference})'
+                    : '';
+                return '<div class="row"><span>${p.method}$ref:</span><span>KES ${p.amount.round()}</span></div>';
+              })
+              .join('\n');
+
+    return '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Receipt - ${order.orderId}</title>
+  <style>
+    @page { size: 80mm auto; margin: 4mm; }
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12.5px;
+      color: #111;
+      line-height: 1.4;
+      margin: 0;
+      padding: 8px;
+    }
+    .text-center { text-align: center; }
+    .bold { font-weight: bold; }
+    .divider { border-top: 1px dashed #444; margin: 8px 0; }
+    .title { font-size: 15px; font-weight: 800; letter-spacing: 0.8px; }
+    .subtitle { font-size: 10.5px; color: #555; }
+    .row { display: flex; justify-content: space-between; gap: 8px; margin: 3px 0; }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #eee;
+      border: 1px solid #bbb;
+      font-size: 10.5px;
+      font-weight: bold;
+    }
+    .barcode {
+      font-family: monospace;
+      letter-spacing: 3.5px;
+      margin-top: 6px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="text-center">
+    <div class="title">HARBOR RIDGE LAUNDRY</div>
+    <div class="subtitle">Getathuru Road, opp. NG-CDF Kabete Plaza</div>
+    <div class="subtitle">Harbor Ridge Main • ${order.taxIdentifier}</div>
+    <div class="divider"></div>
+    <div class="bold">CUSTOMER RECEIPT</div>
+  </div>
+  <div class="divider"></div>
+  <div class="row"><span>Order #:</span><span class="bold">${order.orderId}</span></div>
+  <div class="row"><span>Date:</span><span>${order.orderDate}</span></div>
+  <div class="row"><span>Est. Ready:</span><span>${order.deliveryDate}</span></div>
+  <div class="row"><span>Customer:</span><span class="bold">${order.customerName}</span></div>
+  <div class="row"><span>Phone:</span><span>${order.customerPhone}</span></div>
+  <div class="row"><span>Service:</span><span>${order.primaryService}</span></div>
+  <div class="divider"></div>
+  <div class="bold" style="margin-bottom: 4px;">ITEMS</div>
+  $itemsHtml
+  $addonsHtml
+  <div class="divider"></div>
+  <div class="row"><span>Subtotal:</span><span>KES ${order.itemsSubTotal.round()}</span></div>
+  <div class="row bold" style="font-size: 14px;"><span>TOTAL:</span><span>KES ${order.totalAmount.round()}</span></div>
+  <div class="row"><span>Paid:</span><span>KES ${order.paidAmount.round()}</span></div>
+  <div class="row bold"><span>Balance Due:</span><span>KES ${order.balanceDue.round()}</span></div>
+  <div class="row"><span>Status:</span><span class="badge">${isPaid ? 'PAID IN FULL' : 'BALANCE DUE'}</span></div>
+  <div class="divider"></div>
+  <div class="bold" style="margin-bottom: 4px;">PAYMENTS</div>
+  $paymentsHtml
+  <div class="divider"></div>
+  <div class="text-center" style="margin-top: 10px;">
+    <div class="barcode">*${order.orderId.replaceAll('-', '')}*</div>
+    <p style="font-size: 10.5px; color: #555; margin-top: 5px;">Thank you for choosing Harbor Ridge Laundry.<br>Present this receipt upon garment collection.</p>
+  </div>
+</body>
+</html>
+''';
+  }
+
   static String generateInvoiceHtml(OrderDetail order) {
     final itemsRows = order.items
         .map((item) {

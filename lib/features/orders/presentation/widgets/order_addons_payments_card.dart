@@ -9,11 +9,13 @@ class OrderAddonsPaymentsCard extends StatelessWidget {
     required this.order,
     required this.onAddPayment,
     required this.onPrintInvoice,
+    this.onPrintReceipt,
   });
 
   final OrderDetail order;
   final VoidCallback onAddPayment;
   final VoidCallback onPrintInvoice;
+  final VoidCallback? onPrintReceipt;
 
   @override
   Widget build(BuildContext context) {
@@ -147,25 +149,84 @@ class OrderAddonsPaymentsCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10.0),
-          InteractivePressScale(
-            onTap: onPrintInvoice,
-            child: Container(
-              width: double.infinity,
-              height: 38.0,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1AC4E),
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                'Print Invoice',
-                style: textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                  fontSize: 11.0,
-                  fontWeight: FontWeight.w600,
+          Row(
+            children: [
+              if (onPrintReceipt != null) ...[
+                Expanded(
+                  child: InteractivePressScale(
+                    onTap: onPrintReceipt,
+                    child: Container(
+                      height: 38.0,
+                      decoration: BoxDecoration(
+                        color: colors.harborNavy,
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.receipt_long_outlined,
+                            size: 14.0,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 5.0),
+                          Flexible(
+                            child: Text(
+                              'Print Receipt',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.labelSmall?.copyWith(
+                                color: Colors.white,
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+              ],
+              Expanded(
+                child: InteractivePressScale(
+                  onTap: onPrintInvoice,
+                  child: Container(
+                    height: 38.0,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1AC4E),
+                      borderRadius: BorderRadius.circular(6.0),
+                    ),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.print_outlined,
+                          size: 14.0,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 5.0),
+                        Flexible(
+                          child: Text(
+                            'Print Invoice',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.labelSmall?.copyWith(
+                              color: Colors.white,
+                              fontSize: 11.0,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),

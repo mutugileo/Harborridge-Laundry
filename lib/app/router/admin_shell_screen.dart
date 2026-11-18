@@ -23,9 +23,7 @@ import 'package:laundry_ridge/features/production/presentation/order_tracking_no
 import 'package:laundry_ridge/features/reports/presentation/reports_view.dart';
 import 'package:laundry_ridge/features/services/presentation/admin_services_catalog_view.dart';
 import 'package:laundry_ridge/features/settings/presentation/settings_view.dart';
-import 'package:laundry_ridge/features/settlements/presentation/settlements_view.dart';
 import 'package:laundry_ridge/features/staff/presentation/staff_view.dart';
-import 'package:laundry_ridge/features/vendors/presentation/vendors_view.dart';
 
 class AdminShellScreen extends ConsumerStatefulWidget {
   const AdminShellScreen({super.key});
@@ -48,9 +46,7 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
       case AdminNavTab.dashboard:
       case AdminNavTab.dispatch:
       case AdminNavTab.customers:
-      case AdminNavTab.vendors:
       case AdminNavTab.payments:
-      case AdminNavTab.settlements:
       case AdminNavTab.inventory:
       case AdminNavTab.staff:
       case AdminNavTab.reports:
@@ -289,16 +285,6 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
             shellNotifier.switchTab(AdminNavTab.services);
           },
         );
-      case AdminNavTab.vendors:
-        return VendorsView(
-          key: const ValueKey('admin_vendors_view'),
-          onFilterOrdersByBranch: (branchName) {
-            ordersNotifier.resetAllFilters();
-            ordersNotifier.updateVendorFilter(branchName);
-            ordersNotifier.showOrdersList();
-            shellNotifier.switchTab(AdminNavTab.orders);
-          },
-        );
       case AdminNavTab.services:
         return AdminServicesCatalogView(
           key: const ValueKey('admin_services_view'),
@@ -359,16 +345,6 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
           key: const ValueKey('admin_payments_view'),
           onOpenOrderDetails: (orderId) {
             ordersNotifier.openOrderDetails(orderId);
-            shellNotifier.switchTab(AdminNavTab.orders);
-          },
-        );
-      case AdminNavTab.settlements:
-        return SettlementsView(
-          key: const ValueKey('admin_settlements_view'),
-          onFilterOrdersByBranch: (branchName) {
-            ordersNotifier.resetAllFilters();
-            ordersNotifier.updateVendorFilter(branchName);
-            ordersNotifier.showOrdersList();
             shellNotifier.switchTab(AdminNavTab.orders);
           },
         );

@@ -82,8 +82,6 @@ class _AdminServicesCatalogViewState
     'Express Iron',
   ];
 
-  static const List<String> _branches = ['Harbor Ridge Main'];
-
   static const List<String> _deliveryMethods = [
     'Branch walk-in',
     'Pickup assigned',
@@ -919,13 +917,6 @@ class _AdminServicesCatalogViewState
               options: _riders,
               onChanged: (val) => setState(() => _selectedRider = val),
             ),
-            const SizedBox(height: 10.0),
-            _IntakeDropdownField(
-              label: 'Vendor / Branch',
-              value: _selectedBranch,
-              options: _branches,
-              onChanged: (val) => setState(() => _selectedBranch = val),
-            ),
           ] else ...[
             Row(
               children: [
@@ -948,13 +939,6 @@ class _AdminServicesCatalogViewState
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 10.0),
-            _IntakeDropdownField(
-              label: 'Vendor / Branch',
-              value: _selectedBranch,
-              options: _branches,
-              onChanged: (val) => setState(() => _selectedBranch = val),
             ),
           ],
           const SizedBox(height: 16.0),

@@ -71,12 +71,6 @@ class OrderSidebar extends StatelessWidget {
       iconColor: Color(0xFF2DA1E7),
     ),
     SidebarItemData(
-      moduleKey: AppModuleKey.vendors,
-      title: 'Vendors',
-      icon: Icons.handshake_outlined,
-      iconColor: Color(0xFF152042),
-    ),
-    SidebarItemData(
       moduleKey: AppModuleKey.services,
       title: 'Services',
       icon: Icons.local_offer_rounded,
@@ -88,13 +82,6 @@ class OrderSidebar extends StatelessWidget {
       title: 'Payments',
       icon: Icons.payments_outlined,
       iconColor: Color(0xFF1FBF75),
-    ),
-    SidebarItemData(
-      moduleKey: AppModuleKey.settlements,
-      title: 'Settlements',
-      icon: Icons.account_balance_wallet_outlined,
-      iconColor: Color(0xFFDCA842),
-      hasSubmenu: true,
     ),
     SidebarItemData(
       moduleKey: AppModuleKey.inventory,
