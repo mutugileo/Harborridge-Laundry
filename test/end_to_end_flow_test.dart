@@ -98,7 +98,7 @@ void main() {
         email: 'kelvin.mutua@harborridge.test',
         phone: '+254 710 555 900',
         roleTitle: 'POS Counter Attendant',
-        branch: 'LaundryGo Nairobi',
+        branch: 'Harborridge Main',
         initialPassword: 'first-pass-123',
         exceptedModules: {
           AppModuleKey.settlements,

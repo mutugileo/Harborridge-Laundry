@@ -113,7 +113,7 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
   String? _statusMessage;
   bool _showCreateBatchPanel = false;
 
-  String _newBatchBranch = 'LaundryGo Nairobi';
+  String _newBatchBranch = 'Harborridge Main';
   int _newBatchCommissionRate = 15;
   String _newBatchDisbursal = 'M-Pesa B2B';
 
@@ -124,9 +124,9 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
 
   static const List<String> _branchOptions = [
     'All Branches',
-    'LaundryGo Nairobi',
-    'LaundryGo Westlands',
-    'LaundryGo Kilimani',
+    'Harborridge Main',
+    'Harborridge Westlands',
+    'Harborridge Kilimani',
     'Harborridge Central Hub',
   ];
 
@@ -781,9 +781,9 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   for (final branch in [
-                    'LaundryGo Nairobi',
-                    'LaundryGo Westlands',
-                    'LaundryGo Kilimani',
+                    'Harborridge Main',
+                    'Harborridge Westlands',
+                    'Harborridge Kilimani',
                   ]) ...[
                     InteractivePressScale(
                       onTap: () => setState(() => _newBatchBranch = branch),

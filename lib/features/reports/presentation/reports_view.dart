@@ -33,9 +33,8 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
   static const List<String> _branches = [
     'All Branches',
     'Harborridge Main',
-    'LaundryGo Nairobi',
-    'LaundryGo Westlands',
-    'LaundryGo Kilimani',
+    'Harborridge Westlands',
+    'Harborridge Kilimani',
   ];
 
   @override

@@ -360,12 +360,9 @@ class OrdersPageView extends StatelessWidget {
               items: [
                 const DropdownMenuItem(value: null, child: Text('Vendor: All')),
                 for (final v in {
-                  'LaundryGo Nairobi',
                   'Harborridge Main',
-                  'LaundryGo Westlands',
-                  'LaundryGo Kilimani',
-                  'Harborridge Kilimani',
                   'Harborridge Westlands',
+                  'Harborridge Kilimani',
                   'Ridge Eco-Cleaners',
                   if (state.vendorFilter != null) state.vendorFilter!,
                 })

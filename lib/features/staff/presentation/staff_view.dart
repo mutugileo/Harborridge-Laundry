@@ -28,9 +28,8 @@ class _StaffViewState extends ConsumerState<StaffView> {
 
   static const List<String> _branchOptions = [
     'Harborridge Main',
-    'LaundryGo Nairobi',
-    'LaundryGo Westlands',
-    'LaundryGo Kilimani',
+    'Harborridge Westlands',
+    'Harborridge Kilimani',
   ];
 
   late final TextEditingController _nameController;
@@ -39,7 +38,7 @@ class _StaffViewState extends ConsumerState<StaffView> {
   late final TextEditingController _phoneController;
 
   String _selectedRole = 'POS Counter Attendant';
-  String _selectedBranch = 'LaundryGo Nairobi';
+  String _selectedBranch = 'Harborridge Main';
   String _roleFilter = 'All';
   final Set<AppModuleKey> _draftExceptedModules = {
     AppModuleKey.settlements,

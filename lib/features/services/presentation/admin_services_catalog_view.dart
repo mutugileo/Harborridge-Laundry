@@ -83,9 +83,8 @@ class _AdminServicesCatalogViewState
   static const List<String> _branches = [
     'Harbor Ridge • Getathuru Road',
     'Harborridge Main',
-    'LaundryGo Nairobi',
-    'LaundryGo Westlands',
-    'LaundryGo Kilimani',
+    'Harborridge Westlands',
+    'Harborridge Kilimani',
   ];
 
   static const List<String> _deliveryMethods = [

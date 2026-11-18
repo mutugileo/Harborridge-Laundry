@@ -48,7 +48,7 @@ class OrderDetail {
     this.customerPhone = '+254 712 345 678',
     this.assignedStaff = 'Clara M.',
     this.primaryService = 'Wash & Fold',
-    this.vendorBranch = 'LaundryGo Nairobi',
+    this.vendorBranch = 'Harborridge Main',
     this.displayAmount = 'KES 1,500',
     this.paymentStatusLabel = 'Paid',
     this.processingStageLabel = 'Washing',

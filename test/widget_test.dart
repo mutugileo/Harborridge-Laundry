@@ -36,7 +36,7 @@ void main() {
       expect(find.text('LG-2026-00125'), findsOneWidget);
       expect(find.text('John Kamau'), findsOneWidget);
       expect(find.text('Wash & Fold'), findsWidgets);
-      expect(find.text('LaundryGo Nairobi'), findsWidgets);
+      expect(find.text('Harborridge Main'), findsWidgets);
       expect(find.text('KES 1,500'), findsOneWidget);
       expect(find.text('Paid'), findsWidgets);
       expect(find.text('Washing'), findsWidgets);

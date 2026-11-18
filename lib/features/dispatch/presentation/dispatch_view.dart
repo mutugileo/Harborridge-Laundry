@@ -75,9 +75,9 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
 
   static const List<String> _branches = [
     'All Branches',
-    'LaundryGo Nairobi',
-    'LaundryGo Westlands',
     'Harborridge Main',
+    'Harborridge Westlands',
+    'Harborridge Kilimani',
   ];
 
   String _selectedStageFilter = 'All Runs';
@@ -86,7 +86,7 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
   String? _feedbackBanner;
   bool _showSchedulePanel = false;
   String _newRunRider = 'Unassigned';
-  String _newRunBranch = 'LaundryGo Nairobi';
+  String _newRunBranch = 'Harborridge Main';
 
   late final TextEditingController _orderIdController;
   late final TextEditingController _customerController;
@@ -758,9 +758,9 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
                     ),
                     items:
                         const [
-                              'LaundryGo Nairobi',
-                              'LaundryGo Westlands',
                               'Harborridge Main',
+                              'Harborridge Westlands',
+                              'Harborridge Kilimani',
                             ]
                             .map(
                               (b) => DropdownMenuItem(value: b, child: Text(b)),
