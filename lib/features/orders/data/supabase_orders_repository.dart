@@ -152,16 +152,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
   static String _cleanMethod(String method) =>
       method.replaceAll('[', '').replaceAll(']', '').trim();
 
-  static String _sanitizeBranch(String? raw) {
-    if (raw == null || raw.trim().isEmpty) return 'Harbor Ridge Main';
-    final trimmed = raw.trim();
-    if (trimmed.toLowerCase().contains('laundrygo')) {
-      return 'Harbor Ridge Main';
-    }
-    return trimmed
-        .replaceAll('Harborridge', 'Harbor Ridge')
-        .replaceAll('Harbor Ridge • Getathuru Road', 'Harbor Ridge Main');
-  }
+  static String _sanitizeBranch(String? raw) => 'Harbor Ridge Main';
 
   /// Runs a query and turns database errors into messages staff can act on.
   static Future<T> _guard<T>(Future<T> Function() run) async {

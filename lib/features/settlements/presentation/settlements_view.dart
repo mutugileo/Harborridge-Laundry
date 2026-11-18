@@ -123,11 +123,7 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
   late final TextEditingController _accountNumberController;
 
   static const List<String> _branchOptions = [
-    'All Branches',
     'Harbor Ridge Main',
-    'Harbor Ridge Westlands',
-    'Harbor Ridge Kilimani',
-    'Harbor Ridge Central Hub',
   ];
 
   late List<_SettlementBatchRecord> _batches = const [];
@@ -782,8 +778,6 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
                 children: [
                   for (final branch in [
                     'Harbor Ridge Main',
-                    'Harbor Ridge Westlands',
-                    'Harbor Ridge Kilimani',
                   ]) ...[
                     InteractivePressScale(
                       onTap: () => setState(() => _newBatchBranch = branch),

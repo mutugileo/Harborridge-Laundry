@@ -381,9 +381,6 @@ class OrdersPageView extends StatelessWidget {
                 const DropdownMenuItem(value: null, child: Text('Vendor: All')),
                 for (final v in {
                   'Harbor Ridge Main',
-                  'Harbor Ridge Westlands',
-                  'Harbor Ridge Kilimani',
-                  'Ridge Eco-Cleaners',
                   if (state.vendorFilter != null) state.vendorFilter!,
                 })
                   DropdownMenuItem(value: v, child: Text('Vendor: $v')),

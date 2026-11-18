@@ -20,7 +20,7 @@ class ReportsView extends ConsumerStatefulWidget {
 class _ReportsViewState extends ConsumerState<ReportsView> {
   String _selectedPeriod = 'Nov 2026';
   String _selectedChartMetric = 'Revenue';
-  String _selectedBranchFilter = 'All Branches';
+  String _selectedBranchFilter = 'Harbor Ridge Main';
   String? _exportMessage;
 
   static const List<String> _periods = [
@@ -31,21 +31,10 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
   ];
 
   static const List<String> _branches = [
-    'All Branches',
     'Harbor Ridge Main',
-    'Harbor Ridge Westlands',
-    'Harbor Ridge Kilimani',
   ];
 
-  static String _cleanBranchName(String raw) {
-    final trimmed = raw.trim();
-    if (trimmed.isEmpty || trimmed.toLowerCase().contains('laundrygo')) {
-      return 'Harbor Ridge Main';
-    }
-    return trimmed
-        .replaceAll('Harborridge', 'Harbor Ridge')
-        .replaceAll('Harbor Ridge • Getathuru Road', 'Harbor Ridge Main');
-  }
+  static String _cleanBranchName(String raw) => 'Harbor Ridge Main';
 
   @override
   Widget build(BuildContext context) {
@@ -142,11 +131,7 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
       _ => revenueRatios,
     };
 
-    final filteredBranches = _selectedBranchFilter == 'All Branches'
-        ? branchPerformance
-        : branchPerformance
-              .where((b) => b.branch == _selectedBranchFilter)
-              .toList();
+    final filteredBranches = branchPerformance;
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < 768.0;

@@ -28,8 +28,6 @@ class _StaffViewState extends ConsumerState<StaffView> {
 
   static const List<String> _branchOptions = [
     'Harbor Ridge Main',
-    'Harbor Ridge Westlands',
-    'Harbor Ridge Kilimani',
   ];
 
   late final TextEditingController _nameController;

@@ -676,7 +676,7 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
                   style: const TextStyle(fontSize: 12.0),
                   decoration: InputDecoration(
                     labelText: 'Branch Name',
-                    hintText: 'Harbor Ridge Karen',
+                    hintText: 'Harbor Ridge Main',
                     labelStyle: TextStyle(
                       fontSize: 11.0,
                       color: colors.textSecondary,
@@ -728,7 +728,7 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
                   style: const TextStyle(fontSize: 12.0),
                   decoration: InputDecoration(
                     labelText: 'Hub Location',
-                    hintText: 'Karen Hub • Shopping Centre',
+                    hintText: 'Getathuru Road • Kabete Plaza',
                     labelStyle: TextStyle(
                       fontSize: 11.0,
                       color: colors.textSecondary,

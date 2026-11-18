@@ -74,14 +74,11 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
   ];
 
   static const List<String> _branches = [
-    'All Branches',
     'Harbor Ridge Main',
-    'Harbor Ridge Westlands',
-    'Harbor Ridge Kilimani',
   ];
 
   String _selectedStageFilter = 'All Runs';
-  String _selectedBranchFilter = 'All Branches';
+  String _selectedBranchFilter = 'Harbor Ridge Main';
   String _searchQuery = '';
   String? _feedbackBanner;
   bool _showSchedulePanel = false;
@@ -756,16 +753,13 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
                       fontWeight: FontWeight.w600,
                       color: colors.textPrimary,
                     ),
-                    items:
-                        const [
-                              'Harbor Ridge Main',
-                              'Harbor Ridge Westlands',
-                              'Harbor Ridge Kilimani',
-                            ]
-                            .map(
-                              (b) => DropdownMenuItem(value: b, child: Text(b)),
-                            )
-                            .toList(),
+                    items: const [
+                      'Harbor Ridge Main',
+                    ]
+                        .map(
+                          (b) => DropdownMenuItem(value: b, child: Text(b)),
+                        )
+                        .toList(),
                     onChanged: (v) {
                       if (v != null) setState(() => _newRunBranch = v);
                     },

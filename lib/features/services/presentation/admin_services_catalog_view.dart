@@ -83,10 +83,7 @@ class _AdminServicesCatalogViewState
   ];
 
   static const List<String> _branches = [
-    'Harbor Ridge • Getathuru Road',
     'Harbor Ridge Main',
-    'Harbor Ridge Westlands',
-    'Harbor Ridge Kilimani',
   ];
 
   static const List<String> _deliveryMethods = [
@@ -113,7 +110,7 @@ class _AdminServicesCatalogViewState
 
   GarmentServiceSection _selectedSection = GarmentServiceSection.all;
   String _selectedServiceType = 'Wash & Iron';
-  String _selectedBranch = 'Harbor Ridge • Getathuru Road';
+  String _selectedBranch = 'Harbor Ridge Main';
   String _selectedDeliveryMethod = 'Branch walk-in';
   String _selectedRider = 'Unassigned';
   String _selectedPaymentStatus = 'Paid';
