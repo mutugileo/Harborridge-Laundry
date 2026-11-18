@@ -13,6 +13,7 @@ import 'package:laundry_ridge/core/supabase/supabase_config.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
+import 'package:laundry_ridge/core/widgets/shared_axis_page_transition.dart';
 
 enum PaymentStatusFilter {
   all('All Statuses'),
@@ -514,12 +515,19 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
           const SizedBox(height: 14.0),
 
           // Section 6: Official Statement Table / Ledger
-          _buildStatementLedgerTable(
-            context: context,
-            colors: colors,
-            motion: motion,
-            textTheme: textTheme,
-            rows: pagedRows,
+          SharedAxisPageTransition.componentSwitch(
+            child: KeyedSubtree(
+              key: ValueKey(
+                'payments_page_${_currentPage}_${_selectedStatusFilter.name}_${_selectedChannel}_${_selectedPeriod.name}',
+              ),
+              child: _buildStatementLedgerTable(
+                context: context,
+                colors: colors,
+                motion: motion,
+                textTheme: textTheme,
+                rows: pagedRows,
+              ),
+            ),
           ),
           if (filtered.isNotEmpty) ...[
             const SizedBox(height: 12.0),

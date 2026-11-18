@@ -1,6 +1,42 @@
 import 'package:laundry_ridge/features/orders/domain/order_detail.dart';
 
 class DocumentTemplates {
+  static String _brandLogoHtml({bool centered = true}) {
+    final align = centered ? 'center' : 'flex-start';
+    final textAlign = centered ? 'center' : 'left';
+    return '''
+  <div style="display: flex; flex-direction: column; align-items: $align; text-align: $textAlign; margin-bottom: 6px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60" width="84" height="50" style="display: block;">
+      <path d="M28 21.6 Q36 7.2 56 8.4 Q70 9.0 72 21.6 Z" fill="#152042"/>
+      <path d="M25 22.8 Q44 14.4 60 16.8 Q72 18.0 75 23.4 Z" fill="#2DA1E7"/>
+      <rect x="18" y="22.2" width="64" height="6.6" rx="3.3" fill="#2DA1E7"/>
+      <path d="M23 27.6 L77 27.6 L69 48.0 Q50 51.0 31 48.0 Z" fill="#2DA1E7"/>
+      <rect x="31" y="31.8" width="6" height="3.9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="41.5" y="31.8" width="6" height="3.9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="52" y="31.8" width="6" height="3.9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="62.5" y="31.8" width="6" height="3.9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="31" y="38.4" width="6" height="3.9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="41.5" y="38.4" width="6" height="3.9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="52" y="38.4" width="6" height="3.9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="62.5" y="38.4" width="6" height="3.9" rx="1.5" fill="#FFFFFF"/>
+      <path d="M12 45.6 Q38 57.6 64 49.2 Q78 44.4 90 51.6 Q76 49.2 62 53.4 Q36 61.2 12 45.6 Z" fill="#152042"/>
+      <circle cx="13" cy="33.6" r="4.2" fill="#152042"/>
+      <circle cx="8" cy="40.2" r="2.4" fill="#152042"/>
+      <circle cx="85" cy="31.8" r="4.8" fill="#152042"/>
+      <circle cx="89" cy="39.6" r="2.5" fill="#152042"/>
+      <path d="M81 7.9 Q81 14.4 87.5 14.4 Q81 14.4 81 20.9 Q81 14.4 74.5 14.4 Q81 14.4 81 7.9 Z" fill="#152042"/>
+    </svg>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; font-weight: 900; color: #152042; letter-spacing: 0.8px; line-height: 1.1; margin-top: 2px;">HARBOR RIDGE LAUNDRY</div>
+    <div style="display: inline-flex; align-items: center; gap: 5px; margin-top: 2px;">
+      <span style="display: inline-block; width: 14px; height: 1.5px; background: #2DA1E7;"></span>
+      <span style="font-family: sans-serif; font-size: 8.5px; font-weight: 800; color: #2DA1E7; letter-spacing: 1px;">LAUNDRY SERVICE</span>
+      <span style="display: inline-block; width: 14px; height: 1.5px; background: #2DA1E7;"></span>
+    </div>
+    <div style="background: #152042; color: #FFFFFF; font-family: sans-serif; font-size: 7px; font-weight: 800; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 10px; margin-top: 4px;">FRESH, FOLDED, DELIVERED</div>
+  </div>
+''';
+  }
+
   static String generatePaymentReceiptHtml({
     required String txId,
     required String orderId,
@@ -51,7 +87,7 @@ class DocumentTemplates {
 </head>
 <body>
   <div class="text-center">
-    <div class="title">HARBOR RIDGE LAUNDRY</div>
+    ${_brandLogoHtml(centered: true)}
     <div class="subtitle">Getathuru Road, opp. NG-CDF Kabete Plaza</div>
     <div class="subtitle">Nairobi, Kenya • PIN: P051289471A</div>
     <div class="divider"></div>
@@ -160,7 +196,7 @@ class DocumentTemplates {
 </head>
 <body>
   <div class="text-center">
-    <div class="title">HARBOR RIDGE LAUNDRY</div>
+    ${_brandLogoHtml(centered: true)}
     <div class="subtitle">Getathuru Road, opp. NG-CDF Kabete Plaza</div>
     <div class="subtitle">Harbor Ridge Main • ${order.taxIdentifier}</div>
     <div class="divider"></div>
@@ -300,7 +336,7 @@ class DocumentTemplates {
   <table class="header-table">
     <tr>
       <td style="vertical-align: top;">
-        <div class="brand-title">HARBOR RIDGE LAUNDRY</div>
+        ${_brandLogoHtml(centered: false)}
         <div style="font-size: 12px; color: #64748b; margin-top: 4px;">
           ${order.storeAddress}<br>
           Email: ${order.storeEmail} • Tax PIN: ${order.taxIdentifier}<br>

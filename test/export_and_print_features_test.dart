@@ -36,6 +36,9 @@ void main() {
       );
 
       expect(html, contains('HARBOR RIDGE LAUNDRY'));
+      expect(html, contains('<svg'));
+      expect(html, contains('LAUNDRY SERVICE'));
+      expect(html, contains('FRESH, FOLDED, DELIVERED'));
       expect(html, contains('OFFICIAL PAYMENT RECEIPT'));
       expect(html, contains('TX-2026-999'));
       expect(html, contains('ORD-2026-888'));
@@ -86,6 +89,8 @@ void main() {
         final html = DocumentTemplates.generateInvoiceHtml(order);
 
         expect(html, contains('TAX INVOICE'));
+        expect(html, contains('<svg'));
+        expect(html, contains('LAUNDRY SERVICE'));
         expect(html, contains('ORD-7001'));
         expect(html, contains('Brian Otieno'));
         expect(html, contains('Suit 2-Piece'));

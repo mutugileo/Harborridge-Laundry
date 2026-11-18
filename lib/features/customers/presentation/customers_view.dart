@@ -5,6 +5,7 @@ import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
+import 'package:laundry_ridge/core/widgets/shared_axis_page_transition.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 
 class _CustomerProfileRecord {
@@ -420,142 +421,154 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Selected Customer Profile',
-                        style: textTheme.labelSmall?.copyWith(
-                          color: colors.freshSkyBlue,
-                          fontSize: 11.0,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6.0),
-                      Text(
-                        activeCustomer.name,
-                        style: textTheme.titleMedium?.copyWith(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        '${activeCustomer.email} • ${activeCustomer.phone}',
-                        style: textTheme.bodySmall?.copyWith(
-                          fontSize: 12.0,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 12.0),
-                      Container(
-                        padding: const EdgeInsets.all(12.0),
-                        decoration: BoxDecoration(
-                          color: colors.background,
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
+                      SharedAxisPageTransition.componentSwitch(
                         child: Column(
+                          key: ValueKey('cust_profile_${activeCustomer.id}'),
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Care Preference: ${activeCustomer.preferredService}',
-                              style: textTheme.bodySmall?.copyWith(
-                                fontSize: 12.0,
-                                fontWeight: FontWeight.w600,
+                              'Selected Customer Profile',
+                              style: textTheme.labelSmall?.copyWith(
+                                color: colors.freshSkyBlue,
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 6.0),
+                            Text(
+                              activeCustomer.name,
+                              style: textTheme.titleMedium?.copyWith(
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.w800,
                                 color: colors.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 4.0),
                             Text(
-                              'Primary Branch: ${activeCustomer.branch}',
+                              '${activeCustomer.email} • ${activeCustomer.phone}',
                               style: textTheme.bodySmall?.copyWith(
-                                fontSize: 11.0,
+                                fontSize: 12.0,
                                 color: colors.textSecondary,
                               ),
                             ),
+                            const SizedBox(height: 12.0),
+                            Container(
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                color: colors.background,
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Care Preference: ${activeCustomer.preferredService}',
+                                    style: textTheme.bodySmall?.copyWith(
+                                      fontSize: 12.0,
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4.0),
+                                  Text(
+                                    'Primary Branch: ${activeCustomer.branch}',
+                                    style: textTheme.bodySmall?.copyWith(
+                                      fontSize: 11.0,
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14.0),
+                            Text(
+                              'Linked Orders (Click to open invoice):',
+                              style: textTheme.labelSmall?.copyWith(
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 8.0),
+                            if (activeCustomer.recentOrderIds.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
+                                child: Text(
+                                  'No order history yet. Intake a new ticket to link transactions.',
+                                  style: textTheme.bodySmall?.copyWith(
+                                    fontSize: 11.0,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                              )
+                            else
+                              Wrap(
+                                spacing: 8.0,
+                                runSpacing: 8.0,
+                                children: activeCustomer.recentOrderIds.map((
+                                  orderId,
+                                ) {
+                                  return InteractivePressScale(
+                                    onTap: () => widget.onOpenOrderDetails
+                                        ?.call(orderId),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12.0,
+                                        vertical: 7.0,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: colors.freshSkyBlue.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          8.0,
+                                        ),
+                                        border: Border.all(
+                                          color: colors.freshSkyBlue,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'View $orderId →',
+                                        style: textTheme.labelSmall?.copyWith(
+                                          color: colors.harborNavy,
+                                          fontSize: 11.0,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            const SizedBox(height: 14.0),
+                            if (widget.onStartPosOrder != null)
+                              SizedBox(
+                                width: double.infinity,
+                                child: InteractivePressScale(
+                                  onTap: widget.onStartPosOrder,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 11.0,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: colors.harborNavy,
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '+ Create New POS Order for ${activeCustomer.name}',
+                                      style: textTheme.labelMedium?.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 12.0,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 14.0),
-                      Text(
-                        'Linked Orders (Click to open invoice):',
-                        style: textTheme.labelSmall?.copyWith(
-                          fontSize: 11.0,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8.0),
-                      if (activeCustomer.recentOrderIds.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Text(
-                            'No order history yet. Intake a new ticket to link transactions.',
-                            style: textTheme.bodySmall?.copyWith(
-                              fontSize: 11.0,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        )
-                      else
-                        Wrap(
-                          spacing: 8.0,
-                          runSpacing: 8.0,
-                          children: activeCustomer.recentOrderIds.map((
-                            orderId,
-                          ) {
-                            return InteractivePressScale(
-                              onTap: () =>
-                                  widget.onOpenOrderDetails?.call(orderId),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12.0,
-                                  vertical: 7.0,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.freshSkyBlue.withValues(
-                                    alpha: 0.12,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  border: Border.all(
-                                    color: colors.freshSkyBlue,
-                                  ),
-                                ),
-                                child: Text(
-                                  'View $orderId →',
-                                  style: textTheme.labelSmall?.copyWith(
-                                    color: colors.harborNavy,
-                                    fontSize: 11.0,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      const SizedBox(height: 14.0),
-                      if (widget.onStartPosOrder != null)
-                        SizedBox(
-                          width: double.infinity,
-                          child: InteractivePressScale(
-                            onTap: widget.onStartPosOrder,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 11.0,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.harborNavy,
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                '+ Create New POS Order for ${activeCustomer.name}',
-                                style: textTheme.labelMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 12.0,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
                       const SizedBox(height: 18.0),
                       Divider(color: colors.borderSubtle),
                       const SizedBox(height: 10.0),

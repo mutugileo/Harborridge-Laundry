@@ -7,6 +7,7 @@ import 'package:laundry_ridge/core/widgets/app_pagination_bar.dart';
 import 'package:laundry_ridge/core/widgets/garment_catalog_grid.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
+import 'package:laundry_ridge/core/widgets/shared_axis_page_transition.dart';
 import 'package:laundry_ridge/features/orders/domain/order_detail.dart';
 import 'package:laundry_ridge/features/orders/domain/order_item.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
@@ -30,6 +31,7 @@ class OrdersPageView extends StatefulWidget {
 
 class _OrdersPageViewState extends State<OrdersPageView> {
   int _currentPage = 0;
+  int _pageDirection = 1;
 
   OrderDetailsUiState get state => widget.state;
   OrderDetailsNotifier get notifier => widget.notifier;
@@ -178,7 +180,15 @@ class _OrdersPageViewState extends State<OrdersPageView> {
             padding: const EdgeInsets.fromLTRB(26.0, 24.0, 26.0, 18.0),
             child: _buildToolbarAndFilters(context),
           ),
-          _buildOrdersTable(context, pagedOrders),
+          SharedAxisPageTransition.componentSwitch(
+            direction: _pageDirection,
+            child: KeyedSubtree(
+              key: ValueKey(
+                'orders_page_${_currentPage}_${filteredOrders.length}',
+              ),
+              child: _buildOrdersTable(context, pagedOrders),
+            ),
+          ),
           if (filteredOrders.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(26.0, 16.0, 26.0, 0.0),
@@ -186,7 +196,10 @@ class _OrdersPageViewState extends State<OrdersPageView> {
                 currentPage: _currentPage,
                 totalItems: filteredOrders.length,
                 pageSize: 6,
-                onPageChanged: (page) => setState(() => _currentPage = page),
+                onPageChanged: (page) => setState(() {
+                  _pageDirection = page >= _currentPage ? 1 : -1;
+                  _currentPage = page;
+                }),
               ),
             ),
           Padding(

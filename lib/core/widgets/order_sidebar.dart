@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
+import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_spacing.dart';
 import 'package:laundry_ridge/core/permissions/role_permission.dart';
 import 'package:laundry_ridge/core/widgets/harborridge_logo.dart';
@@ -165,7 +166,8 @@ class OrderSidebar extends StatelessWidget {
                 return InteractivePressScale(
                   onTap: () => onItemSelected(originalIndex),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
+                    duration: context.motion.shortDuration,
+                    curve: context.motion.emphasizedCurve,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14.0,
                       vertical: 11.0,
@@ -175,13 +177,30 @@ class OrderSidebar extends StatelessWidget {
                           ? colors.brandPrimary
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(8.0),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: colors.brandPrimary.withValues(
+                                  alpha: 0.26,
+                                ),
+                                blurRadius: 12.0,
+                                spreadRadius: 0.5,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : null,
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          item.icon,
-                          size: 16.0,
-                          color: isSelected ? Colors.white : item.iconColor,
+                        AnimatedScale(
+                          scale: isSelected ? 1.08 : 1.0,
+                          duration: context.motion.shortDuration,
+                          curve: Curves.easeOutBack,
+                          child: Icon(
+                            item.icon,
+                            size: 16.0,
+                            color: isSelected ? Colors.white : item.iconColor,
+                          ),
                         ),
                         const SizedBox(width: 12.0),
                         Expanded(
@@ -193,7 +212,7 @@ class OrderSidebar extends StatelessWidget {
                                   ? Colors.white
                                   : colors.textSecondary,
                               fontWeight: isSelected
-                                  ? FontWeight.w600
+                                  ? FontWeight.w700
                                   : FontWeight.w500,
                             ),
                             maxLines: 1,
@@ -201,12 +220,17 @@ class OrderSidebar extends StatelessWidget {
                           ),
                         ),
                         if (item.hasSubmenu)
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 16.0,
-                            color: isSelected
-                                ? Colors.white
-                                : colors.textTertiary,
+                          AnimatedRotation(
+                            turns: isSelected ? -0.25 : 0.0,
+                            duration: context.motion.shortDuration,
+                            curve: context.motion.emphasizedCurve,
+                            child: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 16.0,
+                              color: isSelected
+                                  ? Colors.white
+                                  : colors.textTertiary,
+                            ),
                           ),
                       ],
                     ),
