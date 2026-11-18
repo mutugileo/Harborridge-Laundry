@@ -26,6 +26,10 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
   late final TextEditingController _newPinController;
   late final TextEditingController _confirmPinController;
 
+  late final TextEditingController _current4DigitPinController;
+  late final TextEditingController _new4DigitPinController;
+
+  int _selectedTab = 0; // 0 = Password, 1 = 4-Digit Quick PIN
   String? _feedbackMessage;
   bool _isSuccess = false;
   bool _isSubmitting = false;
@@ -36,6 +40,8 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
     _currentPinController = TextEditingController();
     _newPinController = TextEditingController();
     _confirmPinController = TextEditingController();
+    _current4DigitPinController = TextEditingController();
+    _new4DigitPinController = TextEditingController();
   }
 
   @override
@@ -43,7 +49,47 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
     _currentPinController.dispose();
     _newPinController.dispose();
     _confirmPinController.dispose();
+    _current4DigitPinController.dispose();
+    _new4DigitPinController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit4DigitPinChange() async {
+    if (_isSubmitting) return;
+    final current = _current4DigitPinController.text.trim();
+    final next = _new4DigitPinController.text.trim();
+
+    if (!RegExp(r'^\d{4}$').hasMatch(current)) {
+      setState(() {
+        _isSuccess = false;
+        _feedbackMessage = 'Current PIN must be 4 digits.';
+      });
+      return;
+    }
+    if (!RegExp(r'^\d{4}$').hasMatch(next)) {
+      setState(() {
+        _isSuccess = false;
+        _feedbackMessage = 'New PIN must be 4 digits.';
+      });
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final (ok, message) = await ref
+        .read(authSessionNotifierProvider.notifier)
+        .changeOwnPin(currentPin: current, newPin: next);
+    if (!mounted) return;
+
+    setState(() {
+      _isSubmitting = false;
+      _isSuccess = ok;
+      _feedbackMessage = message;
+    });
+
+    if (ok) {
+      _current4DigitPinController.clear();
+      _new4DigitPinController.clear();
+    }
   }
 
   Future<void> _submitPinChange() async {
@@ -164,27 +210,115 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16.0),
-              _PinDialogField(
-                key: const ValueKey('change_pin_current_input'),
-                label: 'Current Password',
-                hintText: 'Enter your current password',
-                controller: _currentPinController,
+              const SizedBox(height: 14.0),
+              Row(
+                children: [
+                  Expanded(
+                    child: InteractivePressScale(
+                      onTap: () => setState(() {
+                        _selectedTab = 0;
+                        _feedbackMessage = null;
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        decoration: BoxDecoration(
+                          color: _selectedTab == 0
+                              ? colors.harborNavy
+                              : colors.background,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: _selectedTab == 0
+                                ? colors.harborNavy
+                                : colors.borderSubtle,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Account Password',
+                          style: textTheme.labelSmall?.copyWith(
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w700,
+                            color: _selectedTab == 0
+                                ? Colors.white
+                                : colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  Expanded(
+                    child: InteractivePressScale(
+                      onTap: () => setState(() {
+                        _selectedTab = 1;
+                        _feedbackMessage = null;
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        decoration: BoxDecoration(
+                          color: _selectedTab == 1
+                              ? colors.harborNavy
+                              : colors.background,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: _selectedTab == 1
+                                ? colors.harborNavy
+                                : colors.borderSubtle,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '4-Digit Quick PIN',
+                          style: textTheme.labelSmall?.copyWith(
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w700,
+                            color: _selectedTab == 1
+                                ? Colors.white
+                                : colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12.0),
-              _PinDialogField(
-                key: const ValueKey('change_pin_new_input'),
-                label: 'New Password',
-                hintText: 'At least $kMinStaffPasswordLength characters',
-                controller: _newPinController,
-              ),
-              const SizedBox(height: 12.0),
-              _PinDialogField(
-                key: const ValueKey('change_pin_confirm_input'),
-                label: 'Confirm New Password',
-                hintText: 'Re-enter your new password',
-                controller: _confirmPinController,
-              ),
+              const SizedBox(height: 14.0),
+              if (_selectedTab == 0) ...[
+                _PinDialogField(
+                  key: const ValueKey('change_pin_current_input'),
+                  label: 'Current Password',
+                  hintText: 'Enter your current password',
+                  controller: _currentPinController,
+                ),
+                const SizedBox(height: 12.0),
+                _PinDialogField(
+                  key: const ValueKey('change_pin_new_input'),
+                  label: 'New Password',
+                  hintText: 'At least $kMinStaffPasswordLength characters',
+                  controller: _newPinController,
+                ),
+                const SizedBox(height: 12.0),
+                _PinDialogField(
+                  key: const ValueKey('change_pin_confirm_input'),
+                  label: 'Confirm New Password',
+                  hintText: 'Re-enter your new password',
+                  controller: _confirmPinController,
+                ),
+              ] else ...[
+                _PinDialogField(
+                  key: const ValueKey('change_4digit_pin_current_input'),
+                  label: 'Current 4-Digit PIN',
+                  hintText: 'Enter current 4-digit PIN (default: 1234)',
+                  controller: _current4DigitPinController,
+                ),
+                const SizedBox(height: 12.0),
+                _PinDialogField(
+                  key: const ValueKey('change_4digit_pin_new_input'),
+                  label: 'New 4-Digit PIN',
+                  hintText: 'Enter new 4-digit PIN for rapid unlock',
+                  controller: _new4DigitPinController,
+                ),
+              ],
               AnimatedSwitcher(
                 duration: motion.shortDuration,
                 child: _feedbackMessage == null
@@ -245,7 +379,9 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
                   Expanded(
                     flex: 2,
                     child: InteractivePressScale(
-                      onTap: _submitPinChange,
+                      onTap: _selectedTab == 0
+                          ? _submitPinChange
+                          : _submit4DigitPinChange,
                       child: Container(
                         key: const ValueKey('submit_change_pin_button'),
                         padding: const EdgeInsets.symmetric(vertical: 11.0),
@@ -255,7 +391,11 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          _isSubmitting ? 'Updating…' : 'Update Password',
+                          _isSubmitting
+                              ? 'Updating…'
+                              : (_selectedTab == 0
+                                    ? 'Update Password'
+                                    : 'Update 4-Digit PIN'),
                           style: textTheme.labelMedium?.copyWith(
                             fontSize: 12.0,
                             fontWeight: FontWeight.w700,

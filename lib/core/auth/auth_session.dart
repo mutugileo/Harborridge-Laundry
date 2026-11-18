@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/core/auth/auth_backend.dart';
+import 'package:laundry_ridge/core/auth/quick_pin_service.dart';
 import 'package:laundry_ridge/core/permissions/role_permission.dart';
 
 enum OperatorRole { admin, manager, productionLead, cashier, driver }
@@ -175,6 +176,7 @@ class AuthPortalState {
 
 class AuthSessionNotifier extends Notifier<AuthPortalState> {
   AuthBackend get _backend => ref.read(authBackendProvider);
+  QuickPinService get _quickPinService => ref.read(quickPinServiceProvider);
 
   @override
   AuthPortalState build() {
@@ -253,7 +255,11 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
     }
   }
 
-  Future<bool> signIn({required String email, required String password}) async {
+  Future<bool> signIn({
+    required String email,
+    required String password,
+    String pin = '1234',
+  }) async {
     if (state.isBusy) return false;
     final normalizedEmail = email.trim().toLowerCase();
     if (normalizedEmail.isEmpty || password.isEmpty) {
@@ -273,11 +279,66 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
         email: normalizedEmail,
         password: password,
       );
-      return await _openSession(userId);
+      final ok = await _openSession(userId);
+      if (ok && state.currentWorker.id.isNotEmpty) {
+        await _quickPinService.saveWorkerSession(
+          worker: state.currentWorker,
+          password: password,
+          pin: pin,
+        );
+      }
+      return ok;
     } on Object catch (error) {
       state = state.copyWith(isBusy: false, errorMessage: _messageFor(error));
       return false;
     }
+  }
+
+  Future<bool> signInWithQuickPin(String pin) async {
+    if (state.isBusy) return false;
+    final cleanPin = pin.trim();
+    if (!RegExp(r'^\d{4}$').hasMatch(cleanPin)) {
+      state = state.copyWith(errorMessage: 'PIN must be exactly 4 digits.');
+      return false;
+    }
+
+    final remembered = await _quickPinService.getRememberedWorker();
+    if (remembered == null) {
+      state = state.copyWith(
+        errorMessage: 'No remembered staff account. Sign in with email.',
+      );
+      return false;
+    }
+
+    final isPinValid = await _quickPinService.verifyPin(cleanPin);
+    if (!isPinValid) {
+      state = state.copyWith(errorMessage: 'Incorrect 4-digit PIN. Try again.');
+      return false;
+    }
+
+    state = state.copyWith(isBusy: true, clearError: true, clearMessage: true);
+    try {
+      if (_backend.restoredUserId != null) {
+        return await _openSession(_backend.restoredUserId!);
+      }
+      final savedPassword = await _quickPinService.getSavedPassword();
+      if (savedPassword != null && savedPassword.isNotEmpty) {
+        final userId = await _backend.signIn(
+          email: remembered.email,
+          password: savedPassword,
+        );
+        return await _openSession(userId);
+      }
+      return await _openSession(remembered.id);
+    } on Object catch (error) {
+      state = state.copyWith(isBusy: false, errorMessage: _messageFor(error));
+      return false;
+    }
+  }
+
+  Future<void> switchAccount() async {
+    await _quickPinService.clearRememberedWorker();
+    await signOut();
   }
 
   Future<void> signOut() async {
@@ -293,6 +354,22 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
         statusMessage: 'Signed out.',
       );
     }
+  }
+
+  Future<(bool, String)> changeOwnPin({
+    required String currentPin,
+    required String newPin,
+  }) async {
+    final cleanPin = newPin.trim();
+    if (!RegExp(r'^\d{4}$').hasMatch(cleanPin)) {
+      return (false, 'New PIN must be exactly 4 digits.');
+    }
+    final isCurrentValid = await _quickPinService.verifyPin(currentPin);
+    if (!isCurrentValid) {
+      return (false, 'Current 4-digit PIN is incorrect.');
+    }
+    await _quickPinService.updatePin(cleanPin);
+    return (true, '4-Digit PIN updated successfully.');
   }
 
   /// Returns (ok, message) for the change-password dialog.
@@ -314,6 +391,10 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
         email: state.currentWorker.email,
         currentPassword: currentPassword,
         newPassword: newPassword,
+      );
+      await _quickPinService.saveWorkerSession(
+        worker: state.currentWorker,
+        password: newPassword,
       );
       return (true, 'Password updated. Use it next time you sign in.');
     } on Object catch (error) {

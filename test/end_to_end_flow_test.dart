@@ -158,8 +158,16 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Logout'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('subsequent_pin_form_view')),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('switch_to_email_login_button')),
+      );
+      await tester.pumpAndSettle();
 
       expect(find.text('Work Email'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);

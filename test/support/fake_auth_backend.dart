@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:laundry_ridge/app/app.dart';
 import 'package:laundry_ridge/core/auth/auth_backend.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
+import 'package:laundry_ridge/core/auth/quick_pin_service.dart';
 import 'package:laundry_ridge/core/permissions/role_permission.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Test-only credentials. Never used outside the test suite.
 const String kTestAdminEmail = 'admin@harborridge.test';
@@ -194,6 +196,8 @@ Future<ProviderContainer> pumpTestApp(
   WidgetTester tester, {
   FakeAuthBackend? backend,
 }) async {
+  SharedPreferences.setMockInitialValues({});
+  QuickPinService.resetMemoryCache();
   final container = makeTestContainer(backend);
   addTearDown(container.dispose);
   await tester.pumpWidget(
@@ -202,6 +206,7 @@ Future<ProviderContainer> pumpTestApp(
       child: const LaundryRidgeApp(),
     ),
   );
+  await tester.pumpAndSettle();
   return container;
 }
 
@@ -210,6 +215,11 @@ Future<void> signInThroughForm(
   String email = kTestAdminEmail,
   String password = kTestAdminPassword,
 }) async {
+  final switchBtn = find.byKey(const ValueKey('switch_to_email_login_button'));
+  if (switchBtn.evaluate().isNotEmpty) {
+    await tester.tap(switchBtn);
+    await tester.pumpAndSettle();
+  }
   await tester.enterText(
     find.byKey(const ValueKey('login_email_input')),
     email,
@@ -218,6 +228,8 @@ Future<void> signInThroughForm(
     find.byKey(const ValueKey('login_password_input')),
     password,
   );
+  await tester.ensureVisible(find.byKey(const ValueKey('login_submit_button')));
+  await tester.pumpAndSettle();
   await tester.tap(find.byKey(const ValueKey('login_submit_button')));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
