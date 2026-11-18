@@ -544,143 +544,153 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isMobile = screenWidth < 768.0;
 
-    return Wrap(
-      spacing: 12.0,
-      runSpacing: 10.0,
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: isMobile
-                ? (screenWidth - 48.0).clamp(200.0, 500.0)
-                : 600.0,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+      decoration: BoxDecoration(
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(10.0),
+        border: Border.all(color: colors.borderSubtle),
+      ),
+      child: Wrap(
+        spacing: 12.0,
+        runSpacing: 10.0,
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isMobile
+                  ? (screenWidth - 68.0).clamp(200.0, 500.0)
+                  : 600.0,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 38.0,
+                  height: 38.0,
+                  decoration: BoxDecoration(
+                    color: colors.freshSkyBlue.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: 20.0,
+                    color: colors.freshSkyBlue,
+                  ),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Invoices & Payment Ledger',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleLarge?.copyWith(
+                          fontSize: AppTypography.pageTitleSize,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        'Official statement of accounts, M-Pesa reconciliations & receivables ledger',
+                        maxLines: isMobile ? 2 : 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: AppTypography.captionSize,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Container(
-                width: 38.0,
-                height: 38.0,
-                decoration: BoxDecoration(
-                  color: colors.freshSkyBlue.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: Icon(
-                  Icons.account_balance_wallet_outlined,
-                  size: 20.0,
-                  color: colors.freshSkyBlue,
-                ),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Invoices & Payment Ledger',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.titleLarge?.copyWith(
-                        fontSize: AppTypography.pageTitleSize,
-                        fontWeight: FontWeight.w700,
+              InteractivePressScale(
+                onTap: _exportStatement,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 13.0,
+                    vertical: 8.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.background,
+                    borderRadius: BorderRadius.circular(99.0),
+                    border: Border.all(color: colors.borderSubtle),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.download_rounded,
+                        size: 14.0,
                         color: colors.textPrimary,
                       ),
-                    ),
-                    const SizedBox(height: 2.0),
-                    Text(
-                      'Official statement of accounts, M-Pesa reconciliations & receivables ledger',
-                      maxLines: isMobile ? 2 : 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: AppTypography.captionSize,
-                        color: colors.textSecondary,
+                      const SizedBox(width: 6.0),
+                      Text(
+                        'Download Statement',
+                        style: textTheme.labelSmall?.copyWith(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                ),
+              ),
+              InteractivePressScale(
+                onTap: () => setState(
+                  () => _showAddPaymentPanel = !_showAddPaymentPanel,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14.0,
+                    vertical: 8.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.harborNavy,
+                    borderRadius: BorderRadius.circular(99.0),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _showAddPaymentPanel
+                            ? Icons.close_rounded
+                            : Icons.add_circle_outline_rounded,
+                        size: 14.0,
+                        color: colors.harborGold,
+                      ),
+                      const SizedBox(width: 6.0),
+                      Text(
+                        _showAddPaymentPanel
+                            ? 'Close Form'
+                            : '+ Record Payment (KES)',
+                        style: textTheme.labelSmall?.copyWith(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 8.0,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            InteractivePressScale(
-              onTap: _exportStatement,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 13.0,
-                  vertical: 8.0,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.background,
-                  borderRadius: BorderRadius.circular(99.0),
-                  border: Border.all(color: colors.borderSubtle),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.download_rounded,
-                      size: 14.0,
-                      color: colors.textPrimary,
-                    ),
-                    const SizedBox(width: 6.0),
-                    Text(
-                      'Download Statement',
-                      style: textTheme.labelSmall?.copyWith(
-                        fontSize: AppTypography.captionSize,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            InteractivePressScale(
-              onTap: () =>
-                  setState(() => _showAddPaymentPanel = !_showAddPaymentPanel),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14.0,
-                  vertical: 8.0,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.harborNavy,
-                  borderRadius: BorderRadius.circular(99.0),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _showAddPaymentPanel
-                          ? Icons.close_rounded
-                          : Icons.add_circle_outline_rounded,
-                      size: 14.0,
-                      color: colors.harborGold,
-                    ),
-                    const SizedBox(width: 6.0),
-                    Text(
-                      _showAddPaymentPanel
-                          ? 'Close Form'
-                          : '+ Record Payment (KES)',
-                      style: textTheme.labelSmall?.copyWith(
-                        fontSize: AppTypography.captionSize,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 
