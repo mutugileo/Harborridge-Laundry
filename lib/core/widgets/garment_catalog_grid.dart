@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
+import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
@@ -134,7 +135,9 @@ class _GarmentTile extends StatelessWidget {
           '${garment.displayName} (${garment.defaultServiceType}) · ${garment.priceDisplayLabel} ${garment.unitBasisLabel}',
       child: InteractivePressScale(
         onTap: onTap,
-        child: Container(
+        child: AnimatedContainer(
+          duration: context.motion.shortDuration,
+          curve: context.motion.emphasizedCurve,
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFFF0F9FF) : Colors.white,
             borderRadius: BorderRadius.circular(8.0),
@@ -144,8 +147,14 @@ class _GarmentTile extends StatelessWidget {
                   : const Color(0xFFE2E8F0),
               width: isSelected ? 1.6 : 1.0,
             ),
-            boxShadow: const [
-              BoxShadow(
+            boxShadow: [
+              if (isSelected)
+                BoxShadow(
+                  color: const Color(0xFF159CE8).withValues(alpha: 0.22),
+                  blurRadius: 12.0,
+                  spreadRadius: 1.0,
+                ),
+              const BoxShadow(
                 color: Color(0x0A0F172A),
                 blurRadius: 4.0,
                 offset: Offset(0, 1),
@@ -211,24 +220,42 @@ class _GarmentTile extends StatelessWidget {
                 Positioned(
                   top: 5.0,
                   left: 5.0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5.0,
-                      vertical: 2.0,
+                  child: AnimatedSwitcher(
+                    duration: context.motion.shortDuration,
+                    switchInCurve: Curves.easeOutBack,
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: FadeTransition(opacity: animation, child: child),
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF159CE8),
-                      borderRadius: BorderRadius.circular(99.0),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      garment.isWeightBased && weightKg != null
-                          ? '${weightKg!.toStringAsFixed(1)}kg'
-                          : '$quantity',
-                      style: textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontSize: 9.0,
-                        fontWeight: FontWeight.w800,
+                    child: Container(
+                      key: ValueKey(
+                        'badge_${garment.name}_${quantity}_$weightKg',
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5.0,
+                        vertical: 2.0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF159CE8),
+                        borderRadius: BorderRadius.circular(99.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF159CE8)
+                                .withValues(alpha: 0.35),
+                            blurRadius: 6.0,
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        garment.isWeightBased && weightKg != null
+                            ? '${weightKg!.toStringAsFixed(1)}kg'
+                            : '$quantity',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontSize: 9.0,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),

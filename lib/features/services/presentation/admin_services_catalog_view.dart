@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
+import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/core/widgets/add_custom_item_dialog.dart';
 import 'package:laundry_ridge/core/widgets/garment_catalog_grid.dart';
 import 'package:laundry_ridge/core/widgets/garment_item_image.dart';
@@ -1392,12 +1393,17 @@ class _AdminServicesCatalogViewState
                       ),
                     ),
                     const SizedBox(width: 8.0),
-                    Text(
-                      'KES ${grandTotal.toStringAsFixed(2)}',
-                      style: textTheme.titleMedium?.copyWith(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w800,
-                        color: colors.freshSkyBlue,
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: grandTotal, end: grandTotal),
+                      duration: context.motion.shortDuration,
+                      curve: context.motion.emphasizedCurve,
+                      builder: (context, animatedTotal, _) => Text(
+                        'KES ${animatedTotal.toStringAsFixed(2)}',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w800,
+                          color: colors.freshSkyBlue,
+                        ),
                       ),
                     ),
                   ],
@@ -1604,7 +1610,9 @@ class _AdminServicesCatalogViewState
                         _customPosItems.clear();
                       });
                     },
-              child: Container(
+              child: AnimatedContainer(
+                duration: context.motion.shortDuration,
+                curve: context.motion.emphasizedCurve,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12.0,
                   vertical: 13.0,
@@ -1614,6 +1622,17 @@ class _AdminServicesCatalogViewState
                       ? colors.textTertiary
                       : colors.accentGreen,
                   borderRadius: BorderRadius.circular(10.0),
+                  boxShadow:
+                      (selectedEntries.isEmpty && _customPosItems.isEmpty)
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: colors.accentGreen.withValues(alpha: 0.28),
+                            blurRadius: 14.0,
+                            spreadRadius: 1.0,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                 ),
                 alignment: Alignment.center,
                 child: Row(
@@ -1649,7 +1668,7 @@ class _AdminServicesCatalogViewState
   }
 }
 
-class _IntakeLabeledTextField extends StatelessWidget {
+class _IntakeLabeledTextField extends StatefulWidget {
   const _IntakeLabeledTextField({
     required this.label,
     required this.hintText,
@@ -1665,54 +1684,86 @@ class _IntakeLabeledTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
 
   @override
+  State<_IntakeLabeledTextField> createState() =>
+      _IntakeLabeledTextFieldState();
+}
+
+class _IntakeLabeledTextFieldState extends State<_IntakeLabeledTextField> {
+  bool _isFocused = false;
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final motion = context.motion;
     final textTheme = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: textTheme.labelSmall?.copyWith(
             fontSize: 11.0,
             fontWeight: FontWeight.w600,
-            color: colors.textSecondary,
+            color: _isFocused ? colors.freshSkyBlue : colors.textSecondary,
           ),
         ),
         const SizedBox(height: 4.0),
-        Container(
-          height: 38.0,
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          decoration: BoxDecoration(
-            color: colors.background,
-            borderRadius: BorderRadius.circular(8.0),
-            border: Border.all(color: colors.borderSubtle),
-          ),
-          child: Row(
-            children: [
-              Icon(prefixIcon, size: 16.0, color: colors.textSecondary),
-              const SizedBox(width: 8.0),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  onChanged: onChanged,
-                  style: textTheme.bodySmall?.copyWith(
-                    fontSize: 12.0,
-                    color: colors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    hintText: hintText,
-                    hintStyle: textTheme.bodySmall?.copyWith(
-                      fontSize: 11.5,
-                      color: colors.textSecondary,
+        Focus(
+          onFocusChange: (focused) => setState(() => _isFocused = focused),
+          child: AnimatedContainer(
+            duration: motion.shortDuration,
+            curve: motion.emphasizedCurve,
+            height: 38.0,
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            decoration: BoxDecoration(
+              color: _isFocused ? colors.cardBackground : colors.background,
+              borderRadius: BorderRadius.circular(8.0),
+              border: Border.all(
+                color: _isFocused ? colors.freshSkyBlue : colors.borderSubtle,
+                width: _isFocused ? 1.5 : 1.0,
+              ),
+              boxShadow: _isFocused
+                  ? [
+                      BoxShadow(
+                        color: colors.freshSkyBlue.withValues(alpha: 0.18),
+                        blurRadius: 10.0,
+                        spreadRadius: 0.5,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  widget.prefixIcon,
+                  size: 16.0,
+                  color: _isFocused
+                      ? colors.freshSkyBlue
+                      : colors.textSecondary,
+                ),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: TextField(
+                    controller: widget.controller,
+                    onChanged: widget.onChanged,
+                    style: textTheme.bodySmall?.copyWith(
+                      fontSize: 12.0,
+                      color: colors.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                      hintText: widget.hintText,
+                      hintStyle: textTheme.bodySmall?.copyWith(
+                        fontSize: 11.5,
+                        color: colors.textSecondary,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

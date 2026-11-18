@@ -47,8 +47,10 @@ class _InteractivePressScaleState extends State<InteractivePressScale> {
       behavior: HitTestBehavior.opaque,
       child: AnimatedScale(
         scale: _isPressed ? widget.scaleDownTarget : 1.0,
-        duration: motion.shortDuration,
-        curve: motion.standardCurve,
+        duration: _isPressed
+            ? const Duration(milliseconds: 90)
+            : motion.shortDuration,
+        curve: _isPressed ? Curves.easeInCubic : Curves.easeOutBack,
         child: widget.child,
       ),
     );
