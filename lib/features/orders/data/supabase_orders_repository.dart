@@ -146,6 +146,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
     'rate': item.rate,
     'quantity': item.quantity,
     'garment_type': item.garmentType.name,
+    if (item.imageUrl != null) 'image_url': item.imageUrl,
   };
 
   static String _cleanMethod(String method) =>
@@ -191,6 +192,7 @@ class SupabaseOrdersRepository implements OrdersRepository {
         quantity: (itemMap['quantity'] as num?)?.toInt() ?? 1,
         icon: _iconForGarment(garmentType),
         garmentType: garmentType,
+        imageUrl: itemMap['image_url'] as String?,
       );
     }).toList()..sort((a, b) => a.index.compareTo(b.index));
 

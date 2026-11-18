@@ -294,14 +294,8 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       updatedItems = [
         for (var i = 0; i < currentOrder.items.length; i++)
           if (i == existingIdx)
-            OrderItem(
-              index: currentOrder.items[i].index,
-              serviceName: currentOrder.items[i].serviceName,
-              serviceType: currentOrder.items[i].serviceType,
-              rate: currentOrder.items[i].rate,
+            currentOrder.items[i].copyWith(
               quantity: currentOrder.items[i].quantity + 1,
-              icon: currentOrder.items[i].icon,
-              garmentType: currentOrder.items[i].garmentType,
             )
           else
             currentOrder.items[i],
@@ -392,14 +386,8 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
         updatedItems = [
           for (var i = 0; i < currentOrder.items.length; i++)
             if (i == existingIdx)
-              OrderItem(
-                index: item.index,
-                serviceName: item.serviceName,
-                serviceType: item.serviceType,
-                rate: item.rate,
-                quantity: item.quantity - 1,
-                icon: item.icon,
-                garmentType: item.garmentType,
+              currentOrder.items[i].copyWith(
+                quantity: currentOrder.items[i].quantity - 1,
               )
             else
               currentOrder.items[i],

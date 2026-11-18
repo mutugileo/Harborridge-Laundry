@@ -105,9 +105,6 @@ class OrdersPageView extends StatelessWidget {
                         onAddCustomItem: () => notifier.notifyCatalogAction(
                           'Custom garment entry ready',
                         ),
-                        onScanBarcode: () => notifier.notifyCatalogAction(
-                          'Barcode scanner ready for garment tag',
-                        ),
                       ),
                     ),
                   ),

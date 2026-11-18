@@ -364,7 +364,34 @@ class OrderInvoiceCard extends StatelessWidget {
                   flex: 5,
                   child: Row(
                     children: [
-                      GarmentLineIcon(type: item.garmentType, size: 38.0),
+                      if (item.imageBytes != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Image.memory(
+                            item.imageBytes!,
+                            width: 38.0,
+                            height: 38.0,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      else if (item.imageUrl != null &&
+                          item.imageUrl!.startsWith('http'))
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Image.network(
+                            item.imageUrl!,
+                            width: 38.0,
+                            height: 38.0,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                GarmentLineIcon(
+                                  type: item.garmentType,
+                                  size: 38.0,
+                                ),
+                          ),
+                        )
+                      else
+                        GarmentLineIcon(type: item.garmentType, size: 38.0),
                       const SizedBox(width: 14.0),
                       Expanded(
                         child: Column(

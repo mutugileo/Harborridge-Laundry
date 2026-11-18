@@ -10,7 +10,6 @@ class GarmentCatalogGrid extends StatelessWidget {
     required this.onIncrementGarment,
     required this.onDecrementGarment,
     this.onAddCustomItem,
-    this.onScanBarcode,
     this.selectedSection,
     this.searchQuery,
     this.weightQuantities,
@@ -21,7 +20,6 @@ class GarmentCatalogGrid extends StatelessWidget {
   final ValueChanged<GarmentType> onIncrementGarment;
   final ValueChanged<GarmentType> onDecrementGarment;
   final VoidCallback? onAddCustomItem;
-  final VoidCallback? onScanBarcode;
   final GarmentServiceSection? selectedSection;
   final String? searchQuery;
   final Map<GarmentType, double>? weightQuantities;
@@ -60,7 +58,7 @@ class GarmentCatalogGrid extends StatelessWidget {
 
         final showActionTiles =
             cleanQuery.isEmpty && activeSection == GarmentServiceSection.all;
-        final totalTiles = garments.length + (showActionTiles ? 2 : 0);
+        final totalTiles = garments.length + (showActionTiles ? 1 : 0);
 
         return Container(
           padding: const EdgeInsets.all(10.0),
@@ -98,18 +96,10 @@ class GarmentCatalogGrid extends StatelessWidget {
                 );
               }
 
-              if (index == garments.length) {
-                return _ActionTile(
-                  label: 'Add Item',
-                  icon: const _CirclePlusGlyph(),
-                  onTap: onAddCustomItem,
-                );
-              }
-
               return _ActionTile(
-                label: 'by Barcode',
-                icon: const _BarcodeGlyph(),
-                onTap: onScanBarcode,
+                label: 'Add Item',
+                icon: const _CirclePlusGlyph(),
+                onTap: onAddCustomItem,
               );
             },
           ),
@@ -370,31 +360,6 @@ class _CirclePlusGlyph extends StatelessWidget {
         Icons.add_rounded,
         size: 18.0,
         color: Color(0xFF212529),
-      ),
-    );
-  }
-}
-
-class _BarcodeGlyph extends StatelessWidget {
-  const _BarcodeGlyph();
-
-  @override
-  Widget build(BuildContext context) {
-    const widths = <double>[2.2, 1.4, 3.0, 1.4, 2.2, 3.2];
-    return SizedBox(
-      height: 24.0,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < widths.length; i++) ...[
-            if (i > 0) const SizedBox(width: 2.2),
-            Container(
-              width: widths[i],
-              height: 20.0,
-              color: const Color(0xFF212529),
-            ),
-          ],
-        ],
       ),
     );
   }

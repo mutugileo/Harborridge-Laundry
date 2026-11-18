@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/widgets.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 
@@ -10,6 +12,9 @@ class OrderItem {
     required this.quantity,
     required this.icon,
     required this.garmentType,
+    this.imageUrl,
+    this.imageBytes,
+    this.weightKg,
   });
 
   final int index;
@@ -19,6 +24,36 @@ class OrderItem {
   final int quantity;
   final IconData icon;
   final GarmentType garmentType;
+  final String? imageUrl;
+  final Uint8List? imageBytes;
+  final double? weightKg;
 
-  double get total => rate * quantity;
+  double get total =>
+      weightKg != null && weightKg! > 0 ? rate * weightKg! : rate * quantity;
+
+  OrderItem copyWith({
+    int? index,
+    String? serviceName,
+    String? serviceType,
+    double? rate,
+    int? quantity,
+    IconData? icon,
+    GarmentType? garmentType,
+    String? imageUrl,
+    Uint8List? imageBytes,
+    double? weightKg,
+  }) {
+    return OrderItem(
+      index: index ?? this.index,
+      serviceName: serviceName ?? this.serviceName,
+      serviceType: serviceType ?? this.serviceType,
+      rate: rate ?? this.rate,
+      quantity: quantity ?? this.quantity,
+      icon: icon ?? this.icon,
+      garmentType: garmentType ?? this.garmentType,
+      imageUrl: imageUrl ?? this.imageUrl,
+      imageBytes: imageBytes ?? this.imageBytes,
+      weightKg: weightKg ?? this.weightKg,
+    );
+  }
 }

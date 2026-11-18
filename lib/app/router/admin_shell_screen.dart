@@ -309,9 +309,6 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
           onAddCustomItem: () => ordersNotifier.notifyCatalogAction(
             'Custom garment entry ready for #ORD-0006',
           ),
-          onScanBarcode: () => ordersNotifier.notifyCatalogAction(
-            'Barcode scanner ready for garment tag',
-          ),
           onSubmitNewOrder: (submission) async {
             final totalItems = ordersState.catalogQuantities.values.fold<int>(
               0,

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/core/widgets/garment_catalog_grid.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
@@ -49,7 +52,6 @@ class AdminServicesCatalogView extends ConsumerStatefulWidget {
     required this.onDecrementGarment,
     this.onClearGarments,
     this.onAddCustomItem,
-    this.onScanBarcode,
     this.onSubmitNewOrder,
   });
 
@@ -58,7 +60,6 @@ class AdminServicesCatalogView extends ConsumerStatefulWidget {
   final ValueChanged<GarmentType> onDecrementGarment;
   final VoidCallback? onClearGarments;
   final VoidCallback? onAddCustomItem;
-  final VoidCallback? onScanBarcode;
   final ValueChanged<PosOrderSubmission>? onSubmitNewOrder;
 
   @override
@@ -119,6 +120,7 @@ class _AdminServicesCatalogViewState
   bool _includeStainRemoval = true;
   bool _includeExtraFragrance = false;
   String? _posActionBanner;
+  final List<OrderItem> _customPosItems = [];
 
   @override
   void initState() {
@@ -356,6 +358,27 @@ class _AdminServicesCatalogViewState
     );
   }
 
+  Future<void> _showAddCustomItemDialog(BuildContext context) async {
+    final newItem = await showDialog<OrderItem>(
+      context: context,
+      builder: (dialogContext) => _AddCustomItemDialog(
+        serviceType: _selectedServiceType,
+        serviceTypes: _serviceTypes,
+      ),
+    );
+
+    if (newItem != null && mounted) {
+      setState(() {
+        _customPosItems.add(
+          newItem.copyWith(index: _customPosItems.length + 1),
+        );
+        _posActionBanner =
+            'Added Custom Item "${newItem.serviceName}" (KES ${newItem.rate.toStringAsFixed(0)}) to POS Ticket';
+      });
+      widget.onAddCustomItem?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -442,11 +465,13 @@ class _AdminServicesCatalogViewState
                 ),
               ),
               if (widget.onClearGarments != null &&
-                  widget.quantities.values.any((qty) => qty > 0))
+                  (widget.quantities.values.any((qty) => qty > 0) ||
+                      _customPosItems.isNotEmpty))
                 InteractivePressScale(
                   onTap: () {
                     setState(() {
                       _weightSelections.clear();
+                      _customPosItems.clear();
                     });
                     widget.onClearGarments?.call();
                   },
@@ -658,22 +683,7 @@ class _AdminServicesCatalogViewState
               }
               widget.onDecrementGarment(garment);
             },
-            onAddCustomItem: () {
-              widget.onIncrementGarment(GarmentType.tanBlazer);
-              widget.onAddCustomItem?.call();
-              setState(() {
-                _posActionBanner =
-                    'Added Custom Garment (${GarmentType.tanBlazer.displayName} • KES ${GarmentType.tanBlazer.defaultRate.toStringAsFixed(0)}) to POS Ticket';
-              });
-            },
-            onScanBarcode: () {
-              widget.onIncrementGarment(GarmentType.shirt);
-              widget.onScanBarcode?.call();
-              setState(() {
-                _posActionBanner =
-                    'Scanned Barcode Tag #TAG-8841 → Added ${GarmentType.shirt.displayName} (KES ${GarmentType.shirt.defaultRate.toStringAsFixed(0)}) to POS Ticket';
-              });
-            },
+            onAddCustomItem: () => _showAddCustomItemDialog(context),
           ),
         ],
       ),
@@ -733,6 +743,15 @@ class _AdminServicesCatalogViewState
           ),
         );
       }
+    }
+
+    for (var i = 0; i < _customPosItems.length; i++) {
+      final custom = _customPosItems[i];
+      itemsSubTotal += custom.total;
+      totalPieceCount += custom.weightKg != null && custom.weightKg! > 0
+          ? 1
+          : custom.quantity;
+      customOrderItems.add(custom.copyWith(index: customOrderItems.length + 1));
     }
 
     final addonsTotal =
@@ -951,7 +970,7 @@ class _AdminServicesCatalogViewState
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
-                'Selected Items (${selectedEntries.length})',
+                'Selected Items (${selectedEntries.length + _customPosItems.length})',
                 style: textTheme.labelMedium?.copyWith(
                   fontSize: 13.0,
                   fontWeight: FontWeight.w700,
@@ -969,7 +988,7 @@ class _AdminServicesCatalogViewState
             ],
           ),
           const SizedBox(height: 10.0),
-          if (selectedEntries.isEmpty)
+          if (selectedEntries.isEmpty && _customPosItems.isEmpty)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16.0),
@@ -979,7 +998,7 @@ class _AdminServicesCatalogViewState
                 border: Border.all(color: colors.borderSubtle),
               ),
               child: Text(
-                'Tap any garment tile in the catalog to add items to this customer order.',
+                'Tap any garment tile in the catalog or use Add Item to take in items.',
                 style: textTheme.bodySmall?.copyWith(
                   fontSize: 12.0,
                   color: colors.textSecondary,
@@ -1136,6 +1155,160 @@ class _AdminServicesCatalogViewState
                               const SizedBox(width: 8.0),
                               Text(
                                 'KES ${lineTotal.toStringAsFixed(0)}',
+                                style: textTheme.labelMedium?.copyWith(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                for (var i = 0; i < _customPosItems.length; i++) ...[
+                  Builder(
+                    builder: (context) {
+                      final item = _customPosItems[i];
+                      final isWeight =
+                          item.weightKg != null && item.weightKg! > 0;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10.0,
+                            vertical: 8.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.background.withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(10.0),
+                            border: Border.all(
+                              color: colors.freshSkyBlue.withValues(
+                                alpha: 0.35,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              if (item.imageBytes != null)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(6.0),
+                                  child: Image.memory(
+                                    item.imageBytes!,
+                                    width: 28.0,
+                                    height: 28.0,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              else if (item.imageUrl != null &&
+                                  item.imageUrl!.startsWith('http'))
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(6.0),
+                                  child: Image.network(
+                                    item.imageUrl!,
+                                    width: 28.0,
+                                    height: 28.0,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            GarmentLineIcon(
+                                              type: item.garmentType,
+                                              size: 26.0,
+                                            ),
+                                  ),
+                                )
+                              else
+                                GarmentLineIcon(
+                                  type: item.garmentType,
+                                  size: 26.0,
+                                ),
+                              const SizedBox(width: 8.0),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            isWeight
+                                                ? '${item.serviceName} • ${item.weightKg!.toStringAsFixed(1)} kg'
+                                                : item.serviceName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: colors.textPrimary,
+                                                ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4.0),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 4.0,
+                                            vertical: 1.0,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: colors.freshSkyBlue
+                                                .withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              4.0,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Custom',
+                                            style: textTheme.labelSmall
+                                                ?.copyWith(
+                                                  fontSize: 9.0,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: colors.freshSkyBlue,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      '${item.serviceType} · KES ${item.rate.toStringAsFixed(0)} ${isWeight ? '/kg' : '× ${item.quantity}'}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: textTheme.labelSmall?.copyWith(
+                                        fontSize: 10.0,
+                                        color: colors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _customPosItems.removeAt(i);
+                                  });
+                                },
+                                child: Container(
+                                  width: 22.0,
+                                  height: 22.0,
+                                  decoration: BoxDecoration(
+                                    color: colors.cardBackground,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: colors.borderSubtle,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 13.0,
+                                    color: colors.statusError,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8.0),
+                              Text(
+                                'KES ${item.total.toStringAsFixed(0)}',
                                 style: textTheme.labelMedium?.copyWith(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w700,
@@ -1349,7 +1522,7 @@ class _AdminServicesCatalogViewState
           SizedBox(
             width: double.infinity,
             child: InteractivePressScale(
-              onTap: selectedEntries.isEmpty
+              onTap: (selectedEntries.isEmpty && _customPosItems.isEmpty)
                   ? null
                   : () {
                       final parsedDeposit = double.tryParse(
@@ -1383,6 +1556,9 @@ class _AdminServicesCatalogViewState
                               : null,
                         ),
                       );
+                      setState(() {
+                        _customPosItems.clear();
+                      });
                     },
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -1390,7 +1566,7 @@ class _AdminServicesCatalogViewState
                   vertical: 13.0,
                 ),
                 decoration: BoxDecoration(
-                  color: selectedEntries.isEmpty
+                  color: (selectedEntries.isEmpty && _customPosItems.isEmpty)
                       ? colors.textTertiary
                       : colors.accentGreen,
                   borderRadius: BorderRadius.circular(10.0),
@@ -1636,6 +1812,492 @@ class _AddonToggleChip extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AddCustomItemDialog extends StatefulWidget {
+  const _AddCustomItemDialog({
+    required this.serviceType,
+    required this.serviceTypes,
+  });
+
+  final String serviceType;
+  final List<String> serviceTypes;
+
+  @override
+  State<_AddCustomItemDialog> createState() => _AddCustomItemDialogState();
+}
+
+class _AddCustomItemDialogState extends State<_AddCustomItemDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _rateController;
+  late final TextEditingController _weightController;
+  late String _selectedCategory;
+  bool _isWeightBased = false;
+  int _quantity = 1;
+  GarmentType _selectedPreset = GarmentType.tanBlazer;
+  Uint8List? _pickedImageBytes;
+  String? _pickedImageDataUrl;
+
+  static const _presetGarments = <GarmentType>[
+    GarmentType.tanBlazer,
+    GarmentType.womensDress,
+    GarmentType.threePieceSuit,
+    GarmentType.traditionalAttire,
+    GarmentType.curtains,
+    GarmentType.leatherJacket,
+    GarmentType.duvetStandard,
+    GarmentType.bedsheets,
+    GarmentType.dustTrenchBathrobe,
+    GarmentType.shirt,
+    GarmentType.trousers,
+    GarmentType.hoodie,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _rateController = TextEditingController(text: '350');
+    _weightController = TextEditingController(text: '1.0');
+    _selectedCategory = widget.serviceType;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _rateController.dispose();
+    _weightController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      if (file != null) {
+        final bytes = await file.readAsBytes();
+        final base64String = base64Encode(bytes);
+        if (mounted) {
+          setState(() {
+            _pickedImageBytes = bytes;
+            _pickedImageDataUrl = 'data:image/jpeg;base64,$base64String';
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+
+    final parsedRate = double.tryParse(_rateController.text.trim()) ?? 0.0;
+    final parsedWeight = double.tryParse(_weightController.text.trim()) ?? 1.0;
+    final canSubmit = _nameController.text.trim().isNotEmpty && parsedRate > 0;
+
+    return AlertDialog(
+      backgroundColor: colors.cardBackground,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              color: colors.freshSkyBlue.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.add_photo_alternate_rounded,
+              color: colors.freshSkyBlue,
+              size: 22.0,
+            ),
+          ),
+          const SizedBox(width: 10.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Add Custom Item',
+                  style: textTheme.titleSmall?.copyWith(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                Text(
+                  'Enter custom garment details with photo',
+                  style: textTheme.labelSmall?.copyWith(
+                    fontSize: 11.0,
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 440.0,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 90.0,
+                      height: 90.0,
+                      decoration: BoxDecoration(
+                        color: colors.background,
+                        borderRadius: BorderRadius.circular(12.0),
+                        border: Border.all(
+                          color: colors.freshSkyBlue.withValues(alpha: 0.5),
+                          width: 1.5,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      alignment: Alignment.center,
+                      child: _pickedImageBytes != null
+                          ? Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.memory(
+                                  _pickedImageBytes!,
+                                  fit: BoxFit.cover,
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _pickedImageBytes = null;
+                                        _pickedImageDataUrl = null;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3.0),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close_rounded,
+                                        size: 14.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : GarmentLineIcon(type: _selectedPreset, size: 54.0),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 6.0,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () => _pickPhoto(ImageSource.gallery),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10.0,
+                              vertical: 6.0,
+                            ),
+                            side: BorderSide(color: colors.freshSkyBlue),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                          icon: Icon(
+                            Icons.file_upload_outlined,
+                            size: 16.0,
+                            color: colors.freshSkyBlue,
+                          ),
+                          label: Text(
+                            'Upload Image',
+                            style: textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colors.freshSkyBlue,
+                            ),
+                          ),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => _pickPhoto(ImageSource.camera),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10.0,
+                              vertical: 6.0,
+                            ),
+                            side: BorderSide(color: colors.borderSubtle),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                          icon: Icon(
+                            Icons.camera_alt_outlined,
+                            size: 16.0,
+                            color: colors.textPrimary,
+                          ),
+                          label: Text(
+                            'Take Photo',
+                            style: textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              Text(
+                'Select Garment Icon Preset',
+                style: textTheme.labelSmall?.copyWith(
+                  fontSize: 11.0,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 6.0),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final preset in _presetGarments)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6.0),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedPreset = preset;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Container(
+                            padding: const EdgeInsets.all(6.0),
+                            decoration: BoxDecoration(
+                              color:
+                                  _selectedPreset == preset &&
+                                      _pickedImageBytes == null
+                                  ? colors.freshSkyBlue.withValues(alpha: 0.15)
+                                  : colors.background,
+                              borderRadius: BorderRadius.circular(8.0),
+                              border: Border.all(
+                                color:
+                                    _selectedPreset == preset &&
+                                        _pickedImageBytes == null
+                                    ? colors.freshSkyBlue
+                                    : colors.borderSubtle,
+                              ),
+                            ),
+                            child: GarmentLineIcon(type: preset, size: 26.0),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14.0),
+              _IntakeLabeledTextField(
+                label: 'Item Name',
+                hintText: 'Enter garment or laundry item name',
+                controller: _nameController,
+                prefixIcon: Icons.local_laundry_service_outlined,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 12.0),
+              _IntakeDropdownField(
+                label: 'Service Category',
+                value: _selectedCategory,
+                options: widget.serviceTypes,
+                onChanged: (val) {
+                  setState(() {
+                    _selectedCategory = val;
+                    if (val == 'Laundry by Weight') {
+                      _isWeightBased = true;
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: 12.0),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _IntakeLabeledTextField(
+                      label: _isWeightBased
+                          ? 'Rate per kg (KES)'
+                          : 'Unit Price (KES)',
+                      hintText: 'Enter price per item or load',
+                      controller: _rateController,
+                      prefixIcon: Icons.payments_outlined,
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                  const SizedBox(width: 10.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isWeightBased ? 'Weight (kg)' : 'Quantity',
+                          style: textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11.5,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6.0),
+                        if (_isWeightBased)
+                          TextField(
+                            controller: _weightController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Enter load weight in kilograms',
+                              filled: true,
+                              fillColor: colors.background,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10.0,
+                                vertical: 10.0,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                                borderSide: BorderSide(
+                                  color: colors.borderSubtle,
+                                ),
+                              ),
+                            ),
+                            onChanged: (_) => setState(() {}),
+                          )
+                        else
+                          Container(
+                            height: 44.0,
+                            decoration: BoxDecoration(
+                              color: colors.background,
+                              borderRadius: BorderRadius.circular(8.0),
+                              border: Border.all(color: colors.borderSubtle),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove, size: 16.0),
+                                  onPressed: _quantity > 1
+                                      ? () => setState(() => _quantity--)
+                                      : null,
+                                ),
+                                Text(
+                                  '$_quantity',
+                                  style: textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.textPrimary,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add, size: 16.0),
+                                  onPressed: () => setState(() => _quantity++),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10.0),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _isWeightBased,
+                    activeColor: colors.freshSkyBlue,
+                    onChanged: (val) {
+                      setState(() {
+                        _isWeightBased = val ?? false;
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isWeightBased = !_isWeightBased;
+                        });
+                      },
+                      child: Text(
+                        'Charged by Weight (kg) instead of per item',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 11.5,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            'Cancel',
+            style: textTheme.labelMedium?.copyWith(color: colors.textSecondary),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: canSubmit
+              ? () {
+                  final item = OrderItem(
+                    index: 0,
+                    serviceName: _nameController.text.trim(),
+                    serviceType: '[$_selectedCategory]',
+                    rate: parsedRate,
+                    quantity: _isWeightBased ? 1 : _quantity,
+                    icon: _isWeightBased
+                        ? Icons.wash_rounded
+                        : Icons.checkroom_rounded,
+                    garmentType: _selectedPreset,
+                    imageBytes: _pickedImageBytes,
+                    imageUrl: _pickedImageDataUrl,
+                    weightKg: _isWeightBased ? parsedWeight : null,
+                  );
+                  Navigator.of(context).pop(item);
+                }
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colors.freshSkyBlue,
+            disabledBackgroundColor: colors.textTertiary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
+          child: const Text('Add to Ticket'),
+        ),
+      ],
     );
   }
 }
