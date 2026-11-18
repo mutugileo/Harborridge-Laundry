@@ -262,6 +262,10 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
       );
       return false;
     }
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(normalizedEmail)) {
+      state = state.copyWith(errorMessage: 'Enter a valid email address.');
+      return false;
+    }
 
     state = state.copyWith(isBusy: true, clearError: true, clearMessage: true);
     try {
@@ -327,6 +331,33 @@ class AuthSessionNotifier extends Notifier<AuthPortalState> {
     required Set<AppModuleKey> exceptedModules,
     required String initialPassword,
   }) async {
+    final cleanName = fullName.trim();
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanPhone = phone.trim();
+
+    if (cleanName.isEmpty) {
+      state = state.copyWith(
+        clearMessage: true,
+        errorMessage: 'Enter the worker’s full name.',
+      );
+      return null;
+    }
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(cleanEmail)) {
+      state = state.copyWith(
+        clearMessage: true,
+        errorMessage:
+            'Enter a valid work email address (name@harborridge.co.ke).',
+      );
+      return null;
+    }
+    if (cleanPhone.isNotEmpty &&
+        cleanPhone.replaceAll(RegExp(r'[^0-9]'), '').length < 9) {
+      state = state.copyWith(
+        clearMessage: true,
+        errorMessage: 'Enter a valid contact phone number (at least 9 digits).',
+      );
+      return null;
+    }
     if (initialPassword.length < kMinStaffPasswordLength) {
       state = state.copyWith(
         clearMessage: true,

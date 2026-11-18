@@ -204,16 +204,35 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
   }
 
   void _generateSettlementBatch() {
-    final grossKes = int.tryParse(_grossKesController.text.trim()) ?? 92000;
+    final parsedGross = int.tryParse(_grossKesController.text.trim());
+    if (parsedGross == null || parsedGross <= 0) {
+      setState(() {
+        _statusMessage =
+            'Enter a valid gross volume in KES (must be greater than 0).';
+      });
+      return;
+    }
+    final ordersCovered = _ordersCoveredController.text.trim();
+    if (ordersCovered.isEmpty) {
+      setState(() {
+        _statusMessage =
+            'Enter the orders or volume scope covered in this cycle.';
+      });
+      return;
+    }
+    final acc = _accountNumberController.text.trim();
+    if (acc.isEmpty) {
+      setState(() {
+        _statusMessage =
+            'Enter the disbursal account number, Till, or Paybill.';
+      });
+      return;
+    }
+
+    final grossKes = parsedGross;
     final feeKes = (grossKes * (_newBatchCommissionRate / 100.0)).round();
     final netKes = grossKes - feeKes;
     final batchCode = 'STL-${401 + _batches.length}';
-    final ordersCovered = _ordersCoveredController.text.trim().isEmpty
-        ? '84 Completed Orders • 760 lbs'
-        : _ordersCoveredController.text.trim();
-    final acc = _accountNumberController.text.trim().isEmpty
-        ? 'Till 994820'
-        : _accountNumberController.text.trim();
 
     final newBatch = _SettlementBatchRecord(
       batchCode: batchCode,
@@ -232,6 +251,9 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
 
     setState(() {
       _batches = [newBatch, ..._batches];
+      _grossKesController.clear();
+      _ordersCoveredController.clear();
+      _accountNumberController.clear();
       _showCreateBatchPanel = false;
       _statusMessage =
           'Generated $batchCode for $_newBatchBranch (Net Payout: KES ${_SettlementBatchRecord._formatNumber(netKes)} via $_newBatchDisbursal)';

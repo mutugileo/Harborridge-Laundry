@@ -157,15 +157,27 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
   }
 
   void _scheduleNewRun() {
-    final orderId = _orderIdController.text.trim().isEmpty
-        ? 'LG-2026-00129'
-        : _orderIdController.text.trim();
-    final customer = _customerController.text.trim().isEmpty
-        ? 'Walk-in Pickup'
-        : _customerController.text.trim();
-    final zone = _zoneController.text.trim().isEmpty
-        ? 'Kilimani • Ring Rd'
-        : _zoneController.text.trim();
+    final orderId = _orderIdController.text.trim();
+    if (orderId.isEmpty) {
+      setState(() {
+        _feedbackBanner = 'Please enter an Order ID for this dispatch run.';
+      });
+      return;
+    }
+    final customer = _customerController.text.trim();
+    if (customer.isEmpty) {
+      setState(() {
+        _feedbackBanner = 'Please enter the customer name.';
+      });
+      return;
+    }
+    final zone = _zoneController.text.trim();
+    if (zone.isEmpty) {
+      setState(() {
+        _feedbackBanner = 'Please enter the delivery or pickup zone.';
+      });
+      return;
+    }
     final runCode = 'DSP-${104 + _runs.length}';
 
     final newRun = _DispatchRunItem(
@@ -182,6 +194,9 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
 
     setState(() {
       _runs = [newRun, ..._runs];
+      _orderIdController.clear();
+      _customerController.clear();
+      _zoneController.clear();
       _showSchedulePanel = false;
       _feedbackBanner =
           'Dispatched $runCode ($orderId • $customer) to rider $_newRunRider';

@@ -1518,6 +1518,43 @@ class _AdminServicesCatalogViewState
               prefixIcon: Icons.payments_outlined,
             ),
           ],
+          if (_posActionBanner != null) ...[
+            const SizedBox(height: 12.0),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 8.0,
+              ),
+              decoration: BoxDecoration(
+                color:
+                    _posActionBanner!.contains('Please enter') ||
+                        _posActionBanner!.contains('must be')
+                    ? const Color(0xFFFEF2F2)
+                    : const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color:
+                      _posActionBanner!.contains('Please enter') ||
+                          _posActionBanner!.contains('must be')
+                      ? const Color(0xFFFECACA)
+                      : const Color(0xFFBFDBFE),
+                ),
+              ),
+              child: Text(
+                _posActionBanner!,
+                style: textTheme.labelSmall?.copyWith(
+                  color:
+                      _posActionBanner!.contains('Please enter') ||
+                          _posActionBanner!.contains('must be')
+                      ? const Color(0xFFDC2626)
+                      : const Color(0xFF1D4ED8),
+                  fontSize: 11.0,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 16.0),
           SizedBox(
             width: double.infinity,
@@ -1525,16 +1562,40 @@ class _AdminServicesCatalogViewState
               onTap: (selectedEntries.isEmpty && _customPosItems.isEmpty)
                   ? null
                   : () {
+                      final typedPhone = _customerPhoneController.text.trim();
+                      if (typedPhone.isNotEmpty &&
+                          typedPhone.replaceAll(RegExp(r'[^0-9]'), '').length <
+                              9) {
+                        setState(() {
+                          _posActionBanner = 'Please enter a valid customer phone number (at least 9 digits).';
+                        });
+                        return;
+                      }
+
                       final parsedDeposit = double.tryParse(
                         _depositAmountController.text.trim(),
                       );
+                      if (_selectedPaymentStatus == 'Partial') {
+                        if (parsedDeposit == null ||
+                            parsedDeposit <= 0 ||
+                            parsedDeposit >= grandTotal) {
+                          setState(() {
+                            _posActionBanner =
+                                'Partial deposit must be greater than KES 0 and less than total KES ${grandTotal.toStringAsFixed(0)}.';
+                          });
+                          return;
+                        }
+                      }
+
                       widget.onSubmitNewOrder?.call(
                         PosOrderSubmission(
                           customerName:
                               _customerNameController.text.trim().isEmpty
                               ? 'Walk-in Customer'
                               : _customerNameController.text.trim(),
-                          customerPhone: _customerPhoneController.text.trim(),
+                          customerPhone: typedPhone.isEmpty
+                              ? '+254 142 188767'
+                              : typedPhone,
                           primaryService: _selectedServiceType,
                           vendorBranch: _selectedBranch,
                           deliveryMethod: _selectedDeliveryMethod,

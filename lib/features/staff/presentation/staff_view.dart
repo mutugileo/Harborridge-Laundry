@@ -629,6 +629,19 @@ class _StaffViewState extends ConsumerState<StaffView> {
                 ),
               ),
             ),
+          if (authState.errorMessage != null) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10.0),
+              child: Text(
+                authState.errorMessage!,
+                style: textTheme.labelSmall?.copyWith(
+                  fontSize: 11.0,
+                  fontWeight: FontWeight.w700,
+                  color: colors.statusError,
+                ),
+              ),
+            ),
+          ],
           InteractivePressScale(
             onTap: !canManage || authState.isBusy
                 ? null
@@ -681,29 +694,42 @@ class _StaffViewState extends ConsumerState<StaffView> {
     final controller = TextEditingController();
     final newPassword = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('Reset password for ${worker.fullName}'),
-        content: TextField(
-          controller: controller,
-          obscureText: true,
-          autocorrect: false,
-          enableSuggestions: false,
-          decoration: const InputDecoration(
-            labelText: 'New password',
-            helperText: 'At least $kMinStaffPasswordLength characters',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-            child: const Text('Reset Password'),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final isValid =
+                controller.text.trim().length >= kMinStaffPasswordLength;
+            return AlertDialog(
+              title: Text('Reset password for ${worker.fullName}'),
+              content: TextField(
+                controller: controller,
+                obscureText: true,
+                autocorrect: false,
+                enableSuggestions: false,
+                onChanged: (_) => setDialogState(() {}),
+                decoration: const InputDecoration(
+                  labelText: 'New password',
+                  helperText: 'At least $kMinStaffPasswordLength characters',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: isValid
+                      ? () =>
+                            Navigator.of(dialogContext)
+                                .pop(controller.text.trim())
+                      : null,
+                  child: const Text('Reset Password'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
     controller.dispose();
     if (newPassword == null || !mounted) return;

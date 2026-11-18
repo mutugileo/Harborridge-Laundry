@@ -52,6 +52,21 @@ class _ChangeWorkerPinDialogState extends ConsumerState<ChangeWorkerPinDialog> {
     final newPin = _newPinController.text;
     final confirmPin = _confirmPinController.text;
 
+    if (currentPin.isEmpty) {
+      setState(() {
+        _isSuccess = false;
+        _feedbackMessage = 'Enter your current password.';
+      });
+      return;
+    }
+    if (newPin.length < kMinStaffPasswordLength) {
+      setState(() {
+        _isSuccess = false;
+        _feedbackMessage =
+            'New password must be at least $kMinStaffPasswordLength characters.';
+      });
+      return;
+    }
     if (newPin != confirmPin) {
       setState(() {
         _isSuccess = false;

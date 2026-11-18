@@ -177,18 +177,38 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
       });
       return;
     }
-    final supplier = _newSkuSupplierController.text.trim().isEmpty
-        ? 'Diversey East Africa'
-        : _newSkuSupplierController.text.trim();
-    final unit = _newSkuUnitController.text.trim().isEmpty
-        ? 'Drums'
-        : _newSkuUnitController.text.trim();
-    final costKes = int.tryParse(_newSkuCostController.text.trim()) ?? 4500;
-    final qty = (int.tryParse(_newSkuQtyController.text.trim()) ?? 12).clamp(
-      1,
-      200,
-    );
-    final maxCap = (qty + 8).clamp(15, 250);
+    final supplier = _newSkuSupplierController.text.trim();
+    if (supplier.isEmpty) {
+      setState(() {
+        _statusBanner = 'Enter a supplier or vendor name for this item.';
+      });
+      return;
+    }
+    final unit = _newSkuUnitController.text.trim();
+    if (unit.isEmpty) {
+      setState(() {
+        _statusBanner = 'Enter a measurement unit (Drums, Litres, Kg, Packs).';
+      });
+      return;
+    }
+    final parsedCost = int.tryParse(_newSkuCostController.text.trim());
+    if (parsedCost == null || parsedCost <= 0) {
+      setState(() {
+        _statusBanner =
+            'Enter a valid unit cost in KES (must be greater than 0).';
+      });
+      return;
+    }
+    final parsedQty = int.tryParse(_newSkuQtyController.text.trim());
+    if (parsedQty == null || parsedQty < 0) {
+      setState(() {
+        _statusBanner = 'Enter an initial stock quantity (0 or more).';
+      });
+      return;
+    }
+    final qty = parsedQty.clamp(0, 500);
+    final costKes = parsedCost;
+    final maxCap = (qty + 8).clamp(15, 500);
     final nextSkuCode = 'INV-0${_items.length + 1}';
 
     final newItem = _InventoryStockItem(
@@ -219,6 +239,10 @@ class _InventoryViewState extends ConsumerState<InventoryView> {
         ),
       );
       _newSkuNameController.clear();
+      _newSkuSupplierController.clear();
+      _newSkuUnitController.clear();
+      _newSkuCostController.clear();
+      _newSkuQtyController.clear();
       _showAddSkuPanel = false;
       _statusBanner =
           'Registered $nextSkuCode ($name) with $qty $unit at KES $costKes/$unit';

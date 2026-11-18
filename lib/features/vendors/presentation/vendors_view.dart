@@ -153,15 +153,29 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
       });
       return;
     }
-    final manager = _managerController.text.trim().isEmpty
-        ? 'Branch Lead'
-        : _managerController.text.trim();
-    final location = _locationController.text.trim().isEmpty
-        ? 'Nairobi Metro Dropoff Hub'
-        : _locationController.text.trim();
-    final commission = _commissionController.text.trim().isEmpty
-        ? '15% Partner Split'
-        : _commissionController.text.trim();
+    final manager = _managerController.text.trim();
+    if (manager.isEmpty) {
+      setState(() {
+        _statusMessage = 'Enter the partner branch manager or lead name.';
+      });
+      return;
+    }
+    final location = _locationController.text.trim();
+    if (location.isEmpty) {
+      setState(() {
+        _statusMessage =
+            'Enter the branch physical location or street address.';
+      });
+      return;
+    }
+    final commission = _commissionController.text.trim();
+    if (commission.isEmpty) {
+      setState(() {
+        _statusMessage =
+            'Enter the agreed commission rate terms (15% Partner Split).';
+      });
+      return;
+    }
     final code = 'VND-0${_branches.length + 1}';
 
     final newBranch = _VendorBranchRecord(
@@ -169,11 +183,11 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
       branchName: name,
       managerName: manager,
       location: location,
-      activeOrders: 4,
-      utilizationRatio: 0.65,
+      activeOrders: 0,
+      utilizationRatio: 0.0,
       commissionRate: commission,
       isOnline: true,
-      assignedWorkersCount: 2,
+      assignedWorkersCount: 1,
     );
 
     setState(() {
@@ -181,6 +195,7 @@ class _VendorsViewState extends ConsumerState<VendorsView> {
       _branchNameController.clear();
       _managerController.clear();
       _locationController.clear();
+      _commissionController.clear();
       _showOnboardPanel = false;
       _statusMessage =
           'Onboarded partner branch $code ($name) under $commission';

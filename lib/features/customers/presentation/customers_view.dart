@@ -52,6 +52,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
 
   late final TextEditingController _newNameController;
   late final TextEditingController _newPhoneController;
+  String? _validationError;
 
   final List<_CustomerProfileRecord> _manualCustomers = [];
 
@@ -71,14 +72,26 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
 
   void _addNewCustomer() {
     final name = _newNameController.text.trim();
-    if (name.isEmpty) return;
+    if (name.isEmpty) {
+      setState(() {
+        _validationError = 'Enter the customer full name.';
+      });
+      return;
+    }
     final phone = _newPhoneController.text.trim();
+    if (phone.isEmpty || phone.replaceAll(RegExp(r'[^0-9]'), '').length < 9) {
+      setState(() {
+        _validationError =
+            'Enter a valid mobile phone number (at least 9 digits).';
+      });
+      return;
+    }
     final newRecord = _CustomerProfileRecord(
       id: 'CUS-00${_manualCustomers.length + 1}',
       name: name,
       phone: phone,
-      email: phone.isNotEmpty ? phone : 'Walk-in Profile',
-      branch: 'Harborridge Main',
+      email: phone,
+      branch: 'Harbor Ridge • Getathuru Road',
       tier: 'Regular',
       totalSpend: 'KES 0',
       ordersCount: 0,
@@ -90,6 +103,7 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
       _selectedIndex = 0;
       _newNameController.clear();
       _newPhoneController.clear();
+      _validationError = null;
     });
   }
 
@@ -566,6 +580,17 @@ class _CustomersViewState extends ConsumerState<CustomersView> {
                           ),
                         ),
                       ),
+                      if (_validationError != null) ...[
+                        const SizedBox(height: 6.0),
+                        Text(
+                          _validationError!,
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colors.statusError,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11.0,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 10.0),
                       SizedBox(
                         width: double.infinity,
