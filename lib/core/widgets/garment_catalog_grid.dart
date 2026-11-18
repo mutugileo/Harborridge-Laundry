@@ -32,11 +32,13 @@ class GarmentCatalogGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final int crossAxisCount;
-        if (constraints.maxWidth >= 820.0) {
+        if (constraints.maxWidth >= 900.0) {
           crossAxisCount = 7;
-        } else if (constraints.maxWidth >= 560.0) {
+        } else if (constraints.maxWidth >= 680.0) {
           crossAxisCount = 5;
-        } else if (constraints.maxWidth >= 380.0) {
+        } else if (constraints.maxWidth >= 480.0) {
+          crossAxisCount = 4;
+        } else if (constraints.maxWidth >= 310.0) {
           crossAxisCount = 3;
         } else {
           crossAxisCount = 2;
@@ -74,7 +76,7 @@ class GarmentCatalogGrid extends StatelessWidget {
               crossAxisCount: crossAxisCount,
               crossAxisSpacing: 8.0,
               mainAxisSpacing: 8.0,
-              childAspectRatio: 1.04,
+              childAspectRatio: 0.78,
             ),
             itemBuilder: (context, index) {
               if (index < garments.length) {
@@ -139,16 +141,19 @@ class _GarmentTile extends StatelessWidget {
 
     return Tooltip(
       message:
-          '${garment.displayName} (${garment.defaultServiceType}) · KES ${garment.defaultRate.toStringAsFixed(0)} ${garment.unitBasisLabel}',
+          '${garment.displayName} (${garment.defaultServiceType}) · ${garment.priceDisplayLabel} ${garment.unitBasisLabel}',
       child: InteractivePressScale(
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6.0),
-            border: isSelected
-                ? Border.all(color: const Color(0xFF159CE8), width: 1.5)
-                : null,
+            color: isSelected ? const Color(0xFFF0F9FF) : Colors.white,
+            borderRadius: BorderRadius.circular(8.0),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF159CE8)
+                  : const Color(0xFFE2E8F0),
+              width: isSelected ? 1.6 : 1.0,
+            ),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x0A0F172A),
@@ -159,16 +164,63 @@ class _GarmentTile extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: GarmentLineIcon(type: garment, size: 64.0),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(6.0, 8.0, 6.0, 6.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: GarmentLineIcon(type: garment, size: 44.0),
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      garment.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: textTheme.labelSmall?.copyWith(
+                        fontSize: 11.0,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 3.0),
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6.0,
+                          vertical: 2.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF159CE8).withValues(alpha: 0.15)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                        child: Text(
+                          garment.priceDisplayLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.labelSmall?.copyWith(
+                            fontSize: 10.0,
+                            fontWeight: FontWeight.w800,
+                            color: isSelected
+                                ? const Color(0xFF0284C7)
+                                : const Color(0xFF475569),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (isSelected) ...[
                 Positioned(
-                  left: 6.0,
-                  bottom: 6.0,
+                  top: 5.0,
+                  left: 5.0,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 5.0,
@@ -185,30 +237,38 @@ class _GarmentTile extends StatelessWidget {
                           : '$quantity',
                       style: textTheme.labelSmall?.copyWith(
                         color: Colors.white,
-                        fontSize: 10.0,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 9.0,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
                 ),
                 Positioned(
-                  right: 6.0,
-                  bottom: 6.0,
+                  top: 5.0,
+                  right: 5.0,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: onDecrement,
                     child: Container(
-                      width: 22.0,
-                      height: 22.0,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFE9ECEF),
+                      width: 20.0,
+                      height: 20.0,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
                         shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFCBD5E1)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x14000000),
+                            blurRadius: 2.0,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
                       ),
                       alignment: Alignment.center,
-                      child: Container(
-                        width: 9.0,
-                        height: 1.8,
-                        color: const Color(0xFF495057),
+                      child: const Icon(
+                        Icons.remove,
+                        size: 13.0,
+                        color: Color(0xFF475569),
                       ),
                     ),
                   ),
@@ -239,7 +299,8 @@ class _ActionTile extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(4.0),
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: const [
             BoxShadow(
               color: Color(0x0A0F172A),
@@ -248,19 +309,42 @@ class _ActionTile extends StatelessWidget {
             ),
           ],
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            icon,
-            const SizedBox(height: 12.0),
+            Expanded(child: Center(child: icon)),
+            const SizedBox(height: 4.0),
             Text(
               label,
-              style: textTheme.bodyMedium?.copyWith(
-                fontSize: 13.0,
-                fontWeight: FontWeight.w500,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.labelSmall?.copyWith(
+                fontSize: 11.0,
+                fontWeight: FontWeight.w700,
                 color: colors.textPrimary,
               ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 3.0),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6.0,
+                vertical: 2.0,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(4.0),
+              ),
+              child: Text(
+                'Custom',
+                maxLines: 1,
+                style: textTheme.labelSmall?.copyWith(
+                  fontSize: 10.0,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
             ),
           ],
         ),
