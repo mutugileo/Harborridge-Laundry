@@ -110,9 +110,36 @@ void main() {
         expect(find.text('Selected Items (1)'), findsOneWidget);
         expect(find.text('KES 1250'), findsWidgets);
 
-        // 7. Complete order submission
+        // 7. Complete order submission (blocked without customer details)
         final createOrderBtn = find.text('Create Order & View Invoice');
         expect(createOrderBtn, findsOneWidget);
+        await tester.scrollUntilVisible(
+          createOrderBtn,
+          300.0,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(createOrderBtn);
+        await tester.pumpAndSettle();
+        expect(capturedSubmission, isNull);
+
+        await tester.enterText(
+          find.widgetWithText(
+            TextField,
+            'Enter mobile number for pickup SMS alerts',
+          ),
+          '0712345678',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Enter customer full name'),
+          'Amina Hassan',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Enter M-Pesa receipt code'),
+          'QK89XYZ12',
+        );
+        await tester.pumpAndSettle();
+
         await tester.scrollUntilVisible(
           createOrderBtn,
           300.0,

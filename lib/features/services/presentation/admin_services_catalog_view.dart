@@ -841,11 +841,11 @@ class _AdminServicesCatalogViewState
           ),
           const SizedBox(height: 12.0),
           _IntakeLabeledTextField(
-            label: 'Phone Number',
+            label: 'Phone Number *',
             hintText: 'Enter mobile number for pickup SMS alerts',
             controller: _customerPhoneController,
             prefixIcon: Icons.phone_outlined,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => setState(() => _posActionBanner = null),
           ),
           if (matchedCustomer != null &&
               _customerNameController.text.trim().isEmpty) ...[
@@ -898,10 +898,11 @@ class _AdminServicesCatalogViewState
           ],
           const SizedBox(height: 10.0),
           _IntakeLabeledTextField(
-            label: 'Customer Full Name',
-            hintText: 'Enter customer full name or leave for Walk-in',
+            label: 'Customer Full Name *',
+            hintText: 'Enter customer full name',
             controller: _customerNameController,
             prefixIcon: Icons.person_outline_rounded,
+            onChanged: (_) => setState(() => _posActionBanner = null),
           ),
           const SizedBox(height: 12.0),
           if (isMobile) ...[
@@ -1296,6 +1297,15 @@ class _AdminServicesCatalogViewState
               ],
             ),
           const SizedBox(height: 10.0),
+          Text(
+            'Optional Add-ons',
+            style: textTheme.labelSmall?.copyWith(
+              fontSize: 11.0,
+              fontWeight: FontWeight.w600,
+              color: colors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 6.0),
           Wrap(
             spacing: 8.0,
             runSpacing: 8.0,
@@ -1351,32 +1361,34 @@ class _AdminServicesCatalogViewState
                     ),
                   ],
                 ),
-                const SizedBox(height: 4.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Service Addons:',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.bodySmall?.copyWith(
-                          fontSize: 12.0,
-                          color: colors.textSecondary,
+                if (addonsTotal > 0) ...[
+                  const SizedBox(height: 4.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Service Addons:',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            fontSize: 12.0,
+                            color: colors.textSecondary,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8.0),
-                    Text(
-                      'KES ${addonsTotal.toStringAsFixed(2)}',
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
+                      const SizedBox(width: 8.0),
+                      Text(
+                        'KES ${addonsTotal.toStringAsFixed(2)}',
+                        style: textTheme.bodySmall?.copyWith(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 6.0),
                 Divider(color: colors.borderSubtle, height: 1.0),
                 const SizedBox(height: 6.0),
@@ -1474,19 +1486,21 @@ class _AdminServicesCatalogViewState
               _selectedPaymentMethod == 'M-Pesa') ...[
             const SizedBox(height: 8.0),
             _IntakeLabeledTextField(
-              label: 'M-Pesa Transaction Reference Code',
+              label: 'M-Pesa Transaction Reference Code *',
               hintText: 'Enter M-Pesa receipt code',
               controller: _paymentRefController,
               prefixIcon: Icons.receipt_long_rounded,
+              onChanged: (_) => setState(() => _posActionBanner = null),
             ),
           ],
           if (_selectedPaymentStatus == 'Partial') ...[
             const SizedBox(height: 8.0),
             _IntakeLabeledTextField(
-              label: 'Deposit Amount (KES)',
+              label: 'Deposit Amount (KES) *',
               hintText: 'Enter deposit amount paid at counter',
               controller: _depositAmountController,
               prefixIcon: Icons.payments_outlined,
+              onChanged: (_) => setState(() => _posActionBanner = null),
             ),
           ],
           if (_posActionBanner != null) ...[
@@ -1534,11 +1548,31 @@ class _AdminServicesCatalogViewState
                   ? null
                   : () {
                       final typedPhone = _customerPhoneController.text.trim();
-                      if (typedPhone.isNotEmpty &&
-                          typedPhone.replaceAll(RegExp(r'[^0-9]'), '').length <
-                              9) {
+                      final phoneDigits = typedPhone.replaceAll(
+                        RegExp(r'[^0-9]'),
+                        '',
+                      );
+                      if (phoneDigits.length < 9) {
                         setState(() {
                           _posActionBanner = 'Please enter a valid customer phone number (at least 9 digits).';
+                        });
+                        return;
+                      }
+
+                      final typedName = _customerNameController.text.trim();
+                      if (typedName.length < 2) {
+                        setState(() {
+                          _posActionBanner = 'Please enter the customer full name (at least 2 characters).';
+                        });
+                        return;
+                      }
+
+                      final paymentRef = _paymentRefController.text.trim();
+                      if (_selectedPaymentStatus == 'Paid' &&
+                          _selectedPaymentMethod == 'M-Pesa' &&
+                          paymentRef.length < 4) {
+                        setState(() {
+                          _posActionBanner = 'Please enter the M-Pesa transaction reference code.';
                         });
                         return;
                       }
@@ -1560,13 +1594,8 @@ class _AdminServicesCatalogViewState
 
                       widget.onSubmitNewOrder?.call(
                         PosOrderSubmission(
-                          customerName:
-                              _customerNameController.text.trim().isEmpty
-                              ? 'Walk-in Customer'
-                              : _customerNameController.text.trim(),
-                          customerPhone: typedPhone.isEmpty
-                              ? '+254 142 188767'
-                              : typedPhone,
+                          customerName: typedName,
+                          customerPhone: typedPhone,
                           primaryService: _selectedServiceType,
                           vendorBranch: _selectedBranch,
                           deliveryMethod: _selectedDeliveryMethod,
@@ -1582,9 +1611,8 @@ class _AdminServicesCatalogViewState
                               : (_selectedPaymentStatus == 'Paid'
                                     ? grandTotal
                                     : null),
-                          paymentReference:
-                              _paymentRefController.text.trim().isNotEmpty
-                              ? _paymentRefController.text.trim()
+                          paymentReference: paymentRef.isNotEmpty
+                              ? paymentRef
                               : null,
                         ),
                       );

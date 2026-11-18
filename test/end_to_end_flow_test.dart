@@ -47,11 +47,39 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Create Order & View Invoice'));
       await tester.pump();
+      expect(
+        find.text(
+          'Please enter a valid customer phone number (at least 9 digits).',
+        ),
+        findsWidgets,
+      );
+
+      await tester.enterText(
+        find.widgetWithText(
+          TextField,
+          'Enter mobile number for pickup SMS alerts',
+        ),
+        '0712345678',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Enter customer full name'),
+        'Amina Hassan',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Enter M-Pesa receipt code'),
+        'QK89XYZ12',
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('Create Order & View Invoice'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Create Order & View Invoice'));
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('LG-2026-00131'), findsWidgets);
-      expect(find.text('Walk-in Customer'), findsWidgets);
+      expect(find.text('Amina Hassan'), findsWidgets);
       expect(find.text('ADD PAYMENT'), findsOneWidget);
       expect(find.text('Print Invoice'), findsOneWidget);
 

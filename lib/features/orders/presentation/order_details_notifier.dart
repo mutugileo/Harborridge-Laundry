@@ -588,6 +588,22 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
   }) async {
     if (_orderCreateInFlight) return null;
 
+    final cleanName = customerName.trim();
+    final cleanPhone = customerPhone.trim();
+    if (cleanName.length < 2) {
+      state = state.copyWith(
+        actionFeedbackMessage: 'Please enter the customer full name.',
+      );
+      return null;
+    }
+    if (cleanPhone.replaceAll(RegExp(r'[^0-9]'), '').length < 9) {
+      state = state.copyWith(
+        actionFeedbackMessage:
+            'Please enter a valid customer phone number (at least 9 digits).',
+      );
+      return null;
+    }
+
     final entries = state.catalogQuantities.entries
         .where((entry) => entry.value > 0)
         .toList();
@@ -657,10 +673,8 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
       orderDate: _todayLabel(now),
       deliveryDate: _todayLabel(now.add(const Duration(days: 2))),
       status: OrderProcessStatus.processing,
-      customerName: customerName.trim().isEmpty
-          ? 'Walk-in Customer'
-          : customerName.trim(),
-      customerPhone: customerPhone.trim(),
+      customerName: cleanName,
+      customerPhone: cleanPhone,
       assignedStaff: operator.fullName,
       primaryService: primaryService,
       vendorBranch: vendorBranch,

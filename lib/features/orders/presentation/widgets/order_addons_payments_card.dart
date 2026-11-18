@@ -37,43 +37,45 @@ class OrderAddonsPaymentsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'Service Addons',
-            style: textTheme.titleSmall?.copyWith(
-              fontSize: 14.0,
-              fontWeight: FontWeight.w600,
-              color: colors.textPrimary,
+          if (order.addons.isNotEmpty) ...[
+            Text(
+              'Service Addons',
+              style: textTheme.titleSmall?.copyWith(
+                fontSize: 14.0,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 14.0),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 16.0,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF6F7FA),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (var i = 0; i < order.addons.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 10.0),
-                  Text(
-                    '${order.addons[i].name}:   KES ${order.addons[i].amount.toStringAsFixed(2)}',
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 12.0,
-                      color: colors.textSecondary,
-                      fontWeight: FontWeight.w500,
+            const SizedBox(height: 14.0),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 16.0,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF6F7FA),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < order.addons.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 10.0),
+                    Text(
+                      '${order.addons[i].name}:   KES ${order.addons[i].amount.toStringAsFixed(2)}',
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: 12.0,
+                        color: colors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          const SizedBox(height: 22.0),
+            const SizedBox(height: 22.0),
+          ],
           Text(
             'Payments',
             style: textTheme.titleSmall?.copyWith(
