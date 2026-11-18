@@ -28,7 +28,6 @@ class OrderHeaderBar extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 620.0;
         final isVeryCompact = constraints.maxWidth < 420.0;
 
         return Padding(
@@ -94,8 +93,8 @@ class OrderHeaderBar extends StatelessWidget {
                               isVeryCompact ? 'Password' : 'Change Password',
                               style: textTheme.labelSmall?.copyWith(
                                 color: Colors.white,
-                                fontSize: 10.0,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
@@ -106,81 +105,52 @@ class OrderHeaderBar extends StatelessWidget {
                   ],
                   if (activeWorkerLabel != null) ...[
                     Flexible(
-                      child: InteractivePressScale(
-                        onTap: onSwitchWorkerTap,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isVeryCompact ? 7.0 : 10.0,
-                            vertical: 5.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(99.0),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.28),
+                      child: Tooltip(
+                        message: 'Sign out / Switch operator',
+                        child: InteractivePressScale(
+                          onTap: onSwitchWorkerTap,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isVeryCompact ? 7.0 : 10.0,
+                              vertical: 5.0,
                             ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.verified_user_outlined,
-                                size: 13.0,
-                                color: colors.harborGold,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(99.0),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.34),
                               ),
-                              const SizedBox(width: 4.0),
-                              Flexible(
-                                child: Text(
-                                  activeWorkerLabel!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.labelSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 11.0,
-                                    fontWeight: FontWeight.w600,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.verified_user_outlined,
+                                  size: 13.0,
+                                  color: colors.harborGold,
+                                ),
+                                const SizedBox(width: 4.0),
+                                Flexible(
+                                  child: Text(
+                                    activeWorkerLabel!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: textTheme.labelSmall?.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    if (!isCompact) const SizedBox(width: 10.0),
                   ] else ...[
                     const Icon(Icons.person, color: Colors.white, size: 17.0),
-                    if (!isCompact) const SizedBox(width: 14.0),
                   ],
-                  if (!isCompact)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14.0,
-                        vertical: 6.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'English',
-                            style: textTheme.labelSmall?.copyWith(
-                              color: colors.textPrimary,
-                              fontSize: 12.0,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(width: 4.0),
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: colors.textSecondary,
-                            size: 16.0,
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
               const SizedBox(height: 12.0),
@@ -213,8 +183,8 @@ class OrderHeaderBar extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: textTheme.titleMedium?.copyWith(
                             color: Colors.white,
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 19.0,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
@@ -246,7 +216,7 @@ class OrderHeaderBar extends StatelessWidget {
                             style: textTheme.labelSmall?.copyWith(
                               color: colors.brandPrimary,
                               fontSize: 12.0,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],

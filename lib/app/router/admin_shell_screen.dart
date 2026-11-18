@@ -249,6 +249,13 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
           onRegisterWorkerRequested: () {
             shellNotifier.switchTab(AdminNavTab.staff);
           },
+          onSettingsRequested: () {
+            shellNotifier.switchTab(AdminNavTab.settings);
+          },
+          onOpenOrderRequested: (orderId) {
+            ordersNotifier.openOrderDetails(orderId);
+            shellNotifier.switchTab(AdminNavTab.orders);
+          },
         );
       case AdminNavTab.orders:
         return const OrderDetailsScreen(

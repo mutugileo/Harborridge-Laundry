@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
+import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/utilities/file_saver.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/dashboard/domain/dashboard_models.dart';
@@ -17,11 +18,85 @@ class AdminDashboardView extends ConsumerWidget {
     this.onQuickLinkSelected,
     this.onNewOrderRequested,
     this.onRegisterWorkerRequested,
+    this.onSettingsRequested,
+    this.onOpenOrderRequested,
   });
 
   final ValueChanged<DashboardQuickLinkTarget>? onQuickLinkSelected;
   final VoidCallback? onNewOrderRequested;
   final VoidCallback? onRegisterWorkerRequested;
+  final VoidCallback? onSettingsRequested;
+  final ValueChanged<String>? onOpenOrderRequested;
+
+  void _showAlertsDialog(BuildContext context, WidgetRef ref) {
+    final orders = ref.read(orderDetailsNotifierProvider).orders;
+    final pendingOrders = orders
+        .where(
+          (o) => o.status != OrderProcessStatus.delivered || o.balanceDue > 0,
+        )
+        .take(6)
+        .toList();
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Active Order Alerts (${pendingOrders.length})',
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          content: SizedBox(
+            width: 360.0,
+            child: pendingOrders.isEmpty
+                ? Text(
+                    'All orders are delivered and settled.',
+                    style: textTheme.bodySmall,
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final order in pendingOrders)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            order.balanceDue > 0
+                                ? Icons.payments_outlined
+                                : Icons.local_laundry_service_outlined,
+                            color: order.balanceDue > 0
+                                ? colors.harborGold
+                                : colors.freshSkyBlue,
+                          ),
+                          title: Text(
+                            '${order.orderId} • ${order.customerName}',
+                            style: textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${order.status.displayLabel} • ${order.balanceDue > 0 ? 'Balance KES ${order.balanceDue.round()}' : 'Paid'}',
+                            style: textTheme.bodySmall,
+                          ),
+                          onTap: () {
+                            Navigator.of(dialogContext).pop();
+                            onOpenOrderRequested?.call(order.orderId);
+                          },
+                        ),
+                    ],
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _exportDashboardReport(
     WidgetRef ref,
@@ -108,6 +183,32 @@ class AdminDashboardView extends ConsumerWidget {
             children: [
               _DashboardTopUtilityRow(
                 activeOrdersCount: state.activeOrdersCount,
+                workerInitials: ref
+                    .watch(authSessionNotifierProvider)
+                    .workers
+                    .take(2)
+                    .map(
+                      (w) => w.fullName
+                          .trim()
+                          .split(RegExp(r'\s+'))
+                          .where((p) => p.isNotEmpty)
+                          .take(2)
+                          .map((p) => p[0].toUpperCase())
+                          .join(),
+                    )
+                    .where((s) => s.isNotEmpty)
+                    .toList(),
+                onNotificationsTap: () => _showAlertsDialog(context, ref),
+                onSettingsTap: () {
+                  if (onSettingsRequested != null) {
+                    onSettingsRequested!();
+                  } else {
+                    notifier.triggerDashboardAction('Opening System Settings');
+                  }
+                },
+                onBranchTap: () => notifier.triggerDashboardAction(
+                  'Registered Branch: Harbor Ridge Main • Getathuru Road',
+                ),
                 onAddWorkerTap: () {
                   if (onRegisterWorkerRequested != null) {
                     onRegisterWorkerRequested!();
@@ -322,16 +423,26 @@ class AdminDashboardView extends ConsumerWidget {
 class _DashboardTopUtilityRow extends StatelessWidget {
   const _DashboardTopUtilityRow({
     required this.activeOrdersCount,
+    required this.workerInitials,
+    required this.onNotificationsTap,
+    required this.onSettingsTap,
+    required this.onBranchTap,
     required this.onAddWorkerTap,
   });
 
   final int activeOrdersCount;
+  final List<String> workerInitials;
+  final VoidCallback onNotificationsTap;
+  final VoidCallback onSettingsTap;
+  final VoidCallback onBranchTap;
   final VoidCallback onAddWorkerTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
+    final firstInitials = workerInitials.isNotEmpty ? workerInitials[0] : 'HR';
+    final secondInitials = workerInitials.length > 1 ? workerInitials[1] : 'OP';
 
     return Wrap(
       spacing: 12.0,
@@ -348,7 +459,7 @@ class _DashboardTopUtilityRow extends StatelessWidget {
               'Operations Overview',
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 18.0,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
                 color: colors.textPrimary,
               ),
             ),
@@ -374,8 +485,8 @@ class _DashboardTopUtilityRow extends StatelessWidget {
                   Text(
                     'No of Orders : $activeOrdersCount',
                     style: textTheme.labelSmall?.copyWith(
-                      fontSize: 11.0,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
                       color: colors.textPrimary,
                     ),
                   ),
@@ -389,55 +500,72 @@ class _DashboardTopUtilityRow extends StatelessWidget {
           runSpacing: 6.0,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            SizedBox(
-              width: 58.0,
-              height: 28.0,
-              child: Stack(
-                children: [
-                  Positioned(
-                    left: 0,
-                    child: _MiniCircleAvatar(
-                      initials: 'ER',
-                      backgroundColor: colors.harborNavy,
-                    ),
-                  ),
-                  Positioned(
-                    left: 16.0,
-                    child: _MiniCircleAvatar(
-                      initials: 'MO',
-                      backgroundColor: colors.freshSkyBlue,
-                    ),
-                  ),
-                  Positioned(
-                    left: 32.0,
-                    child: GestureDetector(
-                      onTap: onAddWorkerTap,
-                      child: Container(
-                        width: 26.0,
-                        height: 26.0,
-                        decoration: BoxDecoration(
-                          color: colors.background,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                        child: Icon(
-                          Icons.add,
-                          size: 14.0,
-                          color: colors.textPrimary,
+            Tooltip(
+              message: 'Manage Staff & Workers',
+              child: InkWell(
+                onTap: onAddWorkerTap,
+                borderRadius: BorderRadius.circular(99.0),
+                child: SizedBox(
+                  width: 58.0,
+                  height: 28.0,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        child: _MiniCircleAvatar(
+                          initials: firstInitials,
+                          backgroundColor: colors.harborNavy,
                         ),
                       ),
-                    ),
+                      Positioned(
+                        left: 16.0,
+                        child: _MiniCircleAvatar(
+                          initials: secondInitials,
+                          backgroundColor: colors.freshSkyBlue,
+                        ),
+                      ),
+                      Positioned(
+                        left: 32.0,
+                        child: Container(
+                          width: 26.0,
+                          height: 26.0,
+                          decoration: BoxDecoration(
+                            color: colors.background,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            size: 14.0,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-            _UtilityIconCircle(icon: Icons.notifications_none_rounded),
-            _UtilityIconCircle(icon: Icons.settings_outlined),
-            _UtilityIconCircle(icon: Icons.wb_sunny_outlined),
-            _MiniCircleAvatar(
-              initials: 'HR',
-              backgroundColor: colors.harborGold,
-              textColor: colors.harborNavy,
+            _UtilityIconCircle(
+              icon: Icons.notifications_none_rounded,
+              tooltip: 'Active Order Alerts',
+              onTap: onNotificationsTap,
+            ),
+            _UtilityIconCircle(
+              icon: Icons.settings_outlined,
+              tooltip: 'System Settings',
+              onTap: onSettingsTap,
+            ),
+            Tooltip(
+              message: 'Harbor Ridge Main • Getathuru Road',
+              child: InteractivePressScale(
+                onTap: onBranchTap,
+                child: _MiniCircleAvatar(
+                  initials: 'HR',
+                  backgroundColor: colors.harborGold,
+                  textColor: colors.harborNavy,
+                ),
+              ),
             ),
           ],
         ),
@@ -1283,7 +1411,7 @@ class _MiniCircleAvatar extends StatelessWidget {
         style: TextStyle(
           color: textColor,
           fontSize: 10.0,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
@@ -1291,22 +1419,34 @@ class _MiniCircleAvatar extends StatelessWidget {
 }
 
 class _UtilityIconCircle extends StatelessWidget {
-  const _UtilityIconCircle({required this.icon});
+  const _UtilityIconCircle({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Container(
-      width: 28.0,
-      height: 28.0,
-      decoration: BoxDecoration(
-        color: colors.background,
-        shape: BoxShape.circle,
+    return Tooltip(
+      message: tooltip,
+      child: InteractivePressScale(
+        onTap: onTap,
+        child: Container(
+          width: 28.0,
+          height: 28.0,
+          decoration: BoxDecoration(
+            color: colors.background,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 15.0, color: colors.textSecondary),
+        ),
       ),
-      child: Icon(icon, size: 15.0, color: colors.textSecondary),
     );
   }
 }
