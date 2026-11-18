@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/core/errors/app_failure.dart';
 import 'package:laundry_ridge/core/utilities/client_ref.dart';
+import 'package:laundry_ridge/core/utilities/document_templates.dart';
+import 'package:laundry_ridge/core/utilities/file_saver.dart';
 import 'package:laundry_ridge/features/orders/data/orders_repository.dart';
 import 'package:laundry_ridge/features/orders/domain/order_payment.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
@@ -294,9 +296,65 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
 
   void _exportStatement() {
     final totalKes = _filteredRows.fold<int>(0, (sum, r) => sum + r.amountKes);
+    final buffer = StringBuffer();
+    buffer.writeln('HARBOR RIDGE LAUNDRY - PAYMENT LEDGER STATEMENT');
+    buffer.writeln('Period Filter,${_selectedPeriod.label}');
+    buffer.writeln('Channel Filter,$_selectedChannel');
+    buffer.writeln('Status Filter,${_selectedStatusFilter.label}');
+    buffer.writeln('Exported At,${DateTime.now().toIso8601String()}');
+    buffer.writeln('Branch,Harbor Ridge Main');
+    buffer.writeln('');
+    buffer.writeln(
+      'Transaction Ref,Order ID,Timestamp,Customer Name,Customer Phone,Channel,Reference Code,Status,Amount (KES),Balance Due (KES)',
+    );
+    for (final r in _filteredRows) {
+      buffer.writeln(
+        [
+          csvEscape(r.txId),
+          csvEscape(r.orderId),
+          csvEscape(r.timestamp),
+          csvEscape(r.customerName),
+          csvEscape(r.customerPhone),
+          csvEscape(r.channel),
+          csvEscape(r.referenceCode),
+          csvEscape(r.status),
+          r.amountKes,
+          r.balanceDueKes,
+        ].join(','),
+      );
+    }
+    buffer.writeln('');
+    buffer.writeln('SUMMARY');
+    buffer.writeln('Total Transactions,${_filteredRows.length}');
+    buffer.writeln('Total Reconciled (KES),$totalKes');
+
+    final periodSlug = _selectedPeriod.label.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '_',
+    );
+    final filename = 'harbor_ridge_payments_statement_$periodSlug.csv';
+    downloadCsvFile(filename, buffer.toString());
+
     setState(() {
       _statusBanner =
-          'Statement STMT-2026-NOV exported • KES ${_PaymentLedgerRow._formatAmount(totalKes)} reconciled across ${_filteredRows.length} ledger entries.';
+          'Downloaded $filename • KES ${_PaymentLedgerRow._formatAmount(totalKes)} across ${_filteredRows.length} entries';
+    });
+  }
+
+  void _printReceipt(_PaymentLedgerRow row) {
+    final htmlContent = DocumentTemplates.generatePaymentReceiptHtml(
+      txId: row.txId,
+      orderId: row.orderId,
+      customerName: row.customerName,
+      date: row.timestamp,
+      method: '${row.channel} (${row.referenceCode})',
+      amountKes: row.amountKes,
+      status: row.status,
+    );
+    printHtmlDocument('Receipt - ${row.txId}', htmlContent);
+    setState(() {
+      _statusBanner =
+          'Printed official payment receipt for ${row.txId} (${row.orderId})';
     });
   }
 
@@ -1710,12 +1768,7 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
                         color: colors.textSecondary,
                       ),
                       tooltip: 'Print Receipt',
-                      onPressed: () {
-                        setState(() {
-                          _statusBanner =
-                              'Receipt for ${row.txId} (${row.orderId} • KES ${_PaymentLedgerRow._formatAmount(row.amountKes)}) sent to printer queue.';
-                        });
-                      },
+                      onPressed: () => _printReceipt(row),
                     ),
             ),
           ),
@@ -1890,6 +1943,17 @@ class _PaymentsViewState extends ConsumerState<PaymentsView> {
                             ),
                           ),
                         ),
+                      ),
+                    ] else ...[
+                      const SizedBox(width: 6.0),
+                      IconButton(
+                        icon: Icon(
+                          Icons.print_outlined,
+                          size: 16.0,
+                          color: colors.textSecondary,
+                        ),
+                        tooltip: 'Print Receipt',
+                        onPressed: () => _printReceipt(rows[i]),
                       ),
                     ],
                   ],

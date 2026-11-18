@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/core/auth/auth_session.dart';
 import 'package:laundry_ridge/core/errors/app_failure.dart';
 import 'package:laundry_ridge/core/utilities/client_ref.dart';
+import 'package:laundry_ridge/core/utilities/document_templates.dart';
+import 'package:laundry_ridge/core/utilities/file_saver.dart';
 import 'package:laundry_ridge/core/widgets/garment_line_icon.dart';
 import 'package:laundry_ridge/features/orders/data/orders_repository.dart';
 import 'package:laundry_ridge/features/orders/domain/order_addon.dart';
@@ -549,8 +551,12 @@ class OrderDetailsNotifier extends Notifier<OrderDetailsUiState> {
   }
 
   void triggerPrintInvoice() {
+    final order = state.order;
+    if (order == null) return;
+    final htmlContent = DocumentTemplates.generateInvoiceHtml(order);
+    printHtmlDocument('Invoice - ${order.orderId}', htmlContent);
     state = state.copyWith(
-      actionFeedbackMessage: 'Invoice ready for print: ${state.order?.orderId}',
+      actionFeedbackMessage: 'Printed tax invoice for ${order.orderId}',
     );
   }
 

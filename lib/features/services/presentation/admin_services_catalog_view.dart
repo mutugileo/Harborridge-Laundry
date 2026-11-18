@@ -82,9 +82,7 @@ class _AdminServicesCatalogViewState
     'Express Iron',
   ];
 
-  static const List<String> _branches = [
-    'Harbor Ridge Main',
-  ];
+  static const List<String> _branches = ['Harbor Ridge Main'];
 
   static const List<String> _deliveryMethods = [
     'Branch walk-in',

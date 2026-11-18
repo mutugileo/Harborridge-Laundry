@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
+import 'package:laundry_ridge/core/utilities/file_saver.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
@@ -30,11 +31,62 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
     'Full Year 2026',
   ];
 
-  static const List<String> _branches = [
-    'Harbor Ridge Main',
-  ];
+  static const List<String> _branches = ['Harbor Ridge Main'];
 
   static String _cleanBranchName(String raw) => 'Harbor Ridge Main';
+
+  void _exportFinancialReport(List<dynamic> orders, int grossRevenueKes) {
+    final buffer = StringBuffer();
+    buffer.writeln('HARBOR RIDGE LAUNDRY - FINANCIAL & SLA EXECUTIVE REPORT');
+    buffer.writeln('Reporting Period,$_selectedPeriod');
+    buffer.writeln('Exported At,${DateTime.now().toIso8601String()}');
+    buffer.writeln('Branch,$_selectedBranchFilter');
+    buffer.writeln('');
+    buffer.writeln(
+      'Order ID,Created Date,Customer Name,Customer Phone,Primary Service,Vendor Branch,Assigned Rider,Order Status,Payment Status,Amount (KES)',
+    );
+    for (final order in orders) {
+      final amt =
+          int.tryParse(order.displayAmount.replaceAll(RegExp(r'[^0-9]'), '')) ??
+          0;
+      buffer.writeln(
+        [
+          csvEscape(order.orderId),
+          csvEscape(order.createdDate),
+          csvEscape(order.customerName),
+          csvEscape(order.customerPhone),
+          csvEscape(order.primaryService),
+          csvEscape(order.vendorBranch),
+          csvEscape(order.riderName),
+          csvEscape(order.orderStatus.name),
+          csvEscape(order.paymentStatus.name),
+          amt,
+        ].join(','),
+      );
+    }
+    buffer.writeln('');
+    buffer.writeln('FINANCIAL SUMMARY');
+    buffer.writeln('Total Orders,${orders.length}');
+    buffer.writeln('Gross Revenue (KES),$grossRevenueKes');
+    buffer.writeln(
+      'Chemical & Consumables (KES),${(grossRevenueKes * 0.10).round()}',
+    );
+    buffer.writeln(
+      'Net Operational Margin (KES),${(grossRevenueKes * 0.78).round()}',
+    );
+
+    final periodSlug = _selectedPeriod.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '_',
+    );
+    final filename = 'harbor_ridge_financial_report_$periodSlug.csv';
+    downloadCsvFile(filename, buffer.toString());
+
+    setState(() {
+      _exportMessage =
+          'Downloaded $filename • ${orders.length} orders (KES $grossRevenueKes)';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -255,10 +307,10 @@ class _ReportsViewState extends ConsumerState<ReportsView> {
                           ),
                         const SizedBox(width: 4.0),
                         InteractivePressScale(
-                          onTap: () => setState(() {
-                            _exportMessage =
-                                'Exported Executive Financial & SLA Report ($totalOrders orders) for $_selectedPeriod as PDF & CSV';
-                          }),
+                          onTap: () => _exportFinancialReport(
+                            ordersState.orders,
+                            grossRevenueKes,
+                          ),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 13.0,

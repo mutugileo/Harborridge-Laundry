@@ -73,9 +73,7 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
     'Delivered',
   ];
 
-  static const List<String> _branches = [
-    'Harbor Ridge Main',
-  ];
+  static const List<String> _branches = ['Harbor Ridge Main'];
 
   String _selectedStageFilter = 'All Runs';
   String _selectedBranchFilter = 'Harbor Ridge Main';
@@ -753,12 +751,8 @@ class _DispatchViewState extends ConsumerState<DispatchView> {
                       fontWeight: FontWeight.w600,
                       color: colors.textPrimary,
                     ),
-                    items: const [
-                      'Harbor Ridge Main',
-                    ]
-                        .map(
-                          (b) => DropdownMenuItem(value: b, child: Text(b)),
-                        )
+                    items: const ['Harbor Ridge Main']
+                        .map((b) => DropdownMenuItem(value: b, child: Text(b)))
                         .toList(),
                     onChanged: (v) {
                       if (v != null) setState(() => _newRunBranch = v);

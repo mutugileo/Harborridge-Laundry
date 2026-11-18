@@ -5,6 +5,7 @@ import 'package:laundry_ridge/app/theme/app_motion.dart';
 import 'package:laundry_ridge/app/theme/app_typography.dart';
 import 'package:laundry_ridge/core/supabase/remote_write.dart';
 import 'package:laundry_ridge/core/supabase/supabase_config.dart';
+import 'package:laundry_ridge/core/utilities/file_saver.dart';
 import 'package:laundry_ridge/core/widgets/app_empty_state.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 
@@ -122,9 +123,7 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
   late final TextEditingController _ordersCoveredController;
   late final TextEditingController _accountNumberController;
 
-  static const List<String> _branchOptions = [
-    'Harbor Ridge Main',
-  ];
+  static const List<String> _branchOptions = ['Harbor Ridge Main'];
 
   late List<_SettlementBatchRecord> _batches = const [];
 
@@ -309,9 +308,62 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
       0,
       (sum, b) => sum + b.netPayoutKes,
     );
+    final totalGross = _filteredBatches.fold<int>(
+      0,
+      (sum, b) => sum + b.grossVolumeKes,
+    );
+    final totalFees = _filteredBatches.fold<int>(
+      0,
+      (sum, b) => sum + b.commissionFeeKes,
+    );
+
+    final buffer = StringBuffer();
+    buffer.writeln(
+      'HARBOR RIDGE LAUNDRY - PARTNER REMITTANCE ADVICE STATEMENT',
+    );
+    buffer.writeln('Settlement Cycle,${_selectedCycle.label}');
+    buffer.writeln('Status Filter,${_selectedStatus.label}');
+    buffer.writeln('Exported At,${DateTime.now().toIso8601String()}');
+    buffer.writeln('Branch,Harbor Ridge Main');
+    buffer.writeln('');
+    buffer.writeln(
+      'Batch Code,Partner Vendor,Cycle,Disbursal Channel,Account Number,Orders Covered,Gross Volume (KES),Commission Rate,Commission Fee (KES),Net Payout (KES),Status,Reconciliation Date',
+    );
+    for (final b in _filteredBatches) {
+      buffer.writeln(
+        [
+          csvEscape(b.batchCode),
+          csvEscape(b.vendorName),
+          csvEscape(b.cycle),
+          csvEscape(b.disbursalMethod),
+          csvEscape(b.accountNumber),
+          b.ordersCovered,
+          b.grossVolumeKes,
+          '${b.commissionRatePercent}%',
+          b.commissionFeeKes,
+          b.netPayoutKes,
+          csvEscape(b.status),
+          csvEscape(b.reconciledTimestamp),
+        ].join(','),
+      );
+    }
+    buffer.writeln('');
+    buffer.writeln('SUMMARY');
+    buffer.writeln('Total Batches,${_filteredBatches.length}');
+    buffer.writeln('Gross Volume (KES),$totalGross');
+    buffer.writeln('Commission Retained (KES),$totalFees');
+    buffer.writeln('Net Payout Disbursed (KES),$totalDisbursed');
+
+    final cycleSlug = _selectedCycle.label.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '_',
+    );
+    final filename = 'harbor_ridge_remittance_advice_$cycleSlug.csv';
+    downloadCsvFile(filename, buffer.toString());
+
     setState(() {
       _statusMessage =
-          'Remittance Advice statement exported • Total Net Disbursals: KES ${_SettlementBatchRecord._formatNumber(totalDisbursed)} across ${_filteredBatches.length} partner batches.';
+          'Downloaded $filename • Net Payout: KES ${_SettlementBatchRecord._formatNumber(totalDisbursed)} across ${_filteredBatches.length} batches';
     });
   }
 
@@ -776,9 +828,7 @@ class _SettlementsViewState extends ConsumerState<SettlementsView> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  for (final branch in [
-                    'Harbor Ridge Main',
-                  ]) ...[
+                  for (final branch in ['Harbor Ridge Main']) ...[
                     InteractivePressScale(
                       onTap: () => setState(() => _newBatchBranch = branch),
                       child: Container(

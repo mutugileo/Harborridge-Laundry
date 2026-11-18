@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:laundry_ridge/app/theme/app_colors.dart';
 import 'package:laundry_ridge/app/theme/app_motion.dart';
+import 'package:laundry_ridge/core/utilities/file_saver.dart';
 import 'package:laundry_ridge/core/widgets/interactive_press_scale.dart';
 import 'package:laundry_ridge/features/dashboard/domain/dashboard_models.dart';
 import 'package:laundry_ridge/features/dashboard/presentation/dashboard_notifier.dart';
 import 'package:laundry_ridge/features/dashboard/presentation/dashboard_state.dart';
 import 'package:laundry_ridge/features/dashboard/presentation/widgets/dashboard_charts.dart';
+import 'package:laundry_ridge/features/orders/domain/order_detail.dart';
+import 'package:laundry_ridge/features/orders/presentation/order_details_notifier.dart';
 
 class AdminDashboardView extends ConsumerWidget {
   const AdminDashboardView({
@@ -19,6 +22,63 @@ class AdminDashboardView extends ConsumerWidget {
   final ValueChanged<DashboardQuickLinkTarget>? onQuickLinkSelected;
   final VoidCallback? onNewOrderRequested;
   final VoidCallback? onRegisterWorkerRequested;
+
+  void _exportDashboardReport(
+    WidgetRef ref,
+    DashboardUiState state,
+    DashboardNotifier notifier,
+  ) {
+    final orders = ref.read(orderDetailsNotifierProvider).orders;
+    final buffer = StringBuffer();
+    buffer.writeln('HARBOR RIDGE LAUNDRY - DASHBOARD EXECUTIVE SUMMARY');
+    buffer.writeln('Filter,${state.selectedDateFilter}');
+    buffer.writeln('Exported At,${DateTime.now().toIso8601String()}');
+    buffer.writeln('');
+    buffer.writeln('OPERATIONAL KPI METRICS');
+    buffer.writeln('Metric,Current Value,Performance Trend');
+    for (final kpi in state.kpiMetrics) {
+      buffer.writeln(
+        '${csvEscape(kpi.title)},${csvEscape(kpi.value)},${csvEscape(kpi.changeBadge)}',
+      );
+    }
+    buffer.writeln('');
+    buffer.writeln('TOP PATRONS & CLIENTS');
+    buffer.writeln('Customer Name,Order Count,Total Spend (KES)');
+    for (final c in state.topCustomers) {
+      buffer.writeln(
+        '${csvEscape(c.name)},${csvEscape(c.ordersCountLabel)},${csvEscape(c.totalSpent)}',
+      );
+    }
+    buffer.writeln('');
+    buffer.writeln('ACTIVE PIPELINE ORDERS');
+    buffer.writeln(
+      'Order ID,Customer,Phone,Primary Service,Status,Total (KES),Paid (KES),Balance Due (KES)',
+    );
+    for (final o in orders) {
+      buffer.writeln(
+        [
+          csvEscape(o.orderId),
+          csvEscape(o.customerName),
+          csvEscape(o.customerPhone),
+          csvEscape(o.primaryService),
+          csvEscape(o.status.displayLabel),
+          o.totalAmount.round(),
+          o.paidAmount.round(),
+          o.balanceDue.round(),
+        ].join(','),
+      );
+    }
+
+    final dateSlug = state.selectedDateFilter.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '_',
+    );
+    final filename = 'harbor_ridge_dashboard_report_$dateSlug.csv';
+    downloadCsvFile(filename, buffer.toString());
+    notifier.triggerDashboardAction(
+      'Downloaded $filename (${orders.length} orders)',
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,9 +108,6 @@ class AdminDashboardView extends ConsumerWidget {
             children: [
               _DashboardTopUtilityRow(
                 activeOrdersCount: state.activeOrdersCount,
-                onUpgradeTap: () => notifier.triggerDashboardAction(
-                  'Harbor Ridge Enterprise plan details opened',
-                ),
                 onAddWorkerTap: () {
                   if (onRegisterWorkerRequested != null) {
                     onRegisterWorkerRequested!();
@@ -65,9 +122,7 @@ class AdminDashboardView extends ConsumerWidget {
               _DashboardFilterActionToolbar(
                 selectedDateFilter: state.selectedDateFilter,
                 onDateFilterChanged: notifier.selectDateFilter,
-                onExportTap: () => notifier.triggerDashboardAction(
-                  'Exported ${state.selectedDateFilter} Harbor Ridge analytics report',
-                ),
+                onExportTap: () => _exportDashboardReport(ref, state, notifier),
                 onNewOrderTap: () {
                   if (onNewOrderRequested != null) {
                     onNewOrderRequested!();
@@ -267,12 +322,10 @@ class AdminDashboardView extends ConsumerWidget {
 class _DashboardTopUtilityRow extends StatelessWidget {
   const _DashboardTopUtilityRow({
     required this.activeOrdersCount,
-    required this.onUpgradeTap,
     required this.onAddWorkerTap,
   });
 
   final int activeOrdersCount;
-  final VoidCallback onUpgradeTap;
   final VoidCallback onAddWorkerTap;
 
   @override
@@ -336,40 +389,6 @@ class _DashboardTopUtilityRow extends StatelessWidget {
           runSpacing: 6.0,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            InteractivePressScale(
-              onTap: onUpgradeTap,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14.0,
-                  vertical: 7.0,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [colors.freshSkyBlue, colors.harborGold],
-                  ),
-                  borderRadius: BorderRadius.circular(99.0),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.workspace_premium_outlined,
-                      size: 14.0,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 5.0),
-                    Text(
-                      'Upgrade',
-                      style: textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontSize: 11.0,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             SizedBox(
               width: 58.0,
               height: 28.0,
