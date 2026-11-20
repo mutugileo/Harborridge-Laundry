@@ -1,18 +1,15 @@
-# laundry_ridge
+# HARBOR RIDGE LAUNDRY
 
-A new Flutter project.
+POS, order tracking, dispatch, payments, inventory, and reporting portal for **Harbor Ridge Laundry** (*Harbor Ridge Main — Getathuru Road, opp. NG-CDF Kabete Plaza*).
 
-## Getting Started
+- **Live App**: https://laundry-ridge.vercel.app
+- **Stack**: Flutter Web + Riverpod + Supabase (Auth, Postgres RLS, RPCs, Edge Functions) + Vercel
 
-This project is a starting point for a Flutter application.
+## Development & Verification
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# Harborridge-Laundry
+```sh
+flutter pub get
+flutter analyze
+flutter test
+flutter build web --release
+```
